@@ -29,14 +29,18 @@ public class LoginActivity extends AppCompatActivity {
 
         //Firebase auth instance
         auth = FirebaseAuth.getInstance();
+
+        //Is the User logged in already?
         if (auth.getCurrentUser() != null) {
+
+            //then reedirect to home page
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish();
         }
         setContentView(R.layout.activity_login);
 
-        signInBtn = (Button) findViewById(R.id.sign_in_button);
-        signUpBtn = (Button) findViewById(R.id.sign_up_button);
+        signInBtn = (Button) findViewById(R.id.btn_login);
+        signUpBtn = (Button) findViewById(R.id.btn_signup);
         forgotPassBtn = (Button) findViewById(R.id.btn_reset_password);
         inputEmail = (EditText) findViewById(R.id.email);
         inputPassword = (EditText) findViewById(R.id.password);
