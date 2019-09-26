@@ -16,13 +16,14 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class SignUpActivity extends AppCompatActivity {
 
     private EditText inputEmail, inputPassword;
     private Button signUpBtn, forgotPassBtn, signInBtn;
     private ProgressBar progressBar;
-    FirebaseAuth auth;
+    private FirebaseAuth auth;
 
 
     @Override
@@ -59,8 +60,8 @@ public class SignUpActivity extends AppCompatActivity {
         signUpBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = inputEmail.getText().toString().trim();
-                String password = inputPassword.getText().toString().trim();
+                String email = inputEmail.getText().toString();
+                String password = inputPassword.getText().toString();
 
                 if (TextUtils.isEmpty(email)) {
                     Toast.makeText(getApplicationContext(), "Please Enter email address.", Toast.LENGTH_SHORT).show();
@@ -85,11 +86,12 @@ public class SignUpActivity extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 Toast.makeText(SignUpActivity.this, "Succeeded", Toast.LENGTH_SHORT).show();
                                 progressBar.setVisibility(View.GONE);
-                                if (!task.isSuccessful()) {
-                                    Toast.makeText(SignUpActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    startActivity(new Intent(SignUpActivity.this, MainActivity.class));
+                                if (task.isSuccessful()) {
+                                    startActivity(new Intent(SignUpActivity.this, HomeActivity.class));
                                     finish();
+                                } else {
+                                    Toast.makeText(SignUpActivity.this, "Unsuccessful.Please check your Internet Connection.", Toast.LENGTH_SHORT).show();
+
                                 }
                             }
                         });

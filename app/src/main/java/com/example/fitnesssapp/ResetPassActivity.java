@@ -20,7 +20,7 @@ public class ResetPassActivity extends AppCompatActivity {
     private EditText inputEmail;
     private Button resetBtn,backBtn;
     private ProgressBar progressBar;
-    FirebaseAuth auth;
+    private FirebaseAuth auth;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,7 +60,7 @@ public class ResetPassActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
                                 if (task.isSuccessful()) {
-                                    Toast.makeText(ResetPassActivity.this, "We have sent you instructions to reset your password!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ResetPassActivity.this, "We have sent you instructions to reset your password", Toast.LENGTH_SHORT).show();
                                 } else {
                                     Toast.makeText(ResetPassActivity.this, "Email not registered.", Toast.LENGTH_SHORT).show();
                                 }
