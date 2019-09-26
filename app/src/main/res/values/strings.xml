@@ -7,7 +7,7 @@
     <dimen name="logo_w_h">100dp</dimen>
     <string name="minimum_password">Password too short, enter minimum 6 characters!</string>
     <string name="auth_failed">Authentication failed, check your email and password or sign up</string>
-<!--    <string name="appbar_scrolling_view_behavior" translatable="false">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>-->
+    <!--    <string name="appbar_scrolling_view_behavior" translatable="false">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>-->
 
     <string name="title_activity_home">HomeActivity</string>
     <string name="nav_header_title">Android Studio</string>
@@ -21,4 +21,5 @@
     <string name="menu_tools">Tools</string>
     <string name="menu_share">Share</string>
     <string name="menu_send">Send</string>
+    <string name="title_activity_locations">Locations</string>
 </resources>

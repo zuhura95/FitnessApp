@@ -1,4 +1,4 @@
-package com.example.fitnesssapp;
+package com.example.fitnesssapp.Authentication;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,11 +12,12 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.example.fitnesssapp.HomeActivity;
+import com.example.fitnesssapp.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -87,7 +88,7 @@ public class SignUpActivity extends AppCompatActivity {
                                 Toast.makeText(SignUpActivity.this, "Succeeded", Toast.LENGTH_SHORT).show();
                                 progressBar.setVisibility(View.GONE);
                                 if (task.isSuccessful()) {
-                                    startActivity(new Intent(SignUpActivity.this, HomeActivity.class));
+                                    startActivity(new Intent(SignUpActivity.this, PermissionsActivity.class));
                                     finish();
                                 } else {
                                     Toast.makeText(SignUpActivity.this, "Unsuccessful.Please check your Internet Connection.", Toast.LENGTH_SHORT).show();

@@ -1,7 +1,9 @@
 package com.example.fitnesssapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 
+import com.example.fitnesssapp.Authentication.LoginActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -13,6 +15,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -24,6 +27,7 @@ import android.view.Menu;
 public class HomeActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +35,16 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        //Firebase auth instance
+        auth = FirebaseAuth.getInstance();
+
+        //Is the User logged in already?
+        if (auth.getCurrentUser() == null) {
+
+            //then reedirect to home page
+            startActivity(new Intent(HomeActivity.this, LoginActivity.class));
+            finish();
+        }
 //        FloatingActionButton fab = findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
 //            @Override
