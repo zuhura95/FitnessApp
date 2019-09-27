@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.fitnesssapp">
+    <!-- Maos permission -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- Internet permission -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -9,7 +12,34 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".Locations.LocationsActivity"
+            android:label="@string/title_activity_locations"
+            android:parentActivityName=".HomeActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.fitnesssapp.HomeActivity" />
+        </activity>
+        <activity android:name=".Authentication.PermissionsActivity" />
+        <!--
+             The API key for Google Maps-based APIs is defined as a string resource.
+             (See the file "res/values/google_maps_api.xml").
+             Note that the API key is linked to the encryption key used to sign the APK.
+             You need a different API key for each encryption key, including the release key that is used to
+             sign the APK for publishing.
+             You can define the keys for the debug and release targets in src/debug/ and src/release/.
+        -->
+        <!-- <meta-data -->
+        <!-- android:name="com.google.android.geo.API_KEY" -->
+        <!-- android:value="@string/google_maps_key" /> -->
+        <activity
+            android:name=".HomeActivity"
+            android:label="Home Activity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".Authentication.ResetPassActivity" />
+        <activity android:name=".Authentication.SignUpActivity" /> <!-- launcher activity -->
+        <activity android:name=".Authentication.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
