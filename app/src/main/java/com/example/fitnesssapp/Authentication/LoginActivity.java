@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.example.fitnesssapp.HomeActivity;
 import com.example.fitnesssapp.R;
+import com.example.fitnesssapp.StepCounter.StepsCounterActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -48,7 +49,7 @@ public class LoginActivity extends AppCompatActivity {
         if (auth.getCurrentUser() != null) {
 
             //then reedirect to home page
-            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+            startActivity(new Intent(LoginActivity.this, StepsCounterActivity.class));
             finish();
         }
         setContentView(R.layout.activity_login);
@@ -110,7 +111,7 @@ public class LoginActivity extends AppCompatActivity {
                                 progressBar.setVisibility(View.GONE);
                                 if (task.isSuccessful()) {
 
-                                    Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                                    Intent intent = new Intent(LoginActivity.this, StepsCounterActivity.class);
                                     startActivity(intent);
                                     finish();
 
