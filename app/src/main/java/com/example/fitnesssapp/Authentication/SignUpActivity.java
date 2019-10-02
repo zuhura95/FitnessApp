@@ -12,7 +12,6 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.example.fitnesssapp.HomeActivity;
 import com.example.fitnesssapp.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -88,7 +87,7 @@ public class SignUpActivity extends AppCompatActivity {
                                 Toast.makeText(SignUpActivity.this, "Succeeded", Toast.LENGTH_SHORT).show();
                                 progressBar.setVisibility(View.GONE);
                                 if (task.isSuccessful()) {
-                                    startActivity(new Intent(SignUpActivity.this, PermissionsActivity.class));
+                                    startActivity(new Intent(SignUpActivity.this, ProfileActivity.class));
                                     finish();
                                 } else {
                                     Toast.makeText(SignUpActivity.this, "Unsuccessful.Please check your Internet Connection.", Toast.LENGTH_SHORT).show();

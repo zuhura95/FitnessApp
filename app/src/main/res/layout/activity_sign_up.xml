@@ -15,6 +15,14 @@
         android:orientation="vertical"
         android:padding="@dimen/activity_horizontal_margin">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:padding="10dp"
+            android:text="Register for an account"
+            android:textColor="@android:color/white"
+            android:textSize="20dp" />
 
 
             <EditText
@@ -47,7 +55,7 @@
             android:layout_marginTop="16dp"
             android:background="@color/colorAccent"
             android:text="SIGN UP"
-            android:textColor="@android:color/black"
+            android:textColor="@color/white"
             android:textStyle="bold" />
         <Button
             android:id="@+id/btn_reset_password"
@@ -57,7 +65,7 @@
             android:background="@null"
             android:text="Forgot password?"
             android:textAllCaps="false"
-            android:textColor="@color/colorAccent" />
+            android:textColor="@color/white" />
 
 <!--        Direct to login page-->
         <Button

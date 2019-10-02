@@ -12,7 +12,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".StepCounter.StepsCounterActivity"></activity>
+        <activity android:name=".Authentication.ProfileActivity"></activity>
+        <activity android:name=".StepCounter.StepsCounterActivity" />
         <activity
             android:name=".Locations.LocationsActivity"
             android:label="@string/title_activity_locations"
@@ -24,6 +25,7 @@
         </activity>
         <activity android:name=".Authentication.PermissionsActivity" />
         <!--
+android:theme="@style/AppTheme.NoActionBar"
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
              Note that the API key is linked to the encryption key used to sign the APK.
@@ -40,7 +42,9 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".Authentication.ResetPassActivity" />
         <activity android:name=".Authentication.SignUpActivity" /> <!-- launcher activity -->
-        <activity android:name=".Authentication.LoginActivity">
+        <activity
+            android:name=".Authentication.LoginActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
