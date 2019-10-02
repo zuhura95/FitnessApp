@@ -79,7 +79,7 @@ public class SessionManager {
     }
     public void setAge(int age) {
 
-        editor.putInt(KEY_USER_AGE, Integer.parseInt(age));
+        editor.putInt(KEY_USER_AGE, Integer.parseInt(String.valueOf(age)));
         // commit changes
         editor.commit();
 

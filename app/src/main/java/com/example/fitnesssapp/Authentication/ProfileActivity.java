@@ -1,9 +1,12 @@
 package com.example.fitnesssapp.Authentication;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.View;
@@ -36,7 +39,25 @@ public class ProfileActivity extends AppCompatActivity {
         inputAge = (EditText) findViewById(R.id.age);
         saveButton = (Button) findViewById(R.id.save_btn);
 
-        getUserProfile();
+
+
+
+
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (inputFName.getText()== null || inputLName.getText() == null){
+
+                    Toast.makeText(ProfileActivity.this, "Please Enter your Name", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    getUserProfile();
+                }
+
+            }
+        });
+
 
 
     }
@@ -45,8 +66,8 @@ public class ProfileActivity extends AppCompatActivity {
 
         final String fName, lName;
         final float weight;
-        final float height;
-        final int age;
+       final  float height;
+       final  int age ;
 
         fName = inputFName.getText().toString();
         lName = inputLName.getText().toString();
@@ -54,13 +75,7 @@ public class ProfileActivity extends AppCompatActivity {
         height = Float.parseFloat(inputHeight.getText().toString());
         age = Integer.parseInt(inputAge.getText().toString());
 
-        if (fName != null){
-            if (lName != null){
-                if (weight != 0){
-                    if (height != 0){
-                        if (age != 0){
 
-                            saveButton.isEnabled();
 
                             saveButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
@@ -71,7 +86,13 @@ public class ProfileActivity extends AppCompatActivity {
                                     session.setHeight(height);
                                     session.setAge(age);
                                     Toast.makeText(ProfileActivity.this, "Profile Saved", Toast.LENGTH_SHORT).show();
-                                    startActivity(new Intent(ProfileActivity.this, HomeActivity.class));
+                                    if (ContextCompat.checkSelfPermission(ProfileActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
+                                        startActivity(new Intent(ProfileActivity.this, PermissionsActivity.class));
+                                    }
+                                    else {
+
+                                        startActivity(new Intent(ProfileActivity.this, HomeActivity.class));
+                                    }
 
                                 }
                             });
@@ -79,22 +100,6 @@ public class ProfileActivity extends AppCompatActivity {
 
 
 
-                        }
-                        else{
-                            Toast.makeText(this, "Please Enter your Age", Toast.LENGTH_SHORT).show();
-                        }
-                    }else{
-                        Toast.makeText(this, "Please Enter your Height", Toast.LENGTH_SHORT).show();
-                    }
-                } else{
-                    Toast.makeText(this, "Please Enter your Weight", Toast.LENGTH_SHORT).show();
-                }
-            }else{
-                Toast.makeText(this, "Please Enter your Last Name", Toast.LENGTH_SHORT).show();
-            }
-        }else{
-            Toast.makeText(this, "Please Enter your First Name", Toast.LENGTH_SHORT).show();
-        }
 
     }
 }

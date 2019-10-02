@@ -39,9 +39,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
-            startActivity(new Intent(LoginActivity.this, PermissionsActivity.class));
-        }
+
         //Firebase auth instance
         auth = FirebaseAuth.getInstance();
 
@@ -49,7 +47,7 @@ public class LoginActivity extends AppCompatActivity {
         if (auth.getCurrentUser() != null) {
 
             //then reedirect to home page
-            startActivity(new Intent(LoginActivity.this, StepsCounterActivity.class));
+            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
             finish();
         }
         setContentView(R.layout.activity_login);
@@ -111,9 +109,14 @@ public class LoginActivity extends AppCompatActivity {
                                 progressBar.setVisibility(View.GONE);
                                 if (task.isSuccessful()) {
 
-                                    Intent intent = new Intent(LoginActivity.this, StepsCounterActivity.class);
-                                    startActivity(intent);
-                                    finish();
+                                    if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
+                                        startActivity(new Intent(LoginActivity.this, PermissionsActivity.class));
+                                    }
+                                    else {
+                                        Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                                        startActivity(intent);
+                                        finish();
+                                    }
 
                                 } else {
                                     Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
