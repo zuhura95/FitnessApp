@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -20,16 +21,19 @@ public class ProfileActivity extends AppCompatActivity {
 
     private EditText inputFName, inputLName, inputWeight, inputHeight, inputAge;
     private Button saveButton;
-    private SessionManager session;
+//    private SessionManager session;
     SharedPreferences sharedPreferences;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        session = new SessionManager(getApplicationContext());
-        sharedPreferences = getSharedPreferences("Account",MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+//        session = new SessionManager(getApplicationContext());
+//        sharedPreferences = getSharedPreferences("Account",MODE_PRIVATE);
+
 
 
         inputFName = (EditText) findViewById(R.id.firstname);
@@ -77,14 +81,13 @@ public class ProfileActivity extends AppCompatActivity {
 
 
 
-                            saveButton.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    session.setFName(fName);
-                                    session.setLName(lName);
-                                    session.setWeight(weight);
-                                    session.setHeight(height);
-                                    session.setAge(age);
+//                                    session.setFName(fName);
+//                                    session.setLName(lName);
+//                                    session.setWeight(weight);
+//                                    session.setHeight(height);
+//                                    session.setAge(age);
+//        editor.putString("FirstName",fName);
+//        editor.apply();
                                     Toast.makeText(ProfileActivity.this, "Profile Saved", Toast.LENGTH_SHORT).show();
                                     if (ContextCompat.checkSelfPermission(ProfileActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
                                         startActivity(new Intent(ProfileActivity.this, PermissionsActivity.class));
@@ -94,8 +97,8 @@ public class ProfileActivity extends AppCompatActivity {
                                         startActivity(new Intent(ProfileActivity.this, HomeActivity.class));
                                     }
 
-                                }
-                            });
+
+
 
 
 
