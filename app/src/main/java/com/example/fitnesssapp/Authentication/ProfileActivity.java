@@ -72,7 +72,7 @@ public class ProfileActivity extends AppCompatActivity {
         final float weight;
        final  float height;
        final  int age ;
-
+        SharedPreferences.Editor editor = sharedPreferences.edit();
         fName = inputFName.getText().toString();
         lName = inputLName.getText().toString();
         weight = Float.parseFloat(inputWeight.getText().toString());
@@ -80,23 +80,19 @@ public class ProfileActivity extends AppCompatActivity {
         age = Integer.parseInt(inputAge.getText().toString());
 
 
-
-//                                    session.setFName(fName);
-//                                    session.setLName(lName);
-//                                    session.setWeight(weight);
-//                                    session.setHeight(height);
-//                                    session.setAge(age);
-//        editor.putString("FirstName",fName);
-//        editor.apply();
-                                    Toast.makeText(ProfileActivity.this, "Profile Saved", Toast.LENGTH_SHORT).show();
-                                    if (ContextCompat.checkSelfPermission(ProfileActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
-                                        startActivity(new Intent(ProfileActivity.this, PermissionsActivity.class));
-                                    }
-                                    else {
-
-                                        startActivity(new Intent(ProfileActivity.this, HomeActivity.class));
-                                    }
-
+        editor.putString("FirstName",fName);
+        editor.putString("LastName",lName);
+        editor.putFloat("Weight",weight);
+        editor.putFloat("Height",height);
+        editor.putInt("Age",age);
+        editor.apply();
+        Toast.makeText(ProfileActivity.this, "Profile Saved", Toast.LENGTH_SHORT).show();
+        if (ContextCompat.checkSelfPermission(ProfileActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
+            startActivity(new Intent(ProfileActivity.this, PermissionsActivity.class));
+        }
+        else {
+            startActivity(new Intent(ProfileActivity.this, HomeActivity.class));
+        }
 
 
 
