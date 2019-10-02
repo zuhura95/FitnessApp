@@ -28,6 +28,8 @@ import android.view.Menu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.fitnesssapp.*;
+
 public class HomeActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
@@ -48,7 +50,7 @@ public class HomeActivity extends AppCompatActivity {
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         View headerView = navigationView.getHeaderView(0);
-        helloText = (TextView)headerView.findViewById(R.id.HellotextView);
+        helloText = (TextView)headerView.findViewById(R.id.helloTextView);
         String name =sharedPreferences.getString("FirstName",null);
         helloText.setText("Hello there "+ name+" !");
 
