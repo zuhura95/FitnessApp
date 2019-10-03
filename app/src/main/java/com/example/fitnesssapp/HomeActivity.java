@@ -1,6 +1,8 @@
 package com.example.fitnesssapp;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.example.fitnesssapp.Authentication.LoginActivity;
@@ -23,11 +25,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.view.Menu;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.fitnesssapp.*;
 
 public class HomeActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private FirebaseAuth auth;
+    SharedPreferences sharedPreferences;
+    TextView helloText;
+    TextView t_v;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +46,17 @@ public class HomeActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         //Firebase auth instance
         auth = FirebaseAuth.getInstance();
+        sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
 
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        View headerView = navigationView.getHeaderView(0);
+        helloText = (TextView)headerView.findViewById(R.id.helloTextView);
+        String name =sharedPreferences.getString("FirstName",null);
+        helloText.setText("Hello there "+ name+" !");
+
+
+
+        Toast.makeText(this, name, Toast.LENGTH_SHORT).show();
         //Is the User logged in already?
         if (auth.getCurrentUser() == null) {
 
@@ -46,7 +65,7 @@ public class HomeActivity extends AppCompatActivity {
             finish();
         }
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        NavigationView navigationView = findViewById(R.id.nav_view);
+
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
