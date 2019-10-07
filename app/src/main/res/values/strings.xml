@@ -13,7 +13,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
 
-    <string name="title_activity_home">Home</string>
+    <string name="title_activity_home">Dashboard</string>
     <string name="title_activity_locations">Locations</string>
     <string name="title_activity_profile">ProfileActivity</string>
     <string name="title_activity_achievements">Awards</string>
