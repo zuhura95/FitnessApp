@@ -108,7 +108,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         int id = menuItem.getItemId();
         if (id == R.id.nav_profile){
-            startActivity(new Intent(HomeActivity.this, UserProfile.class));
+            startActivity(new Intent(HomeActivity.this, UserProfileActivity.class));
             finish();
         }
        else if (id == R.id.nav_locations){
