@@ -23,9 +23,10 @@ import android.widget.Toast;
 
 public class UserProfileActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener {
 
-    private EditText inputFName, inputLName, inputWeight, inputHeight, inputAge, inputFromHour, inputToHour, inputLunchHour;
-    private Spinner  inputGoal, inputGender;
-    private String goal, gender, amPm;
+    private EditText inputFName, inputLName, inputWeight
+            ,inputGoal,inputHeight, inputAge, inputFromHour, inputToHour, inputLunchHour;
+    private Spinner  inputGender;
+    private String  gender, amPm;
     SharedPreferences sharedPreferences;
 
     @Override
@@ -53,7 +54,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputHeight = (EditText) findViewById(R.id.height);
         inputAge = (EditText) findViewById(R.id.age);
         inputGender = (Spinner) findViewById(R.id.genderPicker);
-        inputGoal = (Spinner) findViewById(R.id.goalPicker);
+        inputGoal = (EditText) findViewById(R.id.goal);
         inputFromHour =  findViewById(R.id.fromHourPicker);
         inputToHour = findViewById(R.id.toHourPicker);
         inputLunchHour = findViewById(R.id.lunchHourPicker);
@@ -63,23 +64,12 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputHeight.setText(String.valueOf( sharedPreferences.getFloat("Height",0)));
         inputWeight.setText(String.valueOf( sharedPreferences.getFloat("Weight",0)));
         inputGender.setSelection(sharedPreferences.getInt("genderSelection",0));
-        inputGoal.setSelection(sharedPreferences.getInt("goalSelection",0));
+        inputGoal.setText(sharedPreferences.getInt("Goal",0));
         inputFromHour.setText(sharedPreferences.getString("FromHour","00:00"));
         inputToHour.setText(sharedPreferences.getString("ToHour","00:00"));
         inputLunchHour.setText(sharedPreferences.getString("LunchHour","00:00"));
 
         inputGender.setOnItemSelectedListener(this);
-        inputGoal.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                goal=  adapterView.getItemAtPosition(i).toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
         inputFromHour.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -156,7 +146,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         final String fName, lName, fromHour, toHour,lunchHour;
         final float weight;
         final  float height;
-        final  int age, selectedGender, selectedGoal ;
+        final  int age, selectedGender, goal ;
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         fName = inputFName.getText().toString();
@@ -164,17 +154,16 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         weight = Float.parseFloat(inputWeight.getText().toString());
         height = Float.parseFloat(inputHeight.getText().toString());
         age = Integer.parseInt(inputAge.getText().toString());
+        goal = Integer.parseInt(inputGoal.getText().toString());
         fromHour = inputFromHour.getText().toString();
         toHour = inputToHour.getText().toString();
         lunchHour = inputLunchHour.getText().toString();
 
         selectedGender = inputGender.getSelectedItemPosition();
-        selectedGoal = inputGoal.getSelectedItemPosition();
 
         editor.putString("gender", gender);
-        editor.putString("goal", goal);
+        editor.putInt("Goal", goal);
         editor.putInt("genderSelection", selectedGender);
-        editor.putInt("goalSelection", selectedGoal);
         editor.putString("FirstName",fName);
         editor.putString("LastName",lName);
         editor.putFloat("Weight",weight);

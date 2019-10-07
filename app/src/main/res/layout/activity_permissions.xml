@@ -43,7 +43,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:background="@color/colorAccent"
-        android:textColor="#000"
+        android:textColor="#FFF"
         android:text="Grant Permission"
         android:textAllCaps="false" />
 </RelativeLayout>

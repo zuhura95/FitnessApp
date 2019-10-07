@@ -3,6 +3,7 @@ package com.example.fitnesssapp;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
+import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSource;
@@ -78,7 +80,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private FirebaseAuth auth;
     SharedPreferences sharedPreferences;
     TextView helloText;
-    TextView t_v;
     ArcProgress stepsCounter;
 
     @Override
@@ -297,6 +298,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             List<DataPoint> dp = bucket.getDataSet(DataType.AGGREGATE_STEP_COUNT_DELTA).getDataPoints();
             for(DataPoint dataPoint : dp) {
                 String stepCount = String.valueOf(dataPoint.getValue(Field.FIELD_STEPS));
+                stepsCounter.setProgress(Integer.parseInt(stepCount));
+
                // stepCountTextView.setText(stepCount);
                 info += " Aggregate Steps: " + stepCount;
             }
@@ -384,6 +387,48 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        if(connectionResult.getErrorCode() == FitnessStatusCodes.SIGN_IN_REQUIRED) {
+            Log.d(TAG, "Client API connection failed. Attempting resolution if possible");
+            Log.e(TAG, connectionResult.toString());
+            try {
+                connectionResult.startResolutionForResult(HomeActivity.this, CLIENT_API_REQUEST_CODE);
+            } catch (IntentSender.SendIntentException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch(requestCode){
+            case FINE_LOCATION_REQUEST_CODE: {
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    Log.d(TAG, "Fine location permission granted");
+                    mClient.connect();
+                }
+                else    finish();
+            }
+            break;
+        }
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if(requestCode == CLIENT_API_REQUEST_CODE){
+            if(resultCode == RESULT_OK){
+                Log.d(TAG, "Api client connection successful");
+                mClient.connect();
+            }
+        }
+        else if(requestCode == OAUTH_REQUEST_CODE){
+            if(resultCode == RESULT_OK) {
+                Log.d(TAG, "OAuth request complete. Fitness permission authorised");
+
+                readDataFromHistoryApi();
+//                listAvailableDatSources();
+                listHistorySubscription();
+            }
+        }
     }
 }

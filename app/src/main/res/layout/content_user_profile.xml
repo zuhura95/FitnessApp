@@ -171,12 +171,15 @@
                 />
         </LinearLayout>
 
-        <Spinner
-            android:layout_width="wrap_content"
+        <EditText
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/goalPicker"
+            android:id="@+id/goal"
             android:paddingBottom="20dp"
-            android:entries="@array/goal_array"/>
+            android:inputType="number"
+            android:textColor="@color/colorAccent"
+            android:textColorHint="@color/colorAccent"
+            android:hint="Daily Goals: Recommended 10,000 Steps"/>
 
 
         <TextView
