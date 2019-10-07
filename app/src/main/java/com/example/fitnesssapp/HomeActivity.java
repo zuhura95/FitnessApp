@@ -6,11 +6,13 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
 
-
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -30,6 +32,9 @@ import com.example.fitnesssapp.*;
 import com.example.fitnesssapp.Authentication.ProfileActivity;
 import com.example.fitnesssapp.Authentication.LoginActivity;
 import com.example.fitnesssapp.Locations.LocationsActivity;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
@@ -71,7 +76,30 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             finish();
         }
 
+        // Get token
+        // [START retrieve_current_token]
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (!task.isSuccessful()) {
+                            Log.w("TAG", "getInstanceId failed", task.getException());
+                            return;
+                        }
+
+                        // Get new Instance ID token
+                        String token = task.getResult().getToken();
+                        Toast.makeText(HomeActivity.this, token, Toast.LENGTH_SHORT).show();
+                    }
+                });
+        // [END retrieve_current_token]
+
+        // [START fcm_runtime_enable_auto_init]
+      //  FirebaseMessaging.getInstance().setAutoInitEnabled(true);
+        // [END fcm_runtime_enable_auto_init]
+
     }
+
 
     @Override
     public void onBackPressed() {
