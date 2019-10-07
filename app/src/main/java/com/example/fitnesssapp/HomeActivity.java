@@ -5,20 +5,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
-import com.example.fitnesssapp.Authentication.LoginActivity;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
+import android.view.MenuItem;
 import android.view.View;
 
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
+
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,10 +27,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.fitnesssapp.*;
+import com.example.fitnesssapp.Authentication.ProfileActivity;
+import com.example.fitnesssapp.Authentication.LoginActivity;
+import com.example.fitnesssapp.Locations.LocationsActivity;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
-    private AppBarConfiguration mAppBarConfiguration;
+
     private FirebaseAuth auth;
     SharedPreferences sharedPreferences;
     TextView helloText;
@@ -43,20 +44,25 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle(getString(R.string.title_activity_home));
         setSupportActionBar(toolbar);
         //Firebase auth instance
         auth = FirebaseAuth.getInstance();
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
         View headerView = navigationView.getHeaderView(0);
         helloText = (TextView)headerView.findViewById(R.id.helloTextView);
         String name =sharedPreferences.getString("FirstName",null);
         helloText.setText("Hello there "+ name+" !");
 
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
 
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
 
-        Toast.makeText(this, name, Toast.LENGTH_SHORT).show();
         //Is the User logged in already?
         if (auth.getCurrentUser() == null) {
 
@@ -64,17 +70,17 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(new Intent(HomeActivity.this, LoginActivity.class));
             finish();
         }
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
 
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-        mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_share, R.id.nav_locations)
-                .setDrawerLayout(drawer)
-                .build();
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-        NavigationUI.setupWithNavController(navigationView, navController);
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 
     @Override
@@ -85,9 +91,43 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
-                || super.onSupportNavigateUp();
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+
+        int id = menuItem.getItemId();
+        if (id == R.id.nav_profile){
+            startActivity(new Intent(HomeActivity.this, UserProfile.class));
+            finish();
+        }
+       else if (id == R.id.nav_locations){
+            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
+            finish();
+        }
+       else if (id == R.id.nav_about){
+            startActivity(new Intent(HomeActivity.this, AboutActivity.class));
+            finish();
+        }
+        else if (id == R.id.nav_awards){
+            startActivity(new Intent(HomeActivity.this, AchievementsActivity.class));
+            finish();
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+
+
     }
 }
