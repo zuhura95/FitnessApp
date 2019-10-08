@@ -1,6 +1,7 @@
 package com.example.fitnesssapp;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -33,6 +34,7 @@ import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.request.DataSourcesRequest;
+import com.google.android.gms.fitness.result.DataReadResponse;
 import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -66,17 +68,18 @@ import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.ConnectionCallbacks,  GoogleApiClient.OnConnectionFailedListener{
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
 
     private static final int FINE_LOCATION_REQUEST_CODE = 100;
     private static final String TAG = "Fitness";
     private static final int OAUTH_REQUEST_CODE = 101 ;
-    private static final int CLIENT_API_REQUEST_CODE = 303;
-    GoogleApiClient mClient;
+    private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 303;
+    private static final String LOG_TAG = "TAG";
     private FirebaseAuth auth;
     SharedPreferences sharedPreferences;
     TextView helloText;
@@ -116,20 +119,20 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        mClient = new GoogleApiClient.Builder(this)
-                .addApi(Fitness.SENSORS_API)
-                .addApi(Fitness.RECORDING_API)
-                .addApi(Fitness.HISTORY_API)
-                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
+//        mClient = new GoogleApiClient.Builder(this)
+//                .addApi(Fitness.SENSORS_API)
+//                .addApi(Fitness.RECORDING_API)
+//                .addApi(Fitness.HISTORY_API)
+//                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
+//                .addConnectionCallbacks(this)
+//                .addOnConnectionFailedListener(this)
+//                .build();
 
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this,new String[] {Manifest.permission.ACCESS_FINE_LOCATION},FINE_LOCATION_REQUEST_CODE);
         else{
             Log.d(TAG, "Fine Location permission already granted");
-            mClient.connect();
+//            mClient.connect();
         }
         //Is the User logged in already?
         if (auth.getCurrentUser() == null) {
@@ -160,6 +163,67 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         // [START fcm_runtime_enable_auto_init]
       //  FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         // [END fcm_runtime_enable_auto_init]
+
+
+        FitnessOptions fitnessOptions = FitnessOptions.builder()
+                .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .build();
+
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this), fitnessOptions)) {
+            GoogleSignIn.requestPermissions(
+                    this, // your activity
+                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+                    GoogleSignIn.getLastSignedInAccount(this),
+                    fitnessOptions);
+        } else {
+            accessGoogleFit();
+        }
+
+    }
+
+    private void accessGoogleFit() {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.YEAR, -1);
+        long startTime = cal.getTimeInMillis();
+
+        DataReadRequest readRequest = new DataReadRequest.Builder()
+                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .build();
+
+        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .readData(readRequest)
+                .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                    @Override
+                    public void onSuccess(DataReadResponse dataReadResponse) {
+                        Log.d(LOG_TAG, "onSuccess()");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(LOG_TAG, "onFailure()", e);
+                    }
+                })
+                .addOnCompleteListener(new OnCompleteListener<DataReadResponse>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DataReadResponse> task) {
+                        Log.d(LOG_TAG, "onComplete()");
+                    }
+                });
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
+                accessGoogleFit();
+            }
+        }
 
     }
 
@@ -214,6 +278,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(HomeActivity.this, AchievementsActivity.class));
             finish();
         }
+        else if (id == R.id.nav_settings){
+            startActivity(new Intent(HomeActivity.this, SettingsActivity.class));
+            finish();
+        }
+
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -222,7 +292,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "Google API connected");
 
@@ -277,25 +346,25 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //                .bucketByActivityType(1, TimeUnit.MILLISECONDS)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                 .build();
-        PendingResult<DataReadResult> pendingResult = Fitness.HistoryApi.readData(mClient,dataReadRequest);
-        pendingResult.setResultCallback(new ResultCallback<DataReadResult>() {
-            @Override
-            public void onResult(@NonNull DataReadResult dataReadResult) {
-                Log.d(TAG, "History API data received");
-                List<Bucket> bucket = dataReadResult.getBuckets();
-                if(bucket.size() == 1){
-                    Log.d(TAG, "Single bucket data retrieved");
-                    displayBucketData(bucket);
-                    return;
-                }
-                else if(bucket.size() > 1){
-                    Log.d(TAG, "Multiple bucket data retrieved");
-                    logBucketData(bucket);
-                    return;
-                }
-                Log.e(TAG, "Unexpected bucket size");
-            }
-        });
+//        PendingResult<DataReadResult> pendingResult = Fitness.HistoryApi.readData(mClient,dataReadRequest);
+//        pendingResult.setResultCallback(new ResultCallback<DataReadResult>() {
+//            @Override
+//            public void onResult(@NonNull DataReadResult dataReadResult) {
+//                Log.d(TAG, "History API data received");
+//                List<Bucket> bucket = dataReadResult.getBuckets();
+//                if(bucket.size() == 1){
+//                    Log.d(TAG, "Single bucket data retrieved");
+//                    displayBucketData(bucket);
+//                    return;
+//                }
+//                else if(bucket.size() > 1){
+//                    Log.d(TAG, "Multiple bucket data retrieved");
+//                    logBucketData(bucket);
+//                    return;
+//                }
+//                Log.e(TAG, "Unexpected bucket size");
+//            }
+//        });
     }
 
     private void displayBucketData(List<Bucket> bucketList) {
@@ -363,32 +432,32 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     public void listHistorySubscription(){
         Log.d(TAG, "Fetching List of history Subscription");
 
-        PendingResult<ListSubscriptionsResult> pendingResult =Fitness.RecordingApi.listSubscriptions(mClient);
-        pendingResult.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
-            @Override
-            public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
-                Log.d(TAG, "Recording Subscription List fetched successfully");
-                Log.i(TAG, listSubscriptionsResult.toString());
-                if(listSubscriptionsResult.getSubscriptions().size() < 1){
-                    Log.d(TAG, "Subscription List empty.");
-                    createRecordingSubscription();
-                }
-
-            }
-        });
+//        PendingResult<ListSubscriptionsResult> pendingResult =Fitness.RecordingApi.listSubscriptions(mClient);
+//        pendingResult.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
+//            @Override
+//            public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
+//                Log.d(TAG, "Recording Subscription List fetched successfully");
+//                Log.i(TAG, listSubscriptionsResult.toString());
+//                if(listSubscriptionsResult.getSubscriptions().size() < 1){
+//                    Log.d(TAG, "Subscription List empty.");
+//                    createRecordingSubscription();
+//                }
+//
+//            }
+//        });
     }
 
     private void createRecordingSubscription() {
         Log.d(TAG, "Creating A recording subscription");
 
-        PendingResult<Status> pendingResult = Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA);
-        pendingResult.setResultCallback(new ResultCallback<Status>() {
-            @Override
-            public void onResult(@NonNull Status status) {
-                Log.d(TAG, "Recording subscription created successfully.");
-                Log.i(TAG, status.getStatus().toString());
-            }
-        });
+//        PendingResult<Status> pendingResult = Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA);
+//        pendingResult.setResultCallback(new ResultCallback<Status>() {
+//            @Override
+//            public void onResult(@NonNull Status status) {
+//                Log.d(TAG, "Recording subscription created successfully.");
+//                Log.i(TAG, status.getStatus().toString());
+//            }
+//        });
     }
 
     @Override
@@ -396,50 +465,33 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        if(connectionResult.getErrorCode() == FitnessStatusCodes.SIGN_IN_REQUIRED) {
-            Log.d(TAG, "Client API connection failed. Attempting resolution if possible");
-            Log.e(TAG, connectionResult.toString());
-            try {
-                connectionResult.startResolutionForResult(HomeActivity.this, CLIENT_API_REQUEST_CODE);
-            } catch (IntentSender.SendIntentException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+//    @Override
+//    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+//        if(connectionResult.getErrorCode() == FitnessStatusCodes.SIGN_IN_REQUIRED) {
+//            Log.d(TAG, "Client API connection failed. Attempting resolution if possible");
+//            Log.e(TAG, connectionResult.toString());
+//            try {
+//                connectionResult.startResolutionForResult(HomeActivity.this, CLIENT_API_REQUEST_CODE);
+//            } catch (IntentSender.SendIntentException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch(requestCode){
-            case FINE_LOCATION_REQUEST_CODE: {
-                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    Log.d(TAG, "Fine location permission granted");
-                    mClient.connect();
-                }
-                else    finish();
-            }
-            break;
-        }
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        switch(requestCode){
+//            case FINE_LOCATION_REQUEST_CODE: {
+//                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+//                    Log.d(TAG, "Fine location permission granted");
+//                    mClient.connect();
+//                }
+//                else    finish();
+//            }
+//            break;
+//        }
+//    }
 
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(requestCode == CLIENT_API_REQUEST_CODE){
-            if(resultCode == RESULT_OK){
-                Log.d(TAG, "Api client connection successful");
-                mClient.connect();
-            }
-        }
-        else if(requestCode == OAUTH_REQUEST_CODE){
-            if(resultCode == RESULT_OK) {
-                Log.d(TAG, "OAuth request complete. Fitness permission authorised");
 
-                readDataFromHistoryApi();
-//                listAvailableDatSources();
-                listHistorySubscription();
-            }
-        }
-    }
 }

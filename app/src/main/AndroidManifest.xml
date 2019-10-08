@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.fitnesssapp">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -13,7 +16,14 @@
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
             android:theme="@style/AppTheme.NoActionBar"></activity>
-        <!-- [START fcm_default_icon] -->
+        <activity
+            android:name=".AboutActivity"
+            android:label="@string/title_activity_about"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".AchievementsActivity"
+            android:label="@string/title_activity_achievements"
+            android:theme="@style/AppTheme.NoActionBar" /> <!-- [START fcm_default_icon] -->
         <!--
  Set custom default icon. This is used when no icon is set for incoming notification messages.
      See README(https://goo.gl/l4GJaQ) for more.
@@ -26,24 +36,7 @@
  Set color used with incoming notification messages. This is used when no color is set for the incoming
              notification message. See README(https://goo.gl/6BKBk7) for more.
         -->
-        <activity
-            android:name=".AboutActivity"
-            android:label="@string/title_activity_about"
-            android:parentActivityName=".HomeActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.fitnesssapp.HomeActivity" />
-        </activity>
-        <activity
-            android:name=".AchievementsActivity"
-            android:label="@string/title_activity_achievements"
-            android:parentActivityName=".HomeActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.fitnesssapp.HomeActivity" />
-        </activity> <!-- [END fcm_default_channel] -->
+        <!-- [END fcm_default_channel] -->
         <activity android:name=".Authentication.ProfileActivity" />
         <activity
             android:name=".Locations.LocationsActivity"
@@ -70,6 +63,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_launcher_background" />
@@ -88,8 +82,5 @@
             </intent-filter>
         </service>
     </application>
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
 </manifest>
