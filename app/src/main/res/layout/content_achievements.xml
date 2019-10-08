@@ -8,4 +8,13 @@
     tools:context=".AchievementsActivity"
     tools:showIn="@layout/activity_achievements">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/stadium"/>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

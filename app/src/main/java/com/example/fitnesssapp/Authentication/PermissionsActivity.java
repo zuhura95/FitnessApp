@@ -53,6 +53,7 @@ public class PermissionsActivity extends AppCompatActivity {
                                 public void onPermissionGranted(PermissionGrantedResponse response) {
                                     Toast.makeText(PermissionsActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
 
+                                    //If permissions are granted , direct to Dashboard.
                                     startActivity(new Intent(PermissionsActivity.this, HomeActivity.class));
                                     finish();
                                 }

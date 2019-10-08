@@ -1,5 +1,6 @@
 package com.example.fitnesssapp.Authentication;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -16,13 +17,22 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.fitnesssapp.*;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ProfileActivity extends AppCompatActivity {
 
     private EditText inputFName, inputLName, inputWeight, inputHeight, inputAge;
     private Button saveButton;
-//    private SessionManager session;
     SharedPreferences sharedPreferences;
+    private FirebaseAuth auth;
+    private FirebaseFirestore db;
 
 
     @Override
@@ -31,8 +41,8 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
-//        session = new SessionManager(getApplicationContext());
-//        sharedPreferences = getSharedPreferences("Account",MODE_PRIVATE);
+        auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
 
 
@@ -50,6 +60,8 @@ public class ProfileActivity extends AppCompatActivity {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                //Check if First Name and Last Name fields are empty
 
                 if (inputFName.getText()== null || inputLName.getText() == null){
 
@@ -87,6 +99,10 @@ public class ProfileActivity extends AppCompatActivity {
         editor.putInt("Age",age);
         editor.apply();
         Toast.makeText(ProfileActivity.this, "Profile Saved", Toast.LENGTH_SHORT).show();
+
+        //Save the info to Firestore
+        saveToFirebaseDB(fName,lName,weight,height,age);
+
         if (ContextCompat.checkSelfPermission(ProfileActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
             startActivity(new Intent(ProfileActivity.this, PermissionsActivity.class));
         }
@@ -94,11 +110,33 @@ public class ProfileActivity extends AppCompatActivity {
             startActivity(new Intent(ProfileActivity.this, HomeActivity.class));
         }
 
+    }
 
+    private void saveToFirebaseDB(String fName, String lName, float weight, float height, int age){
+        Map< String, Object > user = new HashMap<>();
+        user.put("FirstName",fName);
+        user.put("LastName",lName);
+        user.put("Weight",weight);
+        user.put("Height",height);
+        user.put("Age",age);
+        String uid = auth.getCurrentUser().getUid();
 
-
-
+        db.collection("users").document(uid).set(user)
+               .addOnSuccessListener(new OnSuccessListener<Void>() {
+                   @Override
+                   public void onSuccess(Void aVoid) {
+//                       Toast.makeText(ProfileActivity.this, "YAY", Toast.LENGTH_SHORT).show();
+                   }
+               })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+//                        Toast.makeText(ProfileActivity.this, "OH NO", Toast.LENGTH_SHORT).show();
+                    }
+                });
 
 
     }
+
+
 }

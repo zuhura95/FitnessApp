@@ -6,9 +6,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import com.example.fitnesssapp.Authentication.ProfileActivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -21,18 +27,26 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class UserProfileActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener {
 
-    private EditText inputFName, inputLName, inputWeight, inputHeight, inputAge, inputFromHour, inputToHour, inputLunchHour;
-    private Spinner  inputGoal, inputGender;
-    private String goal, gender, amPm;
+    private EditText inputFName, inputLName, inputWeight
+            ,inputGoal,inputHeight, inputAge, inputFromHour, inputToHour, inputLunchHour;
+    private Spinner  inputGender;
+    private String  gender, amPm;
     SharedPreferences sharedPreferences;
+    private FirebaseFirestore db;
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_profile);
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+        auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(getString(R.string.title_activity_user_profile));
@@ -53,7 +67,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputHeight = (EditText) findViewById(R.id.height);
         inputAge = (EditText) findViewById(R.id.age);
         inputGender = (Spinner) findViewById(R.id.genderPicker);
-        inputGoal = (Spinner) findViewById(R.id.goalPicker);
+        inputGoal = (EditText) findViewById(R.id.goal);
         inputFromHour =  findViewById(R.id.fromHourPicker);
         inputToHour = findViewById(R.id.toHourPicker);
         inputLunchHour = findViewById(R.id.lunchHourPicker);
@@ -63,23 +77,12 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputHeight.setText(String.valueOf( sharedPreferences.getFloat("Height",0)));
         inputWeight.setText(String.valueOf( sharedPreferences.getFloat("Weight",0)));
         inputGender.setSelection(sharedPreferences.getInt("genderSelection",0));
-        inputGoal.setSelection(sharedPreferences.getInt("goalSelection",0));
+        inputGoal.setText(String.valueOf(sharedPreferences.getInt("Goal",5000)));
         inputFromHour.setText(sharedPreferences.getString("FromHour","00:00"));
         inputToHour.setText(sharedPreferences.getString("ToHour","00:00"));
         inputLunchHour.setText(sharedPreferences.getString("LunchHour","00:00"));
 
         inputGender.setOnItemSelectedListener(this);
-        inputGoal.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                goal=  adapterView.getItemAtPosition(i).toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
         inputFromHour.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -156,7 +159,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         final String fName, lName, fromHour, toHour,lunchHour;
         final float weight;
         final  float height;
-        final  int age, selectedGender, selectedGoal ;
+        final  int age, selectedGender, goal ;
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         fName = inputFName.getText().toString();
@@ -164,17 +167,16 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         weight = Float.parseFloat(inputWeight.getText().toString());
         height = Float.parseFloat(inputHeight.getText().toString());
         age = Integer.parseInt(inputAge.getText().toString());
+        goal = Integer.parseInt(inputGoal.getText().toString());
         fromHour = inputFromHour.getText().toString();
         toHour = inputToHour.getText().toString();
         lunchHour = inputLunchHour.getText().toString();
 
         selectedGender = inputGender.getSelectedItemPosition();
-        selectedGoal = inputGoal.getSelectedItemPosition();
 
         editor.putString("gender", gender);
-        editor.putString("goal", goal);
+        editor.putInt("Goal", goal);
         editor.putInt("genderSelection", selectedGender);
-        editor.putInt("goalSelection", selectedGoal);
         editor.putString("FirstName",fName);
         editor.putString("LastName",lName);
         editor.putFloat("Weight",weight);
@@ -184,6 +186,35 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         editor.putString("ToHour",toHour);
         editor.putString("LunchHour",lunchHour);
         editor.apply();
+
+        ////////Save the info to Firestore
+        Map< String, Object > user = new HashMap<>();
+        user.put("FirstName",fName);
+        user.put("LastName",lName);
+        user.put("Weight",weight);
+        user.put("Height",height);
+        user.put("Age",age);
+        user.put("Gender",gender);
+        user.put("Goal",goal);
+        user.put("FromHour",fromHour);
+        user.put("ToHour",toHour);
+        user.put("LunchHour",lunchHour);
+
+        String uid = auth.getCurrentUser().getUid();
+
+        db.collection("users").document(uid).set(user)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+//                        Toast.makeText(UserProfileActivity.this, "YAY", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+//                        Toast.makeText(UserProfileActivity.this, "OH NO", Toast.LENGTH_SHORT).show();
+                    }
+                });
         Snackbar.make(view, "Profile saved!", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
 
