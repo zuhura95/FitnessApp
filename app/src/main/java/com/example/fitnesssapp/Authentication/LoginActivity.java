@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 import com.example.fitnesssapp.HomeActivity;
 import com.example.fitnesssapp.R;
-import com.example.fitnesssapp.StepCounter.StepsCounterActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -97,16 +96,17 @@ public class LoginActivity extends AppCompatActivity {
                         .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
-                                // If sign in fails, display a message to the user. If sign in succeeds
-                                // the auth state listener will be notified and logic to handle the
-                                // signed in user can be handled in the listener.
+
                                 progressBar.setVisibility(View.GONE);
                                 if (task.isSuccessful()) {
 
+                                    // If successful, check if  Permissions for location is granted
+                                    //If not granted
                                     if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
                                         startActivity(new Intent(LoginActivity.this, PermissionsActivity.class));
                                     }
                                     else {
+                                        //If permissions were already granted
                                         Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                                         startActivity(intent);
                                         finish();

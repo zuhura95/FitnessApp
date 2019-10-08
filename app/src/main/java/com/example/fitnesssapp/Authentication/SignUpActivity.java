@@ -17,6 +17,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -24,6 +29,7 @@ public class SignUpActivity extends AppCompatActivity {
     private Button signUpBtn, forgotPassBtn, signInBtn;
     private ProgressBar progressBar;
     private FirebaseAuth auth;
+    private FirebaseFirestore db;
 
 
     @Override
@@ -32,6 +38,7 @@ public class SignUpActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sign_up);
         //Firebase auth instance
         auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         signInBtn = (Button) findViewById(R.id.sign_in_button);
         signUpBtn = (Button) findViewById(R.id.sign_up_button);
@@ -87,6 +94,8 @@ public class SignUpActivity extends AppCompatActivity {
                                 Toast.makeText(SignUpActivity.this, "Succeeded", Toast.LENGTH_SHORT).show();
                                 progressBar.setVisibility(View.GONE);
                                 if (task.isSuccessful()) {
+
+
                                     startActivity(new Intent(SignUpActivity.this, ProfileActivity.class));
                                     finish();
                                 } else {
@@ -103,4 +112,7 @@ public class SignUpActivity extends AppCompatActivity {
         super.onResume();
         progressBar.setVisibility(View.GONE);
     }
+
+
+
 }

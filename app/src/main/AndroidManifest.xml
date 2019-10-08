@@ -45,7 +45,6 @@
                 android:value="com.example.fitnesssapp.HomeActivity" />
         </activity> <!-- [END fcm_default_channel] -->
         <activity android:name=".Authentication.ProfileActivity" />
-        <activity android:name=".StepCounter.StepsCounterActivity" />
         <activity
             android:name=".Locations.LocationsActivity"
             android:label="@string/title_activity_locations"

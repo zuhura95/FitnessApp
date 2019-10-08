@@ -44,7 +44,6 @@
             android:layout_marginRight="0dp"
             android:layout_width="200dp"
             android:layout_height="200dp"
-            app:arc_progress="55"
             app:arc_stroke_width="10dp"
             app:arc_bottom_text="STEPS" />
 
@@ -77,7 +76,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="25000"
+                    android:text="0"
+                    android:id="@+id/caloriesTextview"
                   />
             <TextView
                 android:layout_width="wrap_content"
@@ -114,7 +114,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="3.2"
+                    android:text="0"
+                    android:id="@+id/distanceTextview"
                     />
                 <TextView
                     android:layout_width="wrap_content"
@@ -150,8 +151,9 @@
                     android:src="@drawable/active"/>
                 <TextView
                     android:layout_width="wrap_content"
+                    android:text="0"
                     android:layout_height="wrap_content"
-                    android:text="100"
+                    android:id="@+id/activetimeTextview"
                     />
                 <TextView
                     android:layout_width="wrap_content"

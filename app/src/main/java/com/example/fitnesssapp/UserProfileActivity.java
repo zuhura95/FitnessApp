@@ -6,9 +6,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import com.example.fitnesssapp.Authentication.ProfileActivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -21,6 +27,9 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class UserProfileActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener {
 
     private EditText inputFName, inputLName, inputWeight
@@ -28,12 +37,16 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
     private Spinner  inputGender;
     private String  gender, amPm;
     SharedPreferences sharedPreferences;
+    private FirebaseFirestore db;
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_profile);
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+        auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(getString(R.string.title_activity_user_profile));
@@ -64,7 +77,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputHeight.setText(String.valueOf( sharedPreferences.getFloat("Height",0)));
         inputWeight.setText(String.valueOf( sharedPreferences.getFloat("Weight",0)));
         inputGender.setSelection(sharedPreferences.getInt("genderSelection",0));
-        inputGoal.setText(sharedPreferences.getInt("Goal",0));
+        inputGoal.setText(String.valueOf(sharedPreferences.getInt("Goal",5000)));
         inputFromHour.setText(sharedPreferences.getString("FromHour","00:00"));
         inputToHour.setText(sharedPreferences.getString("ToHour","00:00"));
         inputLunchHour.setText(sharedPreferences.getString("LunchHour","00:00"));
@@ -173,6 +186,35 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         editor.putString("ToHour",toHour);
         editor.putString("LunchHour",lunchHour);
         editor.apply();
+
+        ////////Save the info to Firestore
+        Map< String, Object > user = new HashMap<>();
+        user.put("FirstName",fName);
+        user.put("LastName",lName);
+        user.put("Weight",weight);
+        user.put("Height",height);
+        user.put("Age",age);
+        user.put("Gender",gender);
+        user.put("Goal",goal);
+        user.put("FromHour",fromHour);
+        user.put("ToHour",toHour);
+        user.put("LunchHour",lunchHour);
+
+        String uid = auth.getCurrentUser().getUid();
+
+        db.collection("users").document(uid).set(user)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+//                        Toast.makeText(UserProfileActivity.this, "YAY", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+//                        Toast.makeText(UserProfileActivity.this, "OH NO", Toast.LENGTH_SHORT).show();
+                    }
+                });
         Snackbar.make(view, "Profile saved!", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
 

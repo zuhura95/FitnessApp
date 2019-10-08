@@ -89,14 +89,23 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(getString(R.string.title_activity_home));
         setSupportActionBar(toolbar);
-        //Firebase auth instance
+
+
         auth = FirebaseAuth.getInstance();
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         View headerView = navigationView.getHeaderView(0);
+
+        //Display Name of the user in the navigation header
         helloText = (TextView)headerView.findViewById(R.id.helloTextView);
+
         stepsCounter = (ArcProgress)findViewById(R.id.arc_progress);
+
+        //set the steps counter maximum value to goal set
+        stepsCounter.setMax(sharedPreferences.getInt("Goal",5000));
+
+        //Save the info to Firestore
         String name =sharedPreferences.getString("FirstName",null);
         helloText.setText("Hello there "+ name+" !");
 
@@ -193,10 +202,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(HomeActivity.this, UserProfileActivity.class));
             finish();
         }
-       else if (id == R.id.nav_locations){
-            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
-            finish();
-        }
+//       else if (id == R.id.nav_locations){
+//            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
+//            finish();
+//        }
        else if (id == R.id.nav_about){
             startActivity(new Intent(HomeActivity.this, AboutActivity.class));
             finish();
@@ -298,9 +307,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             List<DataPoint> dp = bucket.getDataSet(DataType.AGGREGATE_STEP_COUNT_DELTA).getDataPoints();
             for(DataPoint dataPoint : dp) {
                 String stepCount = String.valueOf(dataPoint.getValue(Field.FIELD_STEPS));
-                stepsCounter.setProgress(Integer.parseInt(stepCount));
 
-               // stepCountTextView.setText(stepCount);
+            stepsCounter.setProgress(Integer.parseInt(stepCount));
+//                Toast.makeText(this, stepCount, Toast.LENGTH_SHORT).show();
+
+
                 info += " Aggregate Steps: " + stepCount;
             }
             Log.i(TAG, info);

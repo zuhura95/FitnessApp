@@ -120,6 +120,7 @@
             android:layout_height="wrap_content"
             android:entries="@array/gender_array"
 
+
           />
 
     </LinearLayout>
@@ -170,6 +171,11 @@
                 android:textColorHint="@color/colorAccent"
                 />
         </LinearLayout>
+        <TextView
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="Daily Steps Goal"
+            android:textColor="@color/colorPrimaryDark"/>
 
         <EditText
             android:layout_width="match_parent"
