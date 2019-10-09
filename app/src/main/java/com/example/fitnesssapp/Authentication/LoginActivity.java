@@ -18,6 +18,7 @@ import com.example.fitnesssapp.HomeActivity;
 import com.example.fitnesssapp.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -79,12 +80,14 @@ public class LoginActivity extends AppCompatActivity {
                 final String password = inputPassword.getText().toString();
 
                 if (TextUtils.isEmpty(email)) {
-                    Toast.makeText(getApplicationContext(), "Please enter your Email address", Toast.LENGTH_SHORT).show();
-                    return;
+                    Snackbar.make(v, "Please enter your Email Address", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                 return;
                 }
 
                 if (TextUtils.isEmpty(password)) {
-                    Toast.makeText(getApplicationContext(), "Please enter your password", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(v, "Please enter your password", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
                     return;
                 }
 
@@ -114,6 +117,7 @@ public class LoginActivity extends AppCompatActivity {
 
                                 } else {
                                     Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
+
 
                                 }
                             }

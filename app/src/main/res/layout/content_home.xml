@@ -29,6 +29,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/todayDate"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:textAlignment="center"
             android:textSize="20dp"/>
 
@@ -46,6 +48,15 @@
             android:layout_height="200dp"
             app:arc_stroke_width="10dp"
             app:arc_bottom_text="STEPS" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="STEPS "
+            android:textColor="@color/colorPrimary"
+            android:textAlignment="center"
+            android:layout_gravity="center"
+            android:id="@+id/stepsPercent"/>
 
 <!--        CALORIES COUNT-->
 
@@ -171,6 +182,15 @@
 
 
         </LinearLayout>
+
+<!--        BAR CHART-->
+
+        <com.github.mikephil.charting.charts.BarChart
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            >
+
+        </com.github.mikephil.charting.charts.BarChart>
 
     </LinearLayout>
     </ScrollView>
