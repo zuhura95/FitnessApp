@@ -88,6 +88,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private final int FINE_LOCATION_REQUEST_CODE = 101;
     private final int CLIENT_API_REQUEST_CODE = 102;
     private FirebaseAuth auth;
+    private FirebaseFirestore db;
 
     SharedPreferences sharedPreferences;
     TextView helloText, stepsPercentage, dateTextView;
@@ -102,9 +103,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         setSupportActionBar(toolbar);
 
 
-        auth = FirebaseAuth.getInstance();
-
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+        auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        String uid = auth.getCurrentUser().getUid();
+
+        retrieveProfile(uid);
+
+
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         View headerView = navigationView.getHeaderView(0);
@@ -186,6 +192,53 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Log.d(TAG, "Fine Location permission already granted");
             mClient.connect();
         }
+    }
+
+    private void retrieveProfile(String uid) {
+
+
+
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        DocumentReference docRef = db.collection("users").document(uid);
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        String fName, lName,gender,fromHour,toHour,lunchHour;
+                        float weight,height;
+                        int age;
+                        fName = document.getString("FirstName");
+//                        lName = document.getString("LastName");
+//                        gender = document.getString("Gender");
+//                        fromHour = document.getString("FromHour");
+//                        toHour = document.getString("ToHour");
+//                        lunchHour=document.getString("LunchHour");
+//                        weight = (float) document.get("Weight");
+//                        height = (float) document.get("Height");
+//                        age = (int) document.get("Age");
+
+                        editor.putString("FirstName",fName);
+//                        editor.putString("LastName",lName);
+//                        editor.putString("Gender",gender);
+//                        editor.putString("FromHour",fromHour);
+//                        editor.putString("ToHour",toHour);
+//                        editor.putString("LunchHour",lunchHour);
+//                        editor.putFloat("Weight",weight);
+//                        editor.putFloat("Height",height);
+//                        editor.putInt("Age",age);
+                        editor.apply();
+                        helloText.setText(fName);
+
+                    } else {
+                        Log.d(TAG, "No such document");
+                    }
+                } else {
+                    Log.d(TAG, "get failed with ", task.getException());
+                }
+            }
+        });
     }
 
     public void listHistorySubscription(){
