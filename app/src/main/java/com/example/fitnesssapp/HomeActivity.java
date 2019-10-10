@@ -63,6 +63,9 @@ import com.example.fitnesssapp.*;
 import com.example.fitnesssapp.Authentication.ProfileActivity;
 import com.example.fitnesssapp.Authentication.LoginActivity;
 import com.example.fitnesssapp.Locations.LocationsActivity;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -84,7 +87,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private final int OAUTH_REQUEST_CODE = 200;
     private final int FINE_LOCATION_REQUEST_CODE = 101;
     private final int CLIENT_API_REQUEST_CODE = 102;
-     FirebaseAuth auth;
+    private FirebaseAuth auth;
+
     SharedPreferences sharedPreferences;
     TextView helloText, stepsPercentage, dateTextView;
     ArcProgress stepsCounter;
@@ -99,6 +103,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         auth = FirebaseAuth.getInstance();
+
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);

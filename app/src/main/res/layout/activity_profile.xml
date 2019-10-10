@@ -30,7 +30,7 @@
             android:layout_marginBottom="10dp"
             android:layout_marginTop="20dp"
             android:hint="First Name*"
-            android:inputType="textPersonName"
+            android:inputType="textCapWords"
             android:textColor="@android:color/white"
             android:textColorHint="@android:color/white" />
         <EditText
@@ -40,7 +40,7 @@
             android:layout_marginBottom="10dp"
             android:layout_marginTop="20dp"
             android:hint="Last Name*"
-            android:inputType="textPersonName"
+            android:inputType="textCapWords"
             android:textColor="@android:color/white"
             android:textColorHint="@android:color/white" />
         <EditText
