@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:padding="10dp"
-            android:text="Awesome! Let's set your Profile"
+            android:text="Awesome! Let's setup your Profile"
             android:textColor="@android:color/white"
             android:textSize="30dp" />
 

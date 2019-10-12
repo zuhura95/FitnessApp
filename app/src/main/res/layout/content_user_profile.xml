@@ -16,7 +16,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="10dp"
 
        >
     <TextView
@@ -33,15 +32,19 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="10dp"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
             android:orientation="horizontal">
 
             <TextView
-                android:layout_width="200dp"
+                android:layout_weight=".5"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="First Name"
                 android:textColor="@color/colorPrimaryDark"/>
             <TextView
-                android:layout_width="200dp"
+                android:layout_weight=".5"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="Last Name"
                 android:textColor="@color/colorPrimaryDark"/>
@@ -51,46 +54,52 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
             android:orientation="horizontal">
 
 
             <EditText
                 android:id="@+id/firstname"
-                android:layout_width="200dp"
+                android:layout_weight=".5"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:layout_marginTop="10dp"
                 android:hint="First Name*"
                 android:inputType="textPersonName"
                 android:textColor="@color/colorAccent"
-                android:textColorHint="@color/colorAccent" />
+                android:textColorHint="@color/input_hint" />
             <EditText
                 android:id="@+id/lastname"
-                android:layout_width="200dp"
+                android:layout_weight=".5"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:layout_marginTop="10dp"
                 android:hint="Last Name*"
                 android:inputType="textPersonName"
                 android:textColor="@color/colorAccent"
-                android:textColorHint="@color/colorAccent"
+                android:textColorHint="@color/input_hint"
                 />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="10dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp">
 
             <TextView
-                android:layout_width="200dp"
+                android:layout_weight=".5"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="Age"
                 android:textColor="@color/colorPrimaryDark"/>
             <TextView
-                android:layout_width="200dp"
+                android:layout_weight=".5"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="Gender"
                 android:textColor="@color/colorPrimaryDark"/>
@@ -100,43 +109,47 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingRight="10dp"
+        android:paddingLeft="10dp">
 
         <EditText
             android:id="@+id/age"
-            android:layout_width="200dp"
+            android:layout_weight=".5"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
             android:layout_marginTop="20dp"
             android:hint="Age"
             android:inputType="number"
             android:textColor="@color/colorAccent"
-            android:textColorHint="@color/colorAccent" />
+            android:textColorHint="@color/input_hint" />
 
         <Spinner
             android:id="@+id/genderPicker"
-            android:layout_width="200dp"
+            android:layout_marginTop="20dp"
+            android:layout_weight=".5"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:entries="@array/gender_array"
-
-
-          />
+            android:entries="@array/gender_array" />
 
     </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="10dp"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
             android:orientation="horizontal">
 
             <TextView
-                android:layout_width="200dp"
+                android:layout_weight=".5"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="Weight (in kg)"
                 android:textColor="@color/colorPrimaryDark"/>
             <TextView
-                android:layout_width="200dp"
+                android:layout_weight=".5"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="Height (in cm)"
                 android:textColor="@color/colorPrimaryDark"/>
@@ -145,48 +158,64 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="10dp"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
             android:orientation="horizontal">
-
 
             <EditText
                 android:id="@+id/weight"
-                android:layout_width="200dp"
+                android:layout_weight=".5"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:layout_marginTop="20dp"
                 android:hint="Weight (in KG)"
                 android:inputType="numberDecimal"
                 android:textColor="@color/colorAccent"
-                android:textColorHint="@color/colorAccent" />
+                android:textColorHint="@color/input_hint" />
             <EditText
                 android:id="@+id/height"
-                android:layout_width="200dp"
+                android:layout_weight=".5"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:layout_marginTop="20dp"
                 android:hint="Height (in cm)"
                 android:inputType="numberDecimal"
                 android:textColor="@color/colorAccent"
-                android:textColorHint="@color/colorAccent"
+                android:textColorHint="@color/input_hint"
                 />
         </LinearLayout>
-        <TextView
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:text="Daily Steps Goal"
-            android:textColor="@color/colorPrimaryDark"/>
 
-        <EditText
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/goal"
-            android:paddingBottom="20dp"
-            android:inputType="number"
-            android:textColor="@color/colorAccent"
-            android:textColorHint="@color/colorAccent"
-            android:hint="Daily Goals: Recommended 10,000 Steps"/>
+            android:padding="10dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Daily Steps Goal"
+                android:textColor="@color/colorPrimaryDark"/>
+        </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
+            android:layout_marginBottom="20dp"
+            android:orientation="horizontal">
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/goal"
+                android:paddingBottom="20dp"
+                android:inputType="number"
+                android:textColor="@color/colorAccent"
+                android:textColorHint="@color/input_hint"
+                android:hint="Daily Goals: Recommended 10,000 Steps"/>
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
@@ -208,39 +237,42 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:textSize="15dp"
-            android:textColor="@android:color/black"
+            android:textColor="@color/colorPrimaryDark"
             android:text="From"/>
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
             android:layout_marginTop="10dp"
+            android:focusableInTouchMode="false"
             android:id="@+id/fromHourPicker"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:textSize="15dp"
-            android:textColor="@android:color/black"
+            android:textColor="@color/colorPrimaryDark"
             android:text="To"/>
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
             android:layout_marginTop="10dp"
+            android:focusableInTouchMode="false"
             android:id="@+id/toHourPicker"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:textSize="15dp"
-            android:textColor="@android:color/black"
+            android:textColor="@color/colorPrimaryDark"
             android:text="Lunch Break"/>
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
             android:layout_marginTop="10dp"
+            android:focusableInTouchMode="false"
             android:id="@+id/lunchHourPicker"/>
         </LinearLayout>
 
