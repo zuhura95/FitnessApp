@@ -29,7 +29,7 @@
         <item>Female</item>
     </string-array>
 
-<!--    About page-->
+    <!--    About page-->
     <string name="about_app_para1">Fitness App is a simple application where you can track your daily physical activities
     and receive reminders to move more during your working hours and after that.
     </string>
@@ -38,6 +38,8 @@
     <string name="about_app_para3">
         For questions about the study or any technical issues, please contact:\nTasnim Ismail,\n+974 6632 1282
     </string>
+
+
 
 
 </resources>

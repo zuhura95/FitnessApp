@@ -39,6 +39,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation 'com.github.lzyzsd:circleprogress:1.2.1'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    implementation 'com.txusballesteros:FitChart:1.0'
 
 
     implementation 'com.google.firebase:firebase-database:16.0.4'
@@ -54,7 +55,6 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:11.8.0'
     implementation 'com.google.android.gms:play-services-fitness:18.0.0'
     implementation 'com.google.android.libraries.places:places:1.1.0'
-
 
 
 }

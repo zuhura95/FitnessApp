@@ -72,6 +72,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.w3c.dom.Text;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -82,7 +83,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
 
-     GoogleApiClient mClient;
+    GoogleApiClient mClient;
     private String TAG = "Fitness";
     private final int OAUTH_REQUEST_CODE = 200;
     private final int FINE_LOCATION_REQUEST_CODE = 101;
@@ -91,7 +92,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private FirebaseFirestore db;
 
     SharedPreferences sharedPreferences;
-    TextView helloText, stepsPercentage, dateTextView;
+    TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
     ArcProgress stepsCounter;
 
     @Override
@@ -118,6 +119,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         helloText = (TextView)headerView.findViewById(R.id.helloTextView);
         stepsPercentage = (TextView)findViewById(R.id.stepsPercent);
         dateTextView = (TextView)findViewById(R.id.todayDate);
+        calories = findViewById(R.id.caloriesTextview);
+        distance = findViewById(R.id.distanceTextview);
+        activeTime = findViewById(R.id.activetimeTextview);
 
 
         //Set current date
@@ -219,6 +223,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                         age = document.getLong("Age");
 
 
+
                         saveToLocalDB(fName,lName,gender,fromHour,toHour,lunchHour,weight,height,age);
 
 
@@ -255,12 +260,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
-
-
-    private void fetchUserGoogleFitData(){
-
-    }
 
     public void listHistorySubscription(){
         Log.d(TAG, "Fetching List of history Subscription");
@@ -329,6 +328,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         final DataReadRequest dataReadRequest = new DataReadRequest.Builder()
                 .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED)
+//                .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
+//                .aggregate(DataType.TYPE_MOVE_MINUTES,DataType.AGGREGATE_MOVE_MINUTES)
                 .bucketByTime(1, TimeUnit.DAYS)
 //                .bucketByActivityType(1, TimeUnit.MILLISECONDS)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
@@ -360,18 +362,44 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //            String info = "Bucket Type "+String.valueOf(bucket.getBucketType())
 //                    + " Activity Type: " + bucket.getActivity();
             String info = "StartTime: "+String.valueOf(bucket.getStartTime(TimeUnit.MILLISECONDS))+" EndTime: "+String.valueOf(bucket.getEndTime(TimeUnit.MILLISECONDS));
-            List<DataPoint> dp = bucket.getDataSet(DataType.AGGREGATE_STEP_COUNT_DELTA).getDataPoints();
-            for(DataPoint dataPoint : dp) {
+            List<DataPoint> steppoint = bucket.getDataSet(DataType.AGGREGATE_STEP_COUNT_DELTA).getDataPoints();
+            List<DataPoint>caloriepoint= bucket.getDataSet(DataType.TYPE_CALORIES_EXPENDED).getDataPoints();
+//            List<DataPoint> distancepoint = bucket.getDataSet(DataType.TYPE_DISTANCE_DELTA).getDataPoints();
+//            List<DataPoint> activeTimepoint = bucket.getDataSet(DataType.TYPE_MOVE_MINUTES).getDataPoints();
+
+            for(DataPoint dataPoint : steppoint) {
                 String stepCount = String.valueOf(dataPoint.getValue(Field.FIELD_STEPS));
                 stepsCounter.setProgress(Integer.parseInt(stepCount));
                 double steps = Double.parseDouble(stepCount);
                 double value =( steps / sharedPreferences.getInt("Goal",5000)) * 100;
 
-                stepsPercentage.setText(value+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
+                stepsPercentage.setText(String.valueOf(value).substring(0,5)+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
 
 
 
             }
+            for(DataPoint dataPoint : caloriepoint) {
+               String cal = String.valueOf(dataPoint.getValue(Field.FIELD_CALORIES));
+
+                calories.setText(cal.substring(0,3));
+
+
+            }
+//            for(DataPoint dataPoint : distancepoint) {
+//                String dist = String.valueOf(dataPoint.getValue(Field.FIELD_DISTANCE));
+//
+//                calories.setText(dist.substring(0,5));
+//
+//
+//            }
+//            for(DataPoint dataPoint : activeTimepoint) {
+//                String mins = String.valueOf(dataPoint.getValue(Field.FIELD_MIN));
+//
+//                calories.setText(mins.substring(0,3));
+//
+//
+//            }
+
             Log.i(TAG, info);
 
         }
@@ -382,8 +410,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         for(Bucket bucket : bucketList){
 //            String info = "Bucket Type "+String.valueOf(bucket.getBucketType())
 //                    + " Activity Type: " + bucket.getActivity();
-            String info = "StartTime: "+String.valueOf(bucket.getStartTime(TimeUnit.MILLISECONDS))
-                    +" EndTime: "+String.valueOf(bucket.getEndTime(TimeUnit.MILLISECONDS));
+            String info = "-------StartTime: "+String.valueOf(bucket.getStartTime(TimeUnit.MILLISECONDS))
+                    +" ---------EndTime: "+String.valueOf(bucket.getEndTime(TimeUnit.MILLISECONDS));
             List<DataPoint> dp = bucket.getDataSet(DataType.AGGREGATE_STEP_COUNT_DELTA).getDataPoints();
             for(DataPoint dataPoint : dp) {
                 String stepCount = String.valueOf(dataPoint.getValue(Field.FIELD_STEPS));
@@ -463,7 +491,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if(hasOAuthPermission()) {
             Log.d(TAG, "OAuth Permissions already granted");
 
-            fetchUserGoogleFitData();
             readDataFromHistoryApi();
             listAvailableDatSources();
             listHistorySubscription();
