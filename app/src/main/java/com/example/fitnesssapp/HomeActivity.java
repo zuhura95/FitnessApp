@@ -108,7 +108,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         db = FirebaseFirestore.getInstance();
         String uid = auth.getCurrentUser().getUid();
 
-        retrieveProfile(uid);
 
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -119,6 +118,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         helloText = (TextView)headerView.findViewById(R.id.helloTextView);
         stepsPercentage = (TextView)findViewById(R.id.stepsPercent);
         dateTextView = (TextView)findViewById(R.id.todayDate);
+
 
         //Set current date
         SimpleDateFormat sdf = new SimpleDateFormat("d MMM , yyyy");
@@ -133,11 +133,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         stepsCounter.setMax(sharedPreferences.getInt("Goal",5000));
 
 
+//        String name = sharedPreferences.getString("FirstName",null);
 
-
-        //Save the info to Firestore
-        String name =sharedPreferences.getString("FirstName",null);
-        helloText.setText("Hello there "+ name+" !");
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
 
@@ -178,6 +175,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     }
                 });
 
+
         mClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.SENSORS_API)
                 .addApi(Fitness.RECORDING_API)
@@ -192,13 +190,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Log.d(TAG, "Fine Location permission already granted");
             mClient.connect();
         }
+
+        retrieveUserDetails(uid);
     }
 
-    private void retrieveProfile(String uid) {
+    private void retrieveUserDetails(String uid) {
 
-
-
-        final SharedPreferences.Editor editor = sharedPreferences.edit();
         DocumentReference docRef = db.collection("users").document(uid);
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -206,39 +203,63 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
-                        String fName, lName,gender,fromHour,toHour,lunchHour;
-                        float weight,height;
-                        int age;
-                        fName = document.getString("FirstName");
-//                        lName = document.getString("LastName");
-//                        gender = document.getString("Gender");
-//                        fromHour = document.getString("FromHour");
-//                        toHour = document.getString("ToHour");
-//                        lunchHour=document.getString("LunchHour");
-//                        weight = (float) document.get("Weight");
-//                        height = (float) document.get("Height");
-//                        age = (int) document.get("Age");
 
-                        editor.putString("FirstName",fName);
-//                        editor.putString("LastName",lName);
-//                        editor.putString("Gender",gender);
-//                        editor.putString("FromHour",fromHour);
-//                        editor.putString("ToHour",toHour);
-//                        editor.putString("LunchHour",lunchHour);
-//                        editor.putFloat("Weight",weight);
-//                        editor.putFloat("Height",height);
-//                        editor.putInt("Age",age);
-                        editor.apply();
-                        helloText.setText(fName);
+                        String fName, lName,gender,fromHour,toHour,lunchHour;
+                        Double weight,height;
+                        Long age;
+                        /////// GET INFO FROM FIRESTORE
+                        fName = document.getString("FirstName");
+                        lName = document.getString("LastName");
+                        gender = document.getString("Gender");
+                        fromHour = document.getString("FromHour");
+                        toHour = document.getString("ToHour");
+                        lunchHour=document.getString("LunchHour");
+                        weight=document.getDouble("Weight");
+                        height=document.getDouble("Height");
+                        age = document.getLong("Age");
+
+
+                        saveToLocalDB(fName,lName,gender,fromHour,toHour,lunchHour,weight,height,age);
+
+
 
                     } else {
-                        Log.d(TAG, "No such document");
+                        Log.d("TAG", "No such document");
                     }
                 } else {
-                    Log.d(TAG, "get failed with ", task.getException());
+                    Log.d("TAG", "get failed with ", task.getException());
                 }
             }
         });
+    }
+
+
+    /////// SAVE INTO LOCAL DB
+
+    private void saveToLocalDB(String fName, String lName, String gender, String fromHour, String toHour, String lunchHour, Double weight,Double height, Long age) {
+
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("FirstName",fName);
+        editor.putString("LastName",lName);
+        editor.putString("Gender",gender);
+        editor.putString("FromHour",fromHour);
+        editor.putString("ToHour",toHour);
+        editor.putString("LunchHour",lunchHour);
+        editor.putFloat("Weight",Float.valueOf(String.valueOf(weight)));
+        editor.putFloat("Height",Float.valueOf(String.valueOf(height)));
+        editor.putLong("Age",age);
+        editor.apply();
+
+        helloText.setText("Hello there "+ fName +" !");
+    }
+
+
+
+
+
+    private void fetchUserGoogleFitData(){
+
     }
 
     public void listHistorySubscription(){
@@ -302,7 +323,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE,0);
         cal.set(Calendar.SECOND,0);
-//        cal.add(Calendar.DATE, -4);
         long startTime = cal.getTimeInMillis();
 
 
@@ -376,15 +396,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-
-
-
-
-
-
-
-
-
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -424,10 +435,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(HomeActivity.this, UserProfileActivity.class));
             finish();
         }
-//       else if (id == R.id.nav_locations){
-//            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
-//            finish();
-//        }
        else if (id == R.id.nav_about){
             startActivity(new Intent(HomeActivity.this, AboutActivity.class));
             finish();
@@ -456,6 +463,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if(hasOAuthPermission()) {
             Log.d(TAG, "OAuth Permissions already granted");
 
+            fetchUserGoogleFitData();
             readDataFromHistoryApi();
             listAvailableDatSources();
             listHistorySubscription();

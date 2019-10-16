@@ -73,7 +73,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputLunchHour = findViewById(R.id.lunchHourPicker);
         inputFName.setText(sharedPreferences.getString("FirstName",null));
         inputLName.setText(sharedPreferences.getString("LastName",null));
-        inputAge.setText(String.valueOf(sharedPreferences.getInt("Age",0)));
+        inputAge.setText(String.valueOf(sharedPreferences.getLong("Age",0)));
         inputHeight.setText(String.valueOf( sharedPreferences.getFloat("Height",0)));
         inputWeight.setText(String.valueOf( sharedPreferences.getFloat("Weight",0)));
         inputGender.setSelection(sharedPreferences.getInt("genderSelection",0));
@@ -159,14 +159,15 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         final String fName, lName, fromHour, toHour,lunchHour;
         final float weight;
         final  float height;
-        final  int age, selectedGender, goal ;
+        final  int  selectedGender, goal ;
+        final Long age;
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         fName = inputFName.getText().toString();
         lName = inputLName.getText().toString();
         weight = Float.parseFloat(inputWeight.getText().toString());
         height = Float.parseFloat(inputHeight.getText().toString());
-        age = Integer.parseInt(inputAge.getText().toString());
+        age = Long.valueOf(inputAge.getText().toString());
         goal = Integer.parseInt(inputGoal.getText().toString());
         fromHour = inputFromHour.getText().toString();
         toHour = inputToHour.getText().toString();
@@ -181,7 +182,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         editor.putString("LastName",lName);
         editor.putFloat("Weight",weight);
         editor.putFloat("Height",height);
-        editor.putInt("Age",age);
+        editor.putLong("Age",age);
         editor.putString("FromHour",fromHour);
         editor.putString("ToHour",toHour);
         editor.putString("LunchHour",lunchHour);

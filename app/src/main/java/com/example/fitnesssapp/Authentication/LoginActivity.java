@@ -4,10 +4,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,6 +24,9 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -28,6 +34,9 @@ public class LoginActivity extends AppCompatActivity {
     private Button signUpBtn, forgotPassBtn, signInBtn;
     private ProgressBar progressBar;
     private FirebaseAuth auth;
+    private FirebaseFirestore db;
+    SharedPreferences sharedPreferences;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +45,8 @@ public class LoginActivity extends AppCompatActivity {
 
         //Firebase auth instance
         auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
 
         //Is the User logged in already?
         if (auth.getCurrentUser() != null) {
@@ -44,6 +55,7 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(new Intent(LoginActivity.this, HomeActivity.class));
             finish();
         }
+
         setContentView(R.layout.activity_login);
 
         signInBtn = (Button) findViewById(R.id.btn_login);
@@ -110,6 +122,7 @@ public class LoginActivity extends AppCompatActivity {
                                     }
                                     else {
                                         //If permissions were already granted
+
                                         Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                                         startActivity(intent);
                                         finish();
@@ -127,4 +140,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
     }
+
+
+
 }
