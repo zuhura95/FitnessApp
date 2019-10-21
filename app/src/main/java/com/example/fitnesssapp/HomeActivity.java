@@ -29,11 +29,14 @@ import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
+import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.request.DataSourcesRequest;
+import com.google.android.gms.fitness.request.OnDataPointListener;
+import com.google.android.gms.fitness.request.SensorRequest;
 import com.google.android.gms.fitness.result.DataReadResponse;
 import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.fitness.result.ListSubscriptionsResult;
@@ -79,21 +82,26 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
 
     GoogleApiClient mClient;
     private String TAG = "Fitness";
     private final int OAUTH_REQUEST_CODE = 200;
+    private static final int REQUEST_OAUTH_REQUEST_CODE = 0x1001;
     private final int FINE_LOCATION_REQUEST_CODE = 101;
-    private final int CLIENT_API_REQUEST_CODE = 102;
     private FirebaseAuth auth;
     private FirebaseFirestore db;
+    private static OnDataPointListener stepListener;
+    private static OnDataPointListener distanceListener;
 
     SharedPreferences sharedPreferences;
     TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
     ArcProgress stepsCounter;
+    private float distanceInMeters;
+    private float kCals;
+    private float movemins;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -180,23 +188,286 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 });
 
 
-        mClient = new GoogleApiClient.Builder(this)
-                .addApi(Fitness.SENSORS_API)
-                .addApi(Fitness.RECORDING_API)
-                .addApi(Fitness.HISTORY_API)
-                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this,new String[] {Manifest.permission.ACCESS_FINE_LOCATION},FINE_LOCATION_REQUEST_CODE);
-        else{
-            Log.d(TAG, "Fine Location permission already granted");
-            mClient.connect();
+
+
+            FitnessOptions fitnessOptions = FitnessOptions.builder()
+                    .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                    .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                    .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
+                    .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
+                    .addDataType(DataType.TYPE_MOVE_MINUTES,FitnessOptions.ACCESS_READ)
+                    .build();
+
+        // check if app has permissions
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount( this), fitnessOptions)) {
+            GoogleSignIn.requestPermissions(
+                    this,
+                    REQUEST_OAUTH_REQUEST_CODE,
+                    GoogleSignIn.getLastSignedInAccount( this),
+                    fitnessOptions);
+        } else {
+            accessGoogleFit();
         }
 
         retrieveUserDetails(uid);
     }
+
+    private void accessGoogleFit() {
+
+
+        // Subscribe to recordings
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+                .subscribe(DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+
+
+        Fitness.getRecordingClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+                .subscribe(DataType.TYPE_STEP_COUNT_DELTA)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+        Fitness.getRecordingClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+                .subscribe(DataType.TYPE_DISTANCE_DELTA)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+        Fitness.getRecordingClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+                .subscribe(DataType.TYPE_CALORIES_EXPENDED)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+
+        Fitness.getRecordingClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+                .subscribe(DataType.TYPE_MOVE_MINUTES)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+        // end of subscriptions
+
+
+
+        // prepare to get history
+
+        Calendar cal = Calendar.getInstance();
+        long endTime = cal.getTimeInMillis();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE,0);
+        cal.set(Calendar.SECOND,0);
+        long startTime = cal.getTimeInMillis();
+
+        DateFormat dateFormat = DateFormat.getDateTimeInstance();
+        Log.d(TAG,"Range Start: " + dateFormat.format(startTime));
+        Log.d(TAG, "Range End: " + dateFormat.format(endTime));
+
+        DataReadRequest readRequest = new DataReadRequest.Builder()
+                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
+                .aggregate(DataType.TYPE_CALORIES_EXPENDED,DataType.AGGREGATE_CALORIES_EXPENDED)
+                .aggregate(DataType.TYPE_MOVE_MINUTES,DataType.AGGREGATE_MOVE_MINUTES)
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .bucketByTime(1, TimeUnit.DAYS)
+                .build();
+
+        // get history
+        Fitness.getHistoryClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+                .readData(readRequest)
+                .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                    @Override
+                    public void onSuccess(DataReadResponse dataReadResponse) {
+                        Log.d(TAG, "successfully got history");
+                        getDataSetsFromBucket(dataReadResponse);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "failed to get history", e);
+                    }
+                });
+
+
+    }
+
+    private void getDataSetsFromBucket(DataReadResponse dataReadResponse) {
+        // number of buckets would always be 1 (bucket size was set to 365 days in readRequest)
+        if (dataReadResponse.getBuckets().size() > 0) {
+            Log.d(TAG, "Number of returned buckets of DataSets is: " + dataReadResponse.getBuckets().size());
+            for (Bucket bucket : dataReadResponse.getBuckets()) {
+                List<DataSet> dataSets = bucket.getDataSets();
+                for (DataSet dataSet : dataSets) {
+                    parseDataSet(dataSet);
+                }
+            }
+        }
+    }
+
+    private void parseDataSet(DataSet dataSet) {
+        Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+        DateFormat dateFormat = DateFormat.getTimeInstance();
+
+        int totalStepsFromDataPoints = 0;
+        float distanceTraveledFromDataPoints = 0;
+        float kcals = 0;
+        long mins = 0;
+
+        for (DataPoint dp : dataSet.getDataPoints()) {
+            Log.d(TAG, "Data point:");
+            Log.d(TAG, "\tType: " + dp.getDataType().getName());
+            Log.d(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+            Log.d(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+
+
+
+            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES) ;
+            movemins += mins;
+            activeTime.setText(String.format("%.2f", movemins/1000.00));
+
+
+            for (Field field : dp.getDataType().getFields()) {
+                Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
+
+                // increment the steps or distance
+                if (field.getName().equals("steps")) {
+                    totalStepsFromDataPoints += dp.getValue(field).asInt();
+
+                } else if (field.getName().equals("distance")) {
+                    distanceTraveledFromDataPoints += dp.getValue(field).asFloat();
+                }else if (field.getName().equals("calories")) {
+                    kcals += dp.getValue(field).asFloat();
+                }
+
+
+
+
+            }
+        }
+
+        //////////////////// update the proper labels/////////////////////
+        if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
+           // userSteps.setText(String.valueOf(totalStepsFromDataPoints));
+            String stepCount = String.valueOf(totalStepsFromDataPoints);
+                stepsCounter.setProgress(Integer.parseInt(stepCount));
+               double steps = Double.parseDouble(stepCount);
+               double value =( steps / sharedPreferences.getInt("Goal",5000)) * 100;
+//
+                stepsPercentage.setText(value+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
+
+
+        } else if (dataSet.getDataType().getName().equals("com.google.distance.delta")) {
+            distance.setText(String.format("%.2f", distanceTraveledFromDataPoints/1000.00));
+            distanceInMeters = distanceTraveledFromDataPoints;
+        }
+
+        else if (dataSet.getDataType().getName().equals("com.google.calories.expended")) {
+            calories.setText(String.format("%.2f", kcals/1000.00));
+            kCals = kcals;
+        }
+
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "Resumed app");
+
+        // initialize the step listener
+        stepListener = new OnDataPointListener() {
+            @Override
+            public void onDataPoint(DataPoint dataPoint) {
+                for (Field field : dataPoint.getDataType().getFields()) {
+                    Log.d(TAG, "Field: " + field.getName());
+                    Log.d(TAG, "Value: " + dataPoint.getValue(field));
+
+                    if (field.getName().equals("steps")) {
+                       int currentSteps = stepsCounter.getProgress();
+                        currentSteps = currentSteps + dataPoint.getValue(field).asInt();
+                        //userSteps.setText(Integer.toString(currentSteps));
+                        stepsCounter.setProgress(currentSteps);
+                        double steps = Double.parseDouble(String.valueOf(currentSteps));
+                        double value =( steps / sharedPreferences.getInt("Goal",5000)) * 100;
+//
+                        stepsPercentage.setText(value+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
+
+
+                    }
+                }
+            }
+        };
+
+        // register the step listener
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))) {
+            Log.d(TAG, "Not signed in...");
+        } else {
+            Fitness.getSensorsClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+                    .add(
+                            new SensorRequest.Builder()
+                                    .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+                                    .setSamplingRate(10, TimeUnit.SECONDS)
+                                    .build(), stepListener
+                    )
+                    .addOnCompleteListener(
+                            new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Log.d(TAG, "Step Listener Registered.");
+                                    } else {
+                                        Log.e(TAG, "Step Listener not registered", task.getException());
+                                    }
+                                }
+                            }
+                    );
+        }
+    }
+
 
 
 
@@ -263,256 +534,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-    public void listHistorySubscription(){
-        Log.d(TAG, "Fetching List of history Subscription");
-
-        PendingResult<ListSubscriptionsResult> pendingResult =Fitness.RecordingApi.listSubscriptions(mClient);
-        pendingResult.setResultCallback(new ResultCallback<ListSubscriptionsResult>() {
-            @Override
-            public void onResult(@NonNull ListSubscriptionsResult listSubscriptionsResult) {
-                Log.d(TAG, "Recording Subscription List fetched successfully");
-                Log.i(TAG, listSubscriptionsResult.toString());
-                if(listSubscriptionsResult.getSubscriptions().size() < 1){
-                    Log.d(TAG, "Subscription List empty.");
-                    createRecordingSubscription();
-                }
-
-            }
-        });
-    }
-
-    private void listAvailableDatSources() {
-        Log.d(TAG, "Fetching fitness data source");
-        Fitness.getSensorsClient(this, GoogleSignIn.getLastSignedInAccount(this))
-                .findDataSources(new DataSourcesRequest.Builder()
-                        .setDataTypes(DataType.TYPE_STEP_COUNT_DELTA)
-                        .setDataTypes(DataType.TYPE_CALORIES_EXPENDED)
-                        .setDataSourceTypes(DataSource.TYPE_RAW)
-                        .build())
-                .addOnSuccessListener(new OnSuccessListener<List<DataSource>>() {
-                    @Override
-                    public void onSuccess(List<DataSource> dataSources) {
-                        Log.d(TAG, "Data source fetched successfully. Find data list below.");
-                        Log.i(TAG, dataSources.toString());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG,"failed", e);
-                    }
-                });
-    }
-
-    private void createRecordingSubscription() {
-        Log.d(TAG, "Creating A recording subscription");
-
-        PendingResult<Status> pendingResult = Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA);
-        pendingResult.setResultCallback(new ResultCallback<Status>() {
-            @Override
-            public void onResult(@NonNull Status status) {
-                Log.d(TAG, "Recording subscription created successfully.");
-                Log.i(TAG, status.getStatus().toString());
-            }
-        });
-    }
-
-    private void readDataFromHistoryApi(){
-        Log.d(TAG, "Accessing data from History API");
-
-        Calendar cal = Calendar.getInstance();
-        long endTime = cal.getTimeInMillis();
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE,0);
-        cal.set(Calendar.SECOND,0);
-        long startTime = cal.getTimeInMillis();
 
 
 
-        final DataReadRequest dataReadRequest = new DataReadRequest.Builder()
-                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-                .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED)
-//                .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
-//                .aggregate(DataType.TYPE_MOVE_MINUTES,DataType.AGGREGATE_MOVE_MINUTES)
-                .bucketByTime(1, TimeUnit.DAYS)
-//                .bucketByActivityType(1, TimeUnit.MILLISECONDS)
-                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                .build();
-        PendingResult<DataReadResult> pendingResult = Fitness.HistoryApi.readData(mClient,dataReadRequest);
-        pendingResult.setResultCallback(new ResultCallback<DataReadResult>() {
-            @Override
-            public void onResult(@NonNull DataReadResult dataReadResult) {
-                Log.d(TAG, "History API data received");
-                List<Bucket> bucket = dataReadResult.getBuckets();
-                if(bucket.size() == 1){
-                    Log.d(TAG, "Single bucket data retrieved");
-                    displayBucketData(bucket);
-                    return;
-                }
-                else if(bucket.size() > 1){
-                    Log.d(TAG, "Multiple bucket data retrieved");
-                    logBucketData(bucket);
-                    return;
-                }
-                Log.e(TAG, "Unexpected bucket size");
-            }
-        });
-    }
-
-    private void readDistanceAndMoveMins() {
-        Log.d(TAG, "Accessing data from History API");
-
-        Calendar cal = Calendar.getInstance();
-        long endTime = cal.getTimeInMillis();
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE,0);
-        cal.set(Calendar.SECOND,0);
-        long startTime = cal.getTimeInMillis();
-
-        final DataReadRequest dataReadRequest = new DataReadRequest.Builder()
-                .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
-                .aggregate(DataType.TYPE_MOVE_MINUTES,DataType.AGGREGATE_MOVE_MINUTES)
-                .bucketByTime(1, TimeUnit.DAYS)
-//                .bucketByActivityType(1, TimeUnit.MILLISECONDS)
-                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                .build();
-        PendingResult<DataReadResult> pendingResult = Fitness.HistoryApi.readData(mClient,dataReadRequest);
-        pendingResult.setResultCallback(new ResultCallback<DataReadResult>() {
-            @Override
-            public void onResult(@NonNull DataReadResult dataReadResult) {
-                Log.d(TAG, "History API data received");
-                List<Bucket> lbucket = dataReadResult.getBuckets();
-                if(lbucket.size() == 1){
-                    Log.d(TAG, "Single bucket data retrieved");
-                    displayBucketData2(lbucket);
-                    return;
-                }
-                else if(lbucket.size() > 1){
-                    Log.d(TAG, "Multiple bucket data retrieved");
-                    logBucketData(lbucket);
-                    return;
-                }
-                Log.e(TAG, "Unexpected bucket size");
-            }
-        });
-
-    }
-
-    private void displayBucketData2(List<Bucket> lbucket) {
-        Log.d(TAG, "Displaying Bucket data");
-        for(Bucket bucket : lbucket){
-//            String info = "Bucket Type "+String.valueOf(bucket.getBucketType())
-//                    + " Activity Type: " + bucket.getActivity();
-            String info = "StartTime: "+String.valueOf(bucket.getStartTime(TimeUnit.MILLISECONDS))+" EndTime: "+String.valueOf(bucket.getEndTime(TimeUnit.MILLISECONDS));
-//            List<DataPoint> steppoint = bucket.getDataSet(DataType.AGGREGATE_STEP_COUNT_DELTA).getDataPoints();
-//            List<DataPoint>caloriepoint= bucket.getDataSet(DataType.TYPE_CALORIES_EXPENDED).getDataPoints();
-            List<DataPoint> distancepoint = bucket.getDataSet(DataType.AGGREGATE_DISTANCE_DELTA).getDataPoints();
-            List<DataPoint> activeTimepoint = bucket.getDataSet(DataType.TYPE_MOVE_MINUTES).getDataPoints();
-
-//            for(DataPoint dataPoint : steppoint) {
-//                String stepCount = String.valueOf(dataPoint.getValue(Field.FIELD_STEPS));
-//                stepsCounter.setProgress(Integer.parseInt(stepCount));
-//                double steps = Double.parseDouble(stepCount);
-//                double value =( steps / sharedPreferences.getInt("Goal",5000)) * 100;
-//
-//                stepsPercentage.setText(value+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
-//
-//
-//
-//            }
-//            for(DataPoint dataPoint : caloriepoint) {
-//                String cal = String.valueOf(dataPoint.getValue(Field.FIELD_CALORIES));
-//
-//                calories.setText(cal.substring(0,3));
-//
-//
-//            }
-            for(DataPoint dataPoint : distancepoint) {
-                String dist = String.valueOf(dataPoint.getValue(Field.FIELD_DISTANCE));
-
-                calories.setText(dist);
-
-
-            }
-            for(DataPoint dataPoint : activeTimepoint) {
-                String mins = String.valueOf(dataPoint.getValue(Field.FIELD_DURATION));
-
-                calories.setText(mins);
-
-
-            }
-
-            Log.i(TAG, info);
-
-        }
-
-    }
-
-    private void displayBucketData(List<Bucket> bucketList) {
-        Log.d(TAG, "Displaying Bucket data");
-        for(Bucket bucket : bucketList){
-//            String info = "Bucket Type "+String.valueOf(bucket.getBucketType())
-//                    + " Activity Type: " + bucket.getActivity();
-            String info = "StartTime: "+String.valueOf(bucket.getStartTime(TimeUnit.MILLISECONDS))+" EndTime: "+String.valueOf(bucket.getEndTime(TimeUnit.MILLISECONDS));
-            List<DataPoint> steppoint = bucket.getDataSet(DataType.AGGREGATE_STEP_COUNT_DELTA).getDataPoints();
-            List<DataPoint>caloriepoint= bucket.getDataSet(DataType.TYPE_CALORIES_EXPENDED).getDataPoints();
-//            List<DataPoint> distancepoint = bucket.getDataSet(DataType.TYPE_DISTANCE_DELTA).getDataPoints();
-//            List<DataPoint> activeTimepoint = bucket.getDataSet(DataType.TYPE_MOVE_MINUTES).getDataPoints();
-
-            for(DataPoint dataPoint : steppoint) {
-                String stepCount = String.valueOf(dataPoint.getValue(Field.FIELD_STEPS));
-                stepsCounter.setProgress(Integer.parseInt(stepCount));
-                double steps = Double.parseDouble(stepCount);
-                double value =( steps / sharedPreferences.getInt("Goal",5000)) * 100;
-
-                stepsPercentage.setText(value+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
-
-
-
-            }
-            for(DataPoint dataPoint : caloriepoint) {
-               String cal = String.valueOf(dataPoint.getValue(Field.FIELD_CALORIES));
-
-                calories.setText(cal.substring(0,3));
-
-
-            }
-//            for(DataPoint dataPoint : distancepoint) {
-//                String dist = String.valueOf(dataPoint.getValue(Field.FIELD_DISTANCE));
-//
-//                calories.setText(dist.substring(0,5));
-//
-//
-//            }
-//            for(DataPoint dataPoint : activeTimepoint) {
-//                String mins = String.valueOf(dataPoint.getValue(Field.FIELD_MIN));
-//
-//                calories.setText(mins.substring(0,3));
-//
-//
-//            }
-
-            Log.i(TAG, info);
-
-        }
-    }
-
-    private void logBucketData(List<Bucket> bucketList) {
-        Log.d(TAG, "Displaying Bucket data");
-        for(Bucket bucket : bucketList){
-//            String info = "Bucket Type "+String.valueOf(bucket.getBucketType())
-//                    + " Activity Type: " + bucket.getActivity();
-            String info = "-------StartTime: "+String.valueOf(bucket.getStartTime(TimeUnit.MILLISECONDS))
-                    +" ---------EndTime: "+String.valueOf(bucket.getEndTime(TimeUnit.MILLISECONDS));
-            List<DataPoint> dp = bucket.getDataSet(DataType.AGGREGATE_STEP_COUNT_DELTA).getDataPoints();
-            for(DataPoint dataPoint : dp) {
-                String stepCount = String.valueOf(dataPoint.getValue(Field.FIELD_STEPS));
-                info += " Aggregate Steps: " + stepCount;
-            }
-            Log.i(TAG, info);
-
-        }
-    }
 
 
 
@@ -577,94 +601,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "Google API connected");
-
-        if(hasOAuthPermission()) {
-            Log.d(TAG, "OAuth Permissions already granted");
-
-            readDataFromHistoryApi();
-            readDistanceAndMoveMins();
-            listAvailableDatSources();
-            listHistorySubscription();
-        }
-        else {
-            Log.e(TAG, "OAuth Permission not granted.");
-            requestOAuthPermission();
-        }
-    }
-
 
 
     @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    private boolean hasOAuthPermission(){
-        Log.d(TAG, "Checking for OAuth permission");
-
-        FitnessOptions fitnessOptions = FitnessOptions.builder()
-                .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
-                .build();
-        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this),fitnessOptions);
-    }
-
-    private void requestOAuthPermission(){
-        Log.d(TAG, "Attempting OAuth 2.0");
-
-        FitnessOptions fitnessOptions = FitnessOptions.builder()
-                .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
-                .build();
-        GoogleSignIn.requestPermissions(this,OAUTH_REQUEST_CODE,GoogleSignIn.getLastSignedInAccount(this),fitnessOptions);
-    }
-
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        if(connectionResult.getErrorCode() == FitnessStatusCodes.SIGN_IN_REQUIRED) {
-            Log.d(TAG, "Client API connection failed. Attempting resolution if possible");
-            Log.e(TAG, connectionResult.toString());
-            try {
-                connectionResult.startResolutionForResult(HomeActivity.this, CLIENT_API_REQUEST_CODE);
-            } catch (IntentSender.SendIntentException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch(requestCode){
-            case FINE_LOCATION_REQUEST_CODE: {
-                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    Log.d(TAG, "Fine location permission granted");
-                    mClient.connect();
-                }
-                else    finish();
-            }
-            break;
-        }
-    }
-
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(requestCode == CLIENT_API_REQUEST_CODE){
-            if(resultCode == RESULT_OK){
-                Log.d(TAG, "Api client connection successful");
-                mClient.connect();
-            }
-        }
-        else if(requestCode == OAUTH_REQUEST_CODE){
-            if(resultCode == RESULT_OK) {
-                Log.d(TAG, "OAuth request complete. Fitness permission authorised");
-
-
-                readDataFromHistoryApi();
-                readDistanceAndMoveMins();
-//                listAvailableDatSources();
-                listHistorySubscription();
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
+                Log.d(TAG, "accessing...");
+                accessGoogleFit();
             }
         }
     }
