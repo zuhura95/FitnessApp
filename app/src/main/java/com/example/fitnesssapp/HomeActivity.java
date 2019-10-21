@@ -198,6 +198,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         retrieveUserDetails(uid);
     }
 
+
+
     private void retrieveUserDetails(String uid) {
 
         DocumentReference docRef = db.collection("users").document(uid);
@@ -284,6 +286,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Fitness.getSensorsClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .findDataSources(new DataSourcesRequest.Builder()
                         .setDataTypes(DataType.TYPE_STEP_COUNT_DELTA)
+                        .setDataTypes(DataType.TYPE_CALORIES_EXPENDED)
                         .setDataSourceTypes(DataSource.TYPE_RAW)
                         .build())
                 .addOnSuccessListener(new OnSuccessListener<List<DataSource>>() {
@@ -356,6 +359,95 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
+    private void readDistanceAndMoveMins() {
+        Log.d(TAG, "Accessing data from History API");
+
+        Calendar cal = Calendar.getInstance();
+        long endTime = cal.getTimeInMillis();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE,0);
+        cal.set(Calendar.SECOND,0);
+        long startTime = cal.getTimeInMillis();
+
+        final DataReadRequest dataReadRequest = new DataReadRequest.Builder()
+                .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
+                .aggregate(DataType.TYPE_MOVE_MINUTES,DataType.AGGREGATE_MOVE_MINUTES)
+                .bucketByTime(1, TimeUnit.DAYS)
+//                .bucketByActivityType(1, TimeUnit.MILLISECONDS)
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .build();
+        PendingResult<DataReadResult> pendingResult = Fitness.HistoryApi.readData(mClient,dataReadRequest);
+        pendingResult.setResultCallback(new ResultCallback<DataReadResult>() {
+            @Override
+            public void onResult(@NonNull DataReadResult dataReadResult) {
+                Log.d(TAG, "History API data received");
+                List<Bucket> lbucket = dataReadResult.getBuckets();
+                if(lbucket.size() == 1){
+                    Log.d(TAG, "Single bucket data retrieved");
+                    displayBucketData2(lbucket);
+                    return;
+                }
+                else if(lbucket.size() > 1){
+                    Log.d(TAG, "Multiple bucket data retrieved");
+                    logBucketData(lbucket);
+                    return;
+                }
+                Log.e(TAG, "Unexpected bucket size");
+            }
+        });
+
+    }
+
+    private void displayBucketData2(List<Bucket> lbucket) {
+        Log.d(TAG, "Displaying Bucket data");
+        for(Bucket bucket : lbucket){
+//            String info = "Bucket Type "+String.valueOf(bucket.getBucketType())
+//                    + " Activity Type: " + bucket.getActivity();
+            String info = "StartTime: "+String.valueOf(bucket.getStartTime(TimeUnit.MILLISECONDS))+" EndTime: "+String.valueOf(bucket.getEndTime(TimeUnit.MILLISECONDS));
+//            List<DataPoint> steppoint = bucket.getDataSet(DataType.AGGREGATE_STEP_COUNT_DELTA).getDataPoints();
+//            List<DataPoint>caloriepoint= bucket.getDataSet(DataType.TYPE_CALORIES_EXPENDED).getDataPoints();
+            List<DataPoint> distancepoint = bucket.getDataSet(DataType.AGGREGATE_DISTANCE_DELTA).getDataPoints();
+            List<DataPoint> activeTimepoint = bucket.getDataSet(DataType.TYPE_MOVE_MINUTES).getDataPoints();
+
+//            for(DataPoint dataPoint : steppoint) {
+//                String stepCount = String.valueOf(dataPoint.getValue(Field.FIELD_STEPS));
+//                stepsCounter.setProgress(Integer.parseInt(stepCount));
+//                double steps = Double.parseDouble(stepCount);
+//                double value =( steps / sharedPreferences.getInt("Goal",5000)) * 100;
+//
+//                stepsPercentage.setText(value+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
+//
+//
+//
+//            }
+//            for(DataPoint dataPoint : caloriepoint) {
+//                String cal = String.valueOf(dataPoint.getValue(Field.FIELD_CALORIES));
+//
+//                calories.setText(cal.substring(0,3));
+//
+//
+//            }
+            for(DataPoint dataPoint : distancepoint) {
+                String dist = String.valueOf(dataPoint.getValue(Field.FIELD_DISTANCE));
+
+                calories.setText(dist);
+
+
+            }
+            for(DataPoint dataPoint : activeTimepoint) {
+                String mins = String.valueOf(dataPoint.getValue(Field.FIELD_DURATION));
+
+                calories.setText(mins);
+
+
+            }
+
+            Log.i(TAG, info);
+
+        }
+
+    }
+
     private void displayBucketData(List<Bucket> bucketList) {
         Log.d(TAG, "Displaying Bucket data");
         for(Bucket bucket : bucketList){
@@ -373,7 +465,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 double steps = Double.parseDouble(stepCount);
                 double value =( steps / sharedPreferences.getInt("Goal",5000)) * 100;
 
-                stepsPercentage.setText(String.valueOf(value).substring(0,5)+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
+                stepsPercentage.setText(value+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
 
 
 
@@ -492,6 +584,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Log.d(TAG, "OAuth Permissions already granted");
 
             readDataFromHistoryApi();
+            readDistanceAndMoveMins();
             listAvailableDatSources();
             listHistorySubscription();
         }
@@ -500,6 +593,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             requestOAuthPermission();
         }
     }
+
+
 
     @Override
     public void onConnectionSuspended(int i) {
@@ -565,7 +660,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             if(resultCode == RESULT_OK) {
                 Log.d(TAG, "OAuth request complete. Fitness permission authorised");
 
+
                 readDataFromHistoryApi();
+                readDistanceAndMoveMins();
 //                listAvailableDatSources();
                 listHistorySubscription();
             }
