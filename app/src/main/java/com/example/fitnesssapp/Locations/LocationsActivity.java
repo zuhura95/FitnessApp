@@ -44,7 +44,7 @@ public class LocationsActivity extends AppCompatActivity implements LocationList
     private static final int FINE_LOCATION_REQUEST_CODE = 101 ;
     private static final int PERMISSION_REQUEST_LOCATION = 0;
     private ListView listview;
-    private static final String API_KEY = "AIzaSyD70lC0DyYAtzUojP6fjotDk0yEBSTs4f0";
+    private static final String API_KEY = "AIzaSyCzaZKM2YSOlxBaRGRvzQVkbElMfivcgZc";
     private static final String PLACES_API_BASE = "https://maps.googleapis.com/maps/api/place";
     private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
     private static final String TYPE_DETAILS = "/details";

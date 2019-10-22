@@ -206,7 +206,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
             FitnessOptions fitnessOptions = FitnessOptions.builder()
-                    .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
                     .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
                     .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
                     .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
@@ -247,20 +246,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 });
 
 
-        Fitness.getRecordingClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
-                .subscribe(DataType.TYPE_STEP_COUNT_DELTA)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Successfully subscribed");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "There was a problem subscribing...", e);
-                    }
-                });
+
         Fitness.getRecordingClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
                 .subscribe(DataType.TYPE_DISTANCE_DELTA)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -513,7 +499,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Fitness.getSensorsClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
                     .add(
                             new SensorRequest.Builder()
-                                    .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+                                    .setDataType(DataType.AGGREGATE_STEP_COUNT_DELTA)
                                     .setSamplingRate(10, TimeUnit.SECONDS)
                                     .build(), stepListener
                     )
