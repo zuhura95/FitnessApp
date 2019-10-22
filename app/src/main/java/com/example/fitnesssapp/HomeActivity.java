@@ -152,7 +152,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         //set the steps counter maximum value to goal set
         stepsCounter.setMax(sharedPreferences.getInt("Goal",5000));
 
-        BarChart chart = (BarChart) findViewById(R.id.chart);
+//        BarChart chart = (BarChart) findViewById(R.id.chart);
 
 //        BarDataSet barDataSet = new BarDataSet(getDataSet(), "SETS");
 //        BarData data = new BarData((IBarDataSet) getXAxisValues(), barDataSet);
@@ -390,13 +390,16 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
                 // increment the steps or distance
                 if (field.getName().equals("steps")) {
-                    totalStepsFromDataPoints += dp.getValue(field).asInt();
+                    totalStepsFromDataPoints = dp.getValue(field).asInt();
 
                 } else if (field.getName().equals("distance")) {
                     distanceTraveledFromDataPoints += dp.getValue(field).asFloat();
                 }else if (field.getName().equals("calories")) {
                     kcals += dp.getValue(field).asFloat();
                 }
+//                }else if (field.getName().equals("duration")) {
+//                    mins += dp.getValue(field).asInt();
+//                }
 
 
 
@@ -424,6 +427,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             calories.setText(String.format("%.2f", kcals/1000.00));
             kCals = kcals;
         }
+//        else if (dataSet.getDataType().getName().equals(" com.google.active_minutes")) {
+//            activeTime.setText( mins);
+////            kCals = kcals;
+//        }
 
 
     }
