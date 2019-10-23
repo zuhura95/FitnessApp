@@ -18,9 +18,27 @@
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/CustomActionBar" />
 
+<!--        <com.google.android.material.tabs.TabLayout-->
+<!--            android:id="@+id/tabs"-->
+<!--            app:tabBackground="@drawable/tab_background"-->
+<!--            app:tabGravity="fill"-->
+<!--            app:tabMode="scrollable"-->
+<!--            android:layout_margin="5dp"-->
+<!--            app:tabSelectedTextColor="#FFFFFF"-->
+<!--            android:clipToPadding="false"-->
+<!--            app:tabPaddingStart="10dp"-->
+<!--            app:tabPaddingEnd="10dp"-->
+<!--            app:tabIndicatorHeight="0dp"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content" />-->
+
+
     </com.google.android.material.appbar.AppBarLayout>
 
+
+
     <include layout="@layout/content_home" />
+
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

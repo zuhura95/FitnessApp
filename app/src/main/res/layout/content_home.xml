@@ -97,7 +97,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="-----"
-                android:padding="10dp"
+                android:paddingTop="10dp"
                 android:textColor="@color/white"/>
                 <TextView
                     android:layout_width="wrap_content"
@@ -188,13 +188,67 @@
             </LinearLayout>
 
 
+
         </LinearLayout>
 
 
 
-        <include layout="@layout/activity_graphs"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <com.github.mikephil.charting.charts.BarChart
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:id="@+id/chart"
+                >
+
+            </com.github.mikephil.charting.charts.BarChart>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+
+            >
+
+            <Button
+                android:layout_marginRight="20dp"
+                android:layout_width="50dp"
+                android:layout_height="25dp"
+                android:text="DAY"
+                android:textSize="10dp"
+                android:id="@+id/day_button"
+                android:textColor="@color/white"
+                android:background="@drawable/tab_background"/>
+            <Button
+                android:layout_marginRight="20dp"
+                android:layout_marginLeft="20dp"
+                android:layout_width="50dp"
+                android:layout_height="25dp"
+                android:text="WEEK"
+                android:textSize="10dp"
+                android:id="@+id/week_button"
+                android:textColor="@color/white"
+                android:background="@drawable/tab_background"/>
+            <Button
+                android:layout_marginRight="20dp"
+                android:layout_marginLeft="20dp"
+                android:layout_width="50dp"
+                android:layout_height="25dp"
+                android:text="MONTH"
+                android:id="@+id/month_button"
+                android:textSize="10dp"
+                android:textColor="@color/white"
+                android:background="@drawable/tab_background"/>
+        </LinearLayout>
+
 
 
     </LinearLayout>
     </ScrollView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

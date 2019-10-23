@@ -66,6 +66,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.view.Menu;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -110,6 +111,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private float kCals;
     private float movemins;
 
+    Button daybtn,weekbtn, monthbtn;
+    BarChart chart;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +122,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(getString(R.string.title_activity_home));
         setSupportActionBar(toolbar);
+        chart = (BarChart) findViewById(R.id.chart);
 
 
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
@@ -152,15 +157,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         //set the steps counter maximum value to goal set
         stepsCounter.setMax(sharedPreferences.getInt("Goal",5000));
 
-//        BarChart chart = (BarChart) findViewById(R.id.chart);
 
-//        BarDataSet barDataSet = new BarDataSet(getDataSet(), "SETS");
-//        BarData data = new BarData((IBarDataSet) getXAxisValues(), barDataSet);
-//        chart.setData(data);
-////        chart.setDescription();
-//        chart.animateXY(2000, 2000);
-//        chart.invalidate();
-//        String name = sharedPreferences.getString("FirstName",null);
 
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -224,6 +221,29 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
         retrieveUserDetails(uid);
+
+        daybtn = findViewById(R.id.day_button);
+        weekbtn = findViewById(R.id.week_button);
+        monthbtn = findViewById(R.id.month_button);
+
+        daybtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(HomeActivity.this, "DAAY", Toast.LENGTH_SHORT).show();
+            }
+        });
+        weekbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(HomeActivity.this, "WWEEEK", Toast.LENGTH_SHORT).show();
+            }
+        });
+        monthbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(HomeActivity.this, "MOOONTHJ", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void accessGoogleFit() {
