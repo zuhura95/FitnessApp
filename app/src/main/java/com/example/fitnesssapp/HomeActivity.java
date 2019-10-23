@@ -2,12 +2,15 @@ package com.example.fitnesssapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 
 
@@ -16,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 
+import com.example.fitnesssapp.services.AppWorker;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.BarData;
@@ -58,12 +62,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.Observer;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import android.view.Menu;
 import android.widget.Button;
@@ -221,17 +230,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
         retrieveUserDetails(uid);
+        displayNotification();
 
         daybtn = findViewById(R.id.day_button);
         weekbtn = findViewById(R.id.week_button);
         monthbtn = findViewById(R.id.month_button);
 
-        daybtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(HomeActivity.this, "DAAY", Toast.LENGTH_SHORT).show();
-            }
-        });
+
         weekbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -244,6 +249,44 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 Toast.makeText(HomeActivity.this, "MOOONTHJ", Toast.LENGTH_SHORT).show();
             }
         });
+
+
+//        //creating a work request
+//        final OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(AppWorker.class).build();
+
+        daybtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                WorkManager.getInstance().enqueue(request);//performs the work
+
+            }
+        });
+
+//        //display status of work
+//        WorkManager.getInstance().getWorkInfoByIdLiveData(request.getId()).observe(this, new Observer<WorkInfo>() {
+//            @Override
+//            public void onChanged(WorkInfo workInfo) {
+//                String status = workInfo.getState().name();
+//                Toast.makeText(HomeActivity.this, status, Toast.LENGTH_SHORT).show();
+//            }
+//        });
+
+    }
+
+    private void displayNotification() {
+        NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            NotificationChannel channel = new NotificationChannel("fitnessapp","fitnessapp",NotificationManager.IMPORTANCE_DEFAULT);
+            manager.createNotificationChannel(channel);
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),"fitnessapp")
+                .setContentTitle("Keep Staying Fit")
+                .setContentText("Fetching Steps")
+                .setAutoCancel(false)
+                .setOngoing(true)
+                .setSmallIcon(R.drawable.ic_person_walk);
+        manager.notify(1, builder.build());
     }
 
     private void accessGoogleFit() {
