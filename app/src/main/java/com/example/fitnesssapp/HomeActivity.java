@@ -10,6 +10,8 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.app.Dialog;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -97,13 +99,16 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
 
-    GoogleApiClient mClient;
+
     private String TAG = "Fitness";
     private final int OAUTH_REQUEST_CODE = 200;
     private static final int REQUEST_OAUTH_REQUEST_CODE = 0x1001;
@@ -122,6 +127,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     Button daybtn,weekbtn, monthbtn;
     BarChart chart;
+    int i=0;
 
 
     @Override
@@ -131,7 +137,39 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(getString(R.string.title_activity_home));
         setSupportActionBar(toolbar);
+
+//        //Display health tips pop up once a day
+//        Calendar calendar = Calendar.getInstance();
+//        int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
+//        SharedPreferences settings = getSharedPreferences("PREFS",0);
+//        int lastDay = settings.getInt("day", 0);
+//
+//        if (lastDay != currentDay) {
+//            SharedPreferences.Editor editor = settings.edit();
+//            editor.putInt("day", currentDay);
+//            editor.commit();
+//
+//            //run code that will be displayed once a day
+//            Toast.makeText(this, "Hello!!!! Can you see me???", Toast.LENGTH_SHORT).show();
+//            Log.d(TAG, "Different!");
+//        } else {
+//            Toast.makeText(this, "Same day again!", Toast.LENGTH_SHORT).show();
+//            Log.d("MYINT", "Current Day: " + currentDay);
+//            Log.d("MYINT", "Last Day: " + lastDay);
+//
+//            startActivity(new Intent(HomeActivity.this, Popup.class));
+//
+//
+//        }
+
         chart = (BarChart) findViewById(R.id.chart);
+        BarDataSet barDataSet = new BarDataSet(dataValue1(),"DATA SET 1");
+        BarData barData = new BarData();
+        barData.addDataSet(barDataSet);
+
+        //add to bar chart
+        chart.setData(barData);
+        chart.invalidate();
 
 
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
@@ -163,7 +201,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         stepsCounter = (ArcProgress)findViewById(R.id.arc_progress);
 
-        //set the steps counter maximum value to goal set
+        //get the user's steps goal and set it as maximum value for Arc Progress widget
         stepsCounter.setMax(sharedPreferences.getInt("Goal",5000));
 
 
@@ -376,7 +414,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 .aggregate(DataType.TYPE_CALORIES_EXPENDED,DataType.AGGREGATE_CALORIES_EXPENDED)
                 .aggregate(DataType.TYPE_MOVE_MINUTES,DataType.AGGREGATE_MOVE_MINUTES)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                .bucketByTime(1, TimeUnit.DAYS)
+                .bucketByTime(1, TimeUnit.HOURS)
                 .build();
 
         // get history
@@ -420,12 +458,22 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         float distanceTraveledFromDataPoints = 0;
         float kcals = 0;
         long mins = 0;
+        String startTime="";
+        String stime="";
+        String endTime="";
+
+
+
 
         for (DataPoint dp : dataSet.getDataPoints()) {
+
+            startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
+            stime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
+            endTime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
             Log.d(TAG, "Data point:");
             Log.d(TAG, "\tType: " + dp.getDataType().getName());
-            Log.d(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-            Log.d(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+            Log.d(TAG, "\tStart: " + startTime);
+            Log.d(TAG, "\tEnd: " + endTime);
 
 
 
@@ -446,9 +494,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 }else if (field.getName().equals("calories")) {
                     kcals += dp.getValue(field).asFloat();
                 }
-//                }else if (field.getName().equals("duration")) {
-//                    mins += dp.getValue(field).asInt();
-//                }
+
+
+
+
 
 
 
@@ -476,66 +525,69 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             calories.setText(String.format("%.2f", kcals/1000.00));
             kCals = kcals;
         }
-//        else if (dataSet.getDataType().getName().equals(" com.google.active_minutes")) {
-//            activeTime.setText( mins);
-////            kCals = kcals;
-//        }
+
+
+        String today = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        for (DataPoint dataPoint : dataSet.getDataPoints()) {
+
+
+
+
+            for (Field field : dataPoint.getDataType().getFields()) {
+
+                if (field.getName().equals("steps")) {
+
+
+                    for ( i=0; i<=dataSet.getDataPoints().size(); i++) {
+
+
+                        Map<String, Integer> fetchedsteps = new HashMap<>();
+
+                        int s = dataPoint.getValue(field).asInt();
+                        //fetchedsteps.put(stime, stepsCounter.getProgress());
+                        fetchedsteps.put(stime, s);
+
+                        String uid = auth.getCurrentUser().getUid();
+                        db.collection("users").document(uid)
+                                .collection("Daily Steps").document(String.valueOf(today)).set(fetchedsteps)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Log.d(TAG, "\tLET US SEEEEE: " + i);
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+
+                                    }
+                                });
+                    }
+                }
+            }
+        }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     }
 
-    private ArrayList getDataSet() {
-        ArrayList dataSets = null;
+  private ArrayList<BarEntry> dataValue1(){
 
-        ArrayList valueSet1 = new ArrayList();
-        BarEntry v1e1 = new BarEntry(110.000f, 0); // Jan
-        valueSet1.add(v1e1);
-        BarEntry v1e2 = new BarEntry(40.000f, 1); // Feb
-        valueSet1.add(v1e2);
-        BarEntry v1e3 = new BarEntry(60.000f, 2); // Mar
-        valueSet1.add(v1e3);
-        BarEntry v1e4 = new BarEntry(30.000f, 3); // Apr
-        valueSet1.add(v1e4);
-        BarEntry v1e5 = new BarEntry(90.000f, 4); // May
-        valueSet1.add(v1e5);
-        BarEntry v1e6 = new BarEntry(100.000f, 5); // Jun
-        valueSet1.add(v1e6);
-
-        ArrayList valueSet2 = new ArrayList();
-        BarEntry v2e1 = new BarEntry(150.000f, 0); // Jan
-        valueSet2.add(v2e1);
-        BarEntry v2e2 = new BarEntry(90.000f, 1); // Feb
-        valueSet2.add(v2e2);
-        BarEntry v2e3 = new BarEntry(120.000f, 2); // Mar
-        valueSet2.add(v2e3);
-        BarEntry v2e4 = new BarEntry(60.000f, 3); // Apr
-        valueSet2.add(v2e4);
-        BarEntry v2e5 = new BarEntry(20.000f, 4); // May
-        valueSet2.add(v2e5);
-        BarEntry v2e6 = new BarEntry(80.000f, 5); // Jun
-        valueSet2.add(v2e6);
-
-        BarDataSet barDataSet1 = new BarDataSet(valueSet1, "Brand 1");
-        barDataSet1.setColor(Color.rgb(0, 155, 0));
-        BarDataSet barDataSet2 = new BarDataSet(valueSet2, "Brand 2");
-        barDataSet2.setColors(ColorTemplate.COLORFUL_COLORS);
-
-        dataSets = new ArrayList();
-        dataSets.add(barDataSet1);
-        dataSets.add(barDataSet2);
-        return dataSets;
-    }
-
-    private ArrayList getXAxisValues() {
-        ArrayList xAxis = new ArrayList();
-        xAxis.add("JAN");
-        xAxis.add("FEB");
-        xAxis.add("MAR");
-        xAxis.add("APR");
-        xAxis.add("MAY");
-        xAxis.add("JUN");
-        return xAxis;
-    }
+        ArrayList<BarEntry> dataValues = new ArrayList<>();
+        dataValues.add(new BarEntry(0,3));
+      dataValues.add(new BarEntry(0,6));
+      dataValues.add(new BarEntry(2,9));
+      dataValues.add(new BarEntry(4,12));
+      dataValues.add(new BarEntry(6,15));
+      dataValues.add(new BarEntry(8,18));
+      dataValues.add(new BarEntry(10,21));
+      dataValues.add(new BarEntry(12,24));
+      return dataValues;
+  }
 
     @Override
     public void onResume() {
@@ -661,7 +713,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         } else {
             super.onBackPressed();
         }
-        mClient.disconnect();
+
     }
 
     @Override

@@ -197,12 +197,14 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center">
+            android:layout_gravity="center"
+            android:paddingTop="15dp">
 
             <com.github.mikephil.charting.charts.BarChart
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
                 android:id="@+id/chart"
+                android:paddingTop="15dp"
                 >
 
             </com.github.mikephil.charting.charts.BarChart>

@@ -15,7 +15,7 @@ import com.google.firebase.messaging.RemoteMessage;
 
 public class AppWorker extends Worker {
 
-    //This class contains the works that needs to be dne in the background
+    //This class contains the works that needs to be done in the background
 
     public AppWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -24,9 +24,22 @@ public class AppWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        displayNotification("Hello there","We're counting your steps");
+     //   displayNotification("Hello there","We're counting your steps");
+        logDailySteps();
+        logWeeklySteps();
+        logMonthlySteps();
         return Result.success();
     }
+
+    private void logMonthlySteps() {
+    }
+
+    private void logWeeklySteps() {
+    }
+
+    private void logDailySteps() {
+    }
+
 
     private void displayNotification(String task, String desc){
 
@@ -42,4 +55,6 @@ public class AppWorker extends Worker {
                 .setSmallIcon(R.mipmap.ic_launcher);
         manager.notify(1, builder.build());
     }
+
+
 }
