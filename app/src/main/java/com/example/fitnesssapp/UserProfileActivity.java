@@ -1,7 +1,9 @@
 package com.example.fitnesssapp;
 
+import android.app.AlertDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -27,18 +29,20 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class UserProfileActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener {
 
     private EditText inputFName, inputLName, inputWeight
-            ,inputGoal,inputHeight, inputAge, inputFromHour, inputToHour, inputLunchHour;
+            ,inputGoal,inputHeight, inputAge, inputFromHour, inputToHour, inputLunchHour, inputWeekends;
     private Spinner  inputGender;
     private String  gender, amPm;
     SharedPreferences sharedPreferences;
     private FirebaseFirestore db;
     private FirebaseAuth auth;
+    AlertDialog alertDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +75,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputFromHour =  findViewById(R.id.fromHourPicker);
         inputToHour = findViewById(R.id.toHourPicker);
         inputLunchHour = findViewById(R.id.lunchHourPicker);
+        inputWeekends = findViewById(R.id.weekendsPicker);
         inputFName.setText(sharedPreferences.getString("FirstName",null));
         inputLName.setText(sharedPreferences.getString("LastName",null));
         inputAge.setText(String.valueOf(sharedPreferences.getLong("Age",0)));
@@ -81,7 +86,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputFromHour.setText(sharedPreferences.getString("FromHour","00:00"));
         inputToHour.setText(sharedPreferences.getString("ToHour","00:00"));
         inputLunchHour.setText(sharedPreferences.getString("LunchHour","00:00"));
-
+        inputWeekends.setText(sharedPreferences.getString("Weekend",""));
         inputGender.setOnItemSelectedListener(this);
         inputFromHour.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -143,6 +148,41 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
 
             }
         });
+        inputWeekends.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(UserProfileActivity.this);
+                final CharSequence[] days= {"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+                final ArrayList selectedDays = new ArrayList();
+                builder.setTitle("Select your Days Off").setMultiChoiceItems(days, null, new DialogInterface.OnMultiChoiceClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                        if (isChecked){
+                            selectedDays.add(days[which]);
+                        }
+                        else if(selectedDays.contains(which)){
+                            selectedDays.remove(Integer.valueOf(which));
+                        }
+                    }
+                });
+
+                builder.setPositiveButton("Done", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        StringBuilder stringBuilder = new StringBuilder();
+                        for(Object days:selectedDays){
+                             stringBuilder.append(days.toString()+" ");
+                        }
+                        inputWeekends.setText(stringBuilder.toString());
+                    }
+                });
+                //create the dialog
+                alertDialog = builder.create();
+                //show the dialog
+                alertDialog.show();
+
+            }
+        });
 
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -156,7 +196,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
 
     private void saveInfo(View view) {
 
-        final String fName, lName, fromHour, toHour,lunchHour;
+        final String fName, lName, fromHour, toHour,lunchHour,weekend;
         final float weight;
         final  float height;
         final  int  selectedGender, goal ;
@@ -172,6 +212,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         fromHour = inputFromHour.getText().toString();
         toHour = inputToHour.getText().toString();
         lunchHour = inputLunchHour.getText().toString();
+        weekend = inputWeekends.getText().toString();
 
         selectedGender = inputGender.getSelectedItemPosition();
 
@@ -186,6 +227,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         editor.putString("FromHour",fromHour);
         editor.putString("ToHour",toHour);
         editor.putString("LunchHour",lunchHour);
+        editor.putString("Weekend",weekend);
         editor.apply();
 
         ////////Save the info to Firestore
@@ -200,6 +242,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         user.put("FromHour",fromHour);
         user.put("ToHour",toHour);
         user.put("LunchHour",lunchHour);
+        user.put("Weekend",weekend);
 
         String uid = auth.getCurrentUser().getUid();
 

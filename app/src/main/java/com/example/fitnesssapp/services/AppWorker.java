@@ -17,6 +17,9 @@ public class AppWorker extends Worker {
 
     //This class contains the works that needs to be done in the background
 
+
+    ////////// INCOMPLETE !!!!!! /////////////////////
+
     public AppWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
@@ -26,18 +29,13 @@ public class AppWorker extends Worker {
     public Result doWork() {
      //   displayNotification("Hello there","We're counting your steps");
         logDailySteps();
-        logWeeklySteps();
-        logMonthlySteps();
+
         return Result.success();
     }
 
-    private void logMonthlySteps() {
-    }
-
-    private void logWeeklySteps() {
-    }
 
     private void logDailySteps() {
+
     }
 
 
