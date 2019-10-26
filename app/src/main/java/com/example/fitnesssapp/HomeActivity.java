@@ -2,17 +2,12 @@ package com.example.fitnesssapp;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.app.Dialog;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -26,36 +21,21 @@ import com.example.fitnesssapp.services.AppWorker;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
-import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.Scopes;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
-import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
-import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
-import com.google.android.gms.fitness.request.DataSourcesRequest;
 import com.google.android.gms.fitness.request.OnDataPointListener;
 import com.google.android.gms.fitness.request.SensorRequest;
 import com.google.android.gms.fitness.result.DataReadResponse;
-import com.google.android.gms.fitness.result.DataReadResult;
-import com.google.android.gms.fitness.result.ListSubscriptionsResult;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -64,7 +44,6 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -77,7 +56,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.Observer;
 import androidx.work.Constraints;
 import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
@@ -87,18 +65,12 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.fitnesssapp.*;
-import com.example.fitnesssapp.Authentication.ProfileActivity;
 import com.example.fitnesssapp.Authentication.LoginActivity;
-import com.example.fitnesssapp.Locations.LocationsActivity;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
-import com.google.firebase.messaging.FirebaseMessaging;
-
-import org.w3c.dom.Text;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -174,8 +146,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         appController.setToday(today);
 
         chart = findViewById(R.id.chart);
-        YAxis leftAxis = chart.getAxisLeft();
-        leftAxis.setPosition(YAxis.YAxisLabelPosition.OUTSIDE_CHART);
+//        YAxis leftAxis = chart.getAxisLeft();
+//        leftAxis.setPosition(YAxis.YAxisLabelPosition.OUTSIDE_CHART);
+        XAxis axis = chart.getXAxis();
+        axis.setPosition(XAxis.XAxisPosition.BOTTOM);
 
         BarDataSet barDataSet = new BarDataSet(dataValue1(),"STEPS");
         BarData barData = new BarData();
@@ -281,7 +255,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     fitnessOptions);
         } else {
             accessGoogleFit();
-            accessHourlySteps();
+//            accessHourlySteps();
         }
 
         retrieveUserDetails(uid);
@@ -318,17 +292,19 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
+                .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
-        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(AppWorker.class,1,TimeUnit.HOURS).setConstraints(constraints).build();
+        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(AppWorker.class,1,TimeUnit.MINUTES).setConstraints(constraints).build();
         WorkManager.getInstance(this).enqueue(request);
         //display status of work
         WorkManager.getInstance().getWorkInfoByIdLiveData(request.getId()).observe(this, new Observer<WorkInfo>() {
             @Override
             public void onChanged(WorkInfo workInfo) {
                 String status = workInfo.getState().name();
-                Log.d(TAG,status);
+                Toast.makeText(HomeActivity.this, status, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -356,6 +332,133 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 .setSmallIcon(R.drawable.ic_person_walk);
         manager.notify(1, builder.build());
     }
+
+//    private void accessHourlySteps(){
+//
+//
+//        Calendar cal = Calendar.getInstance();
+//        long endTime = cal.getTimeInMillis();
+//        cal.set(Calendar.HOUR_OF_DAY,0);
+//        cal.set(Calendar.MINUTE,0);
+//        cal.set(Calendar.SECOND,0);
+//        long startTime = cal.getTimeInMillis();
+//
+//        final DataReadRequest dataReadRequest = new DataReadRequest.Builder()
+//                .aggregate(DataType.TYPE_STEP_COUNT_DELTA,DataType.AGGREGATE_STEP_COUNT_DELTA)
+//                .setTimeRange(startTime,endTime, TimeUnit.MILLISECONDS)
+//                .bucketByTime(1,TimeUnit.HOURS)
+//                .build();
+//
+//        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
+//                .readData(dataReadRequest)
+//                .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+//                    @Override
+//                    public void onSuccess(DataReadResponse dataReadResponse) {
+//                        getHourlyStepsFromBucket(dataReadResponse);
+//                    }
+//                }).addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception e) {
+//                Log.e(TAG, "failed to get history", e);
+//            }
+//        });
+//
+//
+//    }
+//
+//    private void getHourlyStepsFromBucket(DataReadResponse readResponse){
+//
+//        if(readResponse.getBuckets().size()>0){
+//            Log.d(TAG, "/////////Number of returned buckets of DataSets is: " + readResponse.getBuckets().size());
+//            for (Bucket bucket : readResponse.getBuckets()) {
+//                List<DataSet> dataSets = bucket.getDataSets();
+//
+//                for (DataSet dataSet : dataSets) {
+//
+//
+//                    parseHourlySteps(dataSet);
+//                }
+//            }
+//
+//
+//
+//        }
+//    }
+//
+//    private void parseHourlySteps(DataSet dataSet) {
+//        Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+//        DateFormat dateFormat = DateFormat.getTimeInstance();
+//
+//        int totalStepsFromDataPoints = 0;
+//        String startTime="";
+//        String stime="";
+//        String endTime="";
+//
+//        for (DataPoint dp : dataSet.getDataPoints()) {
+//
+//            startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
+//            stime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
+//            endTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
+//            Log.d(TAG, "Data point:");
+//            Log.d(TAG, "\tType: " + dp.getDataType().getName());
+//            Log.d(TAG, "\tStart: " + startTime);
+//            Log.d(TAG, "\tEnd: " + endTime);
+//            Log.d(TAG, "\tTime stamp: " + stime);
+//
+//
+//            for (Field field : dp.getDataType().getFields()) {
+//                Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
+//
+//                // increment the steps or distance
+//                if (field.getName().equals("steps")) {
+//                    totalStepsFromDataPoints = dp.getValue(field).asInt();
+//
+//                }
+//
+//            }
+//        }
+//
+//        if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
+//
+//            for (DataPoint dataPoint : dataSet.getDataPoints()) {
+//
+//
+//
+//
+//                for (Field field : dataPoint.getDataType().getFields()) {
+//
+//                    if (field.getName().equals("steps")) {
+//
+//
+//
+//                        Map<String, Integer> fetchedsteps = new HashMap<>();
+//                        String uid = auth.getCurrentUser().getUid();
+//                        int s = dataPoint.getValue(field).asInt();
+//                        fetchedsteps.put("steps", s);
+//
+//                        db.collection("users").document(uid)
+//                                .collection(String.valueOf(today)).document(stime).set(fetchedsteps)
+//                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                    @Override
+//                                    public void onSuccess(Void aVoid) {
+//                                        Toast.makeText(HomeActivity.this, "check", Toast.LENGTH_SHORT).show();
+//
+//                                    }
+//                                })
+//                                .addOnFailureListener(new OnFailureListener() {
+//                                    @Override
+//                                    public void onFailure(@NonNull Exception e) {
+//
+//                                    }
+//                                });
+//
+//                    }
+//                }
+//            }
+//
+//
+//        }
+//    }
 
 
 
@@ -469,132 +572,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private void accessHourlySteps(){
 
-
-        Calendar cal = Calendar.getInstance();
-        long endTime = cal.getTimeInMillis();
-        cal.set(Calendar.HOUR_OF_DAY,0);
-        cal.set(Calendar.MINUTE,0);
-        cal.set(Calendar.SECOND,0);
-        long startTime = cal.getTimeInMillis();
-
-        final DataReadRequest dataReadRequest = new DataReadRequest.Builder()
-                .aggregate(DataType.TYPE_STEP_COUNT_DELTA,DataType.AGGREGATE_STEP_COUNT_DELTA)
-                .setTimeRange(startTime,endTime,TimeUnit.MILLISECONDS)
-                .bucketByTime(1,TimeUnit.HOURS)
-                .build();
-
-        Fitness.getHistoryClient(this,GoogleSignIn.getLastSignedInAccount(this))
-                .readData(dataReadRequest)
-                .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
-                    @Override
-                    public void onSuccess(DataReadResponse dataReadResponse) {
-                        getHourlyStepsFromBucket(dataReadResponse);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.e(TAG, "failed to get history", e);
-            }
-        });
-
-
-    }
-
-    private void getHourlyStepsFromBucket(DataReadResponse readResponse){
-
-        if(readResponse.getBuckets().size()>0){
-            Log.d(TAG, "/////////Number of returned buckets of DataSets is: " + readResponse.getBuckets().size());
-            for (Bucket bucket : readResponse.getBuckets()) {
-                List<DataSet> dataSets = bucket.getDataSets();
-
-                for (DataSet dataSet : dataSets) {
-
-
-                    parseHourlySteps(dataSet);
-                }
-            }
-
-
-
-        }
-    }
-
-    private void parseHourlySteps(DataSet dataSet) {
-        Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-        DateFormat dateFormat = DateFormat.getTimeInstance();
-
-        int totalStepsFromDataPoints = 0;
-        String startTime="";
-        String stime="";
-        String endTime="";
-
-        for (DataPoint dp : dataSet.getDataPoints()) {
-
-            startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-            stime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-            endTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-            Log.d(TAG, "Data point:");
-            Log.d(TAG, "\tType: " + dp.getDataType().getName());
-            Log.d(TAG, "\tStart: " + startTime);
-            Log.d(TAG, "\tEnd: " + endTime);
-            Log.d(TAG, "\tTime stamp: " + stime);
-
-
-            for (Field field : dp.getDataType().getFields()) {
-                Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
-
-                // increment the steps or distance
-                if (field.getName().equals("steps")) {
-                    totalStepsFromDataPoints = dp.getValue(field).asInt();
-
-                }
-
-            }
-        }
-
-        if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
-
-            for (DataPoint dataPoint : dataSet.getDataPoints()) {
-
-
-
-
-                for (Field field : dataPoint.getDataType().getFields()) {
-
-                    if (field.getName().equals("steps")) {
-
-
-
-                        Map<String, Integer> fetchedsteps = new HashMap<>();
-
-                        int s = dataPoint.getValue(field).asInt();
-                        fetchedsteps.put("steps", s);
-
-                        String uid = auth.getCurrentUser().getUid();
-                        db.collection("users").document(uid)
-                                .collection(String.valueOf(today)).document(stime).set(fetchedsteps)
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                    //    Toast.makeText(HomeActivity.this, "check it out", Toast.LENGTH_SHORT).show();
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-
-                                    }
-                                });
-
-                    }
-                }
-            }
-
-
-        }
-    }
 
 
     private void getDataSetsFromBucket(DataReadResponse dataReadResponse) {
@@ -692,12 +670,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         ArrayList<BarEntry> dataValues = new ArrayList<>();
         dataValues.add(new BarEntry(0,0));
-      dataValues.add(new BarEntry(0,0));
-      dataValues.add(new BarEntry(0,1));
-      dataValues.add(new BarEntry(0,40));
-      dataValues.add(new BarEntry(0,50));
-      dataValues.add(new BarEntry(0,6));
-      dataValues.add(new BarEntry(0,0));
+      dataValues.add(new BarEntry(3,50));
+      dataValues.add(new BarEntry(4,1));
+      dataValues.add(new BarEntry(5,40));
+      dataValues.add(new BarEntry(6,50));
+      dataValues.add(new BarEntry(7,30));
+      dataValues.add(new BarEntry(8,0));
       return dataValues;
   }
 
@@ -888,7 +866,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
                 Log.d(TAG, "accessing...");
                 accessGoogleFit();
-                accessHourlySteps();
+//                accessHourlySteps();
+
             }
         }
     }

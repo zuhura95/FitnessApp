@@ -1,20 +1,15 @@
 package com.example.fitnesssapp.services;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.Context;
-import android.os.Build;
-import android.os.TokenWatcher;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.example.fitnesssapp.AppController;
-import com.example.fitnesssapp.R;
+import com.example.fitnesssapp.HomeActivity;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.data.Bucket;
@@ -23,60 +18,47 @@ import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
-import com.google.android.gms.fitness.request.OnDataPointListener;
 import com.google.android.gms.fitness.result.DataReadResponse;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.messaging.RemoteMessage;
 
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class AppWorker extends Worker {
 
-    //This class contains the works that needs to be done in the background
-
-    private FirebaseAuth auth;
-    private FirebaseFirestore db;
-    private static OnDataPointListener stepListener;
-    private static OnDataPointListener distanceListener;
     Context context;
-    private float distanceInMeters;
-    private float kCals;
-    private float movemins;
-    String today,uid;
+    FirebaseAuth auth;
+    FirebaseFirestore db;
+    private String TAG = "================Fitness================";
     AppController appController;
-
-
-    private String TAG = "--=-==-=-=-==-=-=-==-==-=-==-==-=-=-=-=-=-==-=-=-=-==-==-==-=-=-=";
-
+    String uid;
 
 
     public AppWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
+        this.context = context;
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        appController = new AppController();
+        uid = auth.getCurrentUser().getUid();
 
     }
 
     @NonNull
     @Override
     public Result doWork() {
-     //   displayNotification("Hello there","We're counting your steps");
-
         accessHourlySteps();
-
         return Result.success();
     }
-
-
 
     private void accessHourlySteps(){
 
@@ -88,13 +70,15 @@ public class AppWorker extends Worker {
         cal.set(Calendar.SECOND,0);
         long startTime = cal.getTimeInMillis();
 
+
         final DataReadRequest dataReadRequest = new DataReadRequest.Builder()
                 .aggregate(DataType.TYPE_STEP_COUNT_DELTA,DataType.AGGREGATE_STEP_COUNT_DELTA)
                 .setTimeRange(startTime,endTime, TimeUnit.MILLISECONDS)
                 .bucketByTime(1,TimeUnit.HOURS)
                 .build();
 
-        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context))
+
+        Fitness.getHistoryClient(getApplicationContext(),GoogleSignIn.getLastSignedInAccount(getApplicationContext()))
                 .readData(dataReadRequest)
                 .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
                     @Override
@@ -177,16 +161,18 @@ public class AppWorker extends Worker {
 
 
                         Map<String, Integer> fetchedsteps = new HashMap<>();
-                        uid = appController.getUid();
+
                         int s = dataPoint.getValue(field).asInt();
                         fetchedsteps.put("steps", s);
+                        String today = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
 
                         db.collection("users").document(uid)
                                 .collection(String.valueOf(today)).document(stime).set(fetchedsteps)
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
-                                            Toast.makeText(context, "check it out", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getApplicationContext(), "check", Toast.LENGTH_SHORT).show();
+
                                     }
                                 })
                                 .addOnFailureListener(new OnFailureListener() {
@@ -203,36 +189,6 @@ public class AppWorker extends Worker {
 
         }
     }
-
-
-
-
-
-
-//    private void logDailySteps() {
-//
-//
-//
-//
-//     //   Log.d(TAG, "Subscribed");
-//
-//    }
-//
-//
-//    private void displayNotification(String task, String desc){
-//
-//        NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-//                NotificationChannel channel = new NotificationChannel("fitnessapp","fitnessapp",NotificationManager.IMPORTANCE_DEFAULT);
-//                manager.createNotificationChannel(channel);
-//        }
-//
-//        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),"fitnessapp")
-//                .setContentTitle(task)
-//                .setContentText(desc)
-//                .setSmallIcon(R.mipmap.ic_launcher);
-//        manager.notify(1, builder.build());
-//    }
 
 
 }
