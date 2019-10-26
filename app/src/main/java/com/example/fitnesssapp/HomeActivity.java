@@ -25,6 +25,8 @@ import android.view.View;
 import com.example.fitnesssapp.services.AppWorker;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
@@ -125,6 +127,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     SharedPreferences sharedPreferences;
     TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
     ArcProgress stepsCounter;
+    AppController appController;
 
     private float distanceInMeters;
     private float kCals;
@@ -132,7 +135,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     Button daybtn,weekbtn, monthbtn;
     BarChart chart;
-    int i=0;
     String today;
 
 
@@ -144,6 +146,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         toolbar.setTitle(getString(R.string.title_activity_home));
         setSupportActionBar(toolbar);
 
+        appController = new AppController();
 //        //Display health tips pop up once a day
 //        Calendar calendar = Calendar.getInstance();
 //        int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
@@ -168,21 +171,27 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //
 //        }
         today = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+        appController.setToday(today);
 
         chart = findViewById(R.id.chart);
-        BarDataSet barDataSet = new BarDataSet(dataValue1(),"INCOMPLETE - STILL TESTING");
+        YAxis leftAxis = chart.getAxisLeft();
+        leftAxis.setPosition(YAxis.YAxisLabelPosition.OUTSIDE_CHART);
+
+        BarDataSet barDataSet = new BarDataSet(dataValue1(),"STEPS");
         BarData barData = new BarData();
         barData.addDataSet(barDataSet);
-
         //add to bar chart
         chart.setData(barData);
         chart.invalidate();
+
+//        displayDataOnChart();
 
 
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         String uid = auth.getCurrentUser().getUid();
+        appController.setUid(uid);
 
 
 
@@ -309,19 +318,26 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-//        Constraints constraints = new Constraints.Builder()
-//                .setRequiredNetworkType(NetworkType.CONNECTED)
-//                .build();
-//        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(AppWorker.class,1, TimeUnit.HOURS).setConstraints(constraints).build();
-//        WorkManager.getInstance(this).enqueue(request);
-//        //display status of work
-//        WorkManager.getInstance().getWorkInfoByIdLiveData(request.getId()).observe(this, new Observer<WorkInfo>() {
-//            @Override
-//            public void onChanged(WorkInfo workInfo) {
-//                String status = workInfo.getState().name();
-//                Toast.makeText(HomeActivity.this, status, Toast.LENGTH_SHORT).show();
-//            }
-//        });
+        Constraints constraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .build();
+        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(AppWorker.class,1,TimeUnit.HOURS).setConstraints(constraints).build();
+        WorkManager.getInstance(this).enqueue(request);
+        //display status of work
+        WorkManager.getInstance().getWorkInfoByIdLiveData(request.getId()).observe(this, new Observer<WorkInfo>() {
+            @Override
+            public void onChanged(WorkInfo workInfo) {
+                String status = workInfo.getState().name();
+                Log.d(TAG,status);
+            }
+        });
+
+    }
+
+    private void displayDataOnChart() {
+
+
+
 
     }
 
@@ -487,7 +503,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void getHourlyStepsFromBucket(DataReadResponse readResponse){
-        int i = 1;
+
         if(readResponse.getBuckets().size()>0){
             Log.d(TAG, "/////////Number of returned buckets of DataSets is: " + readResponse.getBuckets().size());
             for (Bucket bucket : readResponse.getBuckets()) {
@@ -641,11 +657,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-
-
-
-
-
             }
         }
 
@@ -671,15 +682,21 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-  private ArrayList<BarEntry> dataValue1(){
+  private List<BarEntry> dataValue1(){
+
+      final String[] weekdays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}; // Your List / array with String Values For X-axis Labels
+
+// Set the value formatter
+      XAxis xAxis = chart.getXAxis();
+      xAxis.setValueFormatter(new AxisValueFormatter(weekdays));
 
         ArrayList<BarEntry> dataValues = new ArrayList<>();
         dataValues.add(new BarEntry(0,0));
       dataValues.add(new BarEntry(0,0));
-      dataValues.add(new BarEntry(0,0));
-      dataValues.add(new BarEntry(0,0));
-      dataValues.add(new BarEntry(0,0));
-      dataValues.add(new BarEntry(0,0));
+      dataValues.add(new BarEntry(0,1));
+      dataValues.add(new BarEntry(0,40));
+      dataValues.add(new BarEntry(0,50));
+      dataValues.add(new BarEntry(0,6));
       dataValues.add(new BarEntry(0,0));
       return dataValues;
   }
