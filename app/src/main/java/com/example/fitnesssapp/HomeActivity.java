@@ -24,6 +24,7 @@ import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
@@ -66,13 +67,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.fitnesssapp.Authentication.LoginActivity;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -104,10 +109,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private float distanceInMeters;
     private float kCals;
     private float movemins;
+    /*List to store steps data*/
+    private List<Integer> graphData = new ArrayList<>();
 
+    /*List of String which contains X-axis values */
+    ArrayList<String> xAxisValuesList = new ArrayList<>();
     Button daybtn,weekbtn, monthbtn;
     BarChart chart;
-    String today;
+    String today,uid;
+
 
 
     @Override
@@ -146,25 +156,20 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         appController.setToday(today);
 
         chart = findViewById(R.id.chart);
+
+
+
 //        YAxis leftAxis = chart.getAxisLeft();
 //        leftAxis.setPosition(YAxis.YAxisLabelPosition.OUTSIDE_CHART);
-        XAxis axis = chart.getXAxis();
-        axis.setPosition(XAxis.XAxisPosition.BOTTOM);
 
-        BarDataSet barDataSet = new BarDataSet(dataValue1(),"STEPS");
-        BarData barData = new BarData();
-        barData.addDataSet(barDataSet);
-        //add to bar chart
-        chart.setData(barData);
-        chart.invalidate();
 
-//        displayDataOnChart();
+
 
 
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        String uid = auth.getCurrentUser().getUid();
+        uid = auth.getCurrentUser().getUid();
         appController.setUid(uid);
 
 
@@ -259,7 +264,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
         retrieveUserDetails(uid);
+        extractvalues(uid);
         displayNotification();
+        displayDataOnChart();
 
         daybtn = findViewById(R.id.day_button);
         weekbtn = findViewById(R.id.week_button);
@@ -280,14 +287,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-//        //creating a work request
-//        final OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(AppWorker.class).build();
 
         daybtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                WorkManager.getInstance().enqueue(request);//performs the work
                 Toast.makeText(HomeActivity.this, "Show day graph", Toast.LENGTH_SHORT).show();
+              extractvalues(uid);
 
             }
         });
@@ -309,14 +314,77 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
     }
+    private List<BarEntry> dataValue1(){
+
+        // create BarEntry for group
+        ArrayList<BarEntry> group = new ArrayList<>();
+        for (int i = 0; i < graphData.size(); i++) {
+            Log.d(TAG, "generating for:" + graphData.get(i));
+            group.add(new BarEntry(graphData.get(i), i));
+        }
+
+
+        return group;
+    }
 
     private void displayDataOnChart() {
 
+        XAxis xAxis = chart.getXAxis();
 
+
+
+        BarDataSet barDataSet = new BarDataSet(dataValue1(),"STEPS");
+        BarData barData = new BarData();
+        barData.addDataSet(barDataSet);
+        xAxis.setValueFormatter(new AxisValueFormatter());
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        //add to bar chart
+        chart.setData(barData);
+        chart.invalidate();
 
 
     }
 
+
+
+
+
+    private void extractvalues(String uid){
+
+        CollectionReference documentReference = db.collection("users").document(uid).collection(today);
+        documentReference.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        String time = document.getId();
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa");
+                        SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh aa");
+                        try {
+                            Date date = dateFormat.parse(time);
+                            time = dateFormat2.format(date);
+
+                        } catch (ParseException e) {
+                        }
+
+                        int steps = Integer.parseInt(String.valueOf(document.get("steps")));
+                        graphData.add(steps);
+                        xAxisValuesList.add(time);
+
+
+
+                        Log.d(TAG, time + " => " + steps);
+                    }
+                } else {
+                    Log.d(TAG, "Error getting documents: ", task.getException());
+                }
+
+
+            }
+        });
+
+
+    }
     private void displayNotification() {
         NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
@@ -332,134 +400,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 .setSmallIcon(R.drawable.ic_person_walk);
         manager.notify(1, builder.build());
     }
-
-//    private void accessHourlySteps(){
-//
-//
-//        Calendar cal = Calendar.getInstance();
-//        long endTime = cal.getTimeInMillis();
-//        cal.set(Calendar.HOUR_OF_DAY,0);
-//        cal.set(Calendar.MINUTE,0);
-//        cal.set(Calendar.SECOND,0);
-//        long startTime = cal.getTimeInMillis();
-//
-//        final DataReadRequest dataReadRequest = new DataReadRequest.Builder()
-//                .aggregate(DataType.TYPE_STEP_COUNT_DELTA,DataType.AGGREGATE_STEP_COUNT_DELTA)
-//                .setTimeRange(startTime,endTime, TimeUnit.MILLISECONDS)
-//                .bucketByTime(1,TimeUnit.HOURS)
-//                .build();
-//
-//        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
-//                .readData(dataReadRequest)
-//                .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
-//                    @Override
-//                    public void onSuccess(DataReadResponse dataReadResponse) {
-//                        getHourlyStepsFromBucket(dataReadResponse);
-//                    }
-//                }).addOnFailureListener(new OnFailureListener() {
-//            @Override
-//            public void onFailure(@NonNull Exception e) {
-//                Log.e(TAG, "failed to get history", e);
-//            }
-//        });
-//
-//
-//    }
-//
-//    private void getHourlyStepsFromBucket(DataReadResponse readResponse){
-//
-//        if(readResponse.getBuckets().size()>0){
-//            Log.d(TAG, "/////////Number of returned buckets of DataSets is: " + readResponse.getBuckets().size());
-//            for (Bucket bucket : readResponse.getBuckets()) {
-//                List<DataSet> dataSets = bucket.getDataSets();
-//
-//                for (DataSet dataSet : dataSets) {
-//
-//
-//                    parseHourlySteps(dataSet);
-//                }
-//            }
-//
-//
-//
-//        }
-//    }
-//
-//    private void parseHourlySteps(DataSet dataSet) {
-//        Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-//        DateFormat dateFormat = DateFormat.getTimeInstance();
-//
-//        int totalStepsFromDataPoints = 0;
-//        String startTime="";
-//        String stime="";
-//        String endTime="";
-//
-//        for (DataPoint dp : dataSet.getDataPoints()) {
-//
-//            startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-//            stime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-//            endTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-//            Log.d(TAG, "Data point:");
-//            Log.d(TAG, "\tType: " + dp.getDataType().getName());
-//            Log.d(TAG, "\tStart: " + startTime);
-//            Log.d(TAG, "\tEnd: " + endTime);
-//            Log.d(TAG, "\tTime stamp: " + stime);
-//
-//
-//            for (Field field : dp.getDataType().getFields()) {
-//                Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
-//
-//                // increment the steps or distance
-//                if (field.getName().equals("steps")) {
-//                    totalStepsFromDataPoints = dp.getValue(field).asInt();
-//
-//                }
-//
-//            }
-//        }
-//
-//        if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
-//
-//            for (DataPoint dataPoint : dataSet.getDataPoints()) {
-//
-//
-//
-//
-//                for (Field field : dataPoint.getDataType().getFields()) {
-//
-//                    if (field.getName().equals("steps")) {
-//
-//
-//
-//                        Map<String, Integer> fetchedsteps = new HashMap<>();
-//                        String uid = auth.getCurrentUser().getUid();
-//                        int s = dataPoint.getValue(field).asInt();
-//                        fetchedsteps.put("steps", s);
-//
-//                        db.collection("users").document(uid)
-//                                .collection(String.valueOf(today)).document(stime).set(fetchedsteps)
-//                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-//                                    @Override
-//                                    public void onSuccess(Void aVoid) {
-//                                        Toast.makeText(HomeActivity.this, "check", Toast.LENGTH_SHORT).show();
-//
-//                                    }
-//                                })
-//                                .addOnFailureListener(new OnFailureListener() {
-//                                    @Override
-//                                    public void onFailure(@NonNull Exception e) {
-//
-//                                    }
-//                                });
-//
-//                    }
-//                }
-//            }
-//
-//
-//        }
-//    }
-
 
 
     private void accessGoogleFit() {
@@ -660,24 +600,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-  private List<BarEntry> dataValue1(){
 
-      final String[] weekdays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}; // Your List / array with String Values For X-axis Labels
-
-// Set the value formatter
-      XAxis xAxis = chart.getXAxis();
-      xAxis.setValueFormatter(new AxisValueFormatter(weekdays));
-
-        ArrayList<BarEntry> dataValues = new ArrayList<>();
-        dataValues.add(new BarEntry(0,0));
-      dataValues.add(new BarEntry(3,50));
-      dataValues.add(new BarEntry(4,1));
-      dataValues.add(new BarEntry(5,40));
-      dataValues.add(new BarEntry(6,50));
-      dataValues.add(new BarEntry(7,30));
-      dataValues.add(new BarEntry(8,0));
-      return dataValues;
-  }
 
     @Override
     public void onResume() {
@@ -866,6 +789,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
                 Log.d(TAG, "accessing...");
                 accessGoogleFit();
+
 //                accessHourlySteps();
 
             }

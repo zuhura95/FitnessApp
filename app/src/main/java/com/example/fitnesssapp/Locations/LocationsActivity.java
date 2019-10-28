@@ -134,7 +134,7 @@ public class LocationsActivity extends AppCompatActivity implements LocationList
                 ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_expandable_list_item_1, list);
                 listview.setAdapter(adapter);
             } else {
-                Toast.makeText(this, "No Gyms nearby. Sorry", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "No Restaurants nearby. Sorry", Toast.LENGTH_SHORT).show();
             }
             }
             else{
