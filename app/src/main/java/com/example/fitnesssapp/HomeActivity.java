@@ -125,6 +125,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     String today,uid;
 
+     List<Integer> stepsData = new ArrayList<>();
+     List<String> graph_data = new ArrayList<>();
+
 
 
     @Override
@@ -259,11 +262,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         } else {
             accessGoogleFit();
         }
-
-        retrieveUserDetails(uid);
-        extractvalues(uid);
         displayNotification();
-        displayDataOnChart(uid);
+        retrieveUserDetails(uid);
+        hourlyDataOnChart(uid);
 
         daybtn = findViewById(R.id.day_button);
         weekbtn = findViewById(R.id.week_button);
@@ -273,13 +274,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         weekbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(HomeActivity.this, "Show week graph", Toast.LENGTH_SHORT).show();
+                Toast.makeText(HomeActivity.this, "Showing week graph", Toast.LENGTH_SHORT).show();
             }
         });
         monthbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(HomeActivity.this, "Show month graph", Toast.LENGTH_SHORT).show();
+                Toast.makeText(HomeActivity.this, "Showing month graph", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -288,8 +289,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         daybtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(HomeActivity.this, "Show day graph", Toast.LENGTH_SHORT).show();
-              extractvalues(uid);
+                hourlyDataOnChart(uid);
+                Toast.makeText(HomeActivity.this, "Showing day graph", Toast.LENGTH_SHORT).show();
+
 
 
             }
@@ -314,21 +316,18 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    private void displayDataOnChart(String uid) {
 
+    private void hourlyDataOnChart(String uid) {
 
-        Cartesian cartesian = AnyChart.column();
-     final List<Integer> stepsData = new ArrayList<>();
-     final List<String> graph_data = new ArrayList<>();
-         final List<DataEntry> data = new ArrayList<>();
-         int sp;
 
         CollectionReference documentReference = db.collection("users").document(uid).collection(today);
         documentReference.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
+
                     for (QueryDocumentSnapshot document : task.getResult()) {
+                        if (document.exists()) {
                         String time = document.getId();
                         SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa");
                         SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh aa");
@@ -341,25 +340,23 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
                         int steps = Integer.parseInt(String.valueOf(document.get("steps")));
 
-//                        data.add(new ValueDataEntry(time,steps));
-                            stepsData.add(steps);
-                            graph_data.add(time);
+
+                        stepsData.add(steps);
+                        graph_data.add(time);
 
 
-
+                         }
+                        else{
+                            Toast.makeText(HomeActivity.this, "No steps for today", Toast.LENGTH_SHORT).show();
+                        }
                     }
+
                 } else {
                     Log.d(TAG, "Error getting documents: ", task.getException());
                 }
 
 
-                Log.d(TAG,"While Loop");
-                int count = 0;
-                while (stepsData.size() > count) {
-
-                    Log.d(TAG,graph_data.get(count));
-                    count++;
-                }
+                showGraph();
 
 
             }
@@ -367,11 +364,24 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
+    }
 
-        data.add(new CustomDataEntry("4 pm",9));
-        data.add(new CustomDataEntry("5 pm",8));
-        data.add(new CustomDataEntry("6 pm",4));
-        data.add(new CustomDataEntry("7 pm",28));
+
+
+    private void showGraph() {
+
+        Cartesian cartesian = AnyChart.column();
+        final List<DataEntry> data = new ArrayList<>();
+        
+        Log.d(TAG,"While Loop");
+        int count = 0;
+        while (stepsData.size() > count) {
+
+            data.add(new ValueDataEntry(graph_data.get(count),stepsData.get(count)));
+            Log.d(TAG,graph_data.get(count));
+            count++;
+        }
+
         Column column = cartesian.column(data);
 
         column.tooltip()
@@ -396,40 +406,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-
-
-    private void extractvalues(String uid){
-
-        CollectionReference documentReference = db.collection("users").document(uid).collection(today);
-        documentReference.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        String time = document.getId();
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa");
-                        SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh aa");
-                        try {
-                            Date date = dateFormat.parse(time);
-                            time = dateFormat2.format(date);
-
-                        } catch (ParseException e) {
-                        }
-
-                        int steps = Integer.parseInt(String.valueOf(document.get("steps")));
-
-
-                    }
-                } else {
-                    Log.d(TAG, "Error getting documents: ", task.getException());
-                }
-
-
-            }
-        });
-
-
-    }
     private void displayNotification() {
         NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
@@ -808,10 +784,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(HomeActivity.this, AboutActivity.class));
             finish();
         }
-        else if (id == R.id.nav_locations){
-            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
-            finish();
-        }
+//        else if (id == R.id.nav_locations){
+//            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
+//            finish();
+//        }
         else if (id == R.id.nav_awards){
             startActivity(new Intent(HomeActivity.this, AchievementsActivity.class));
             finish();
