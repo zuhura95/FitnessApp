@@ -46,6 +46,7 @@ dependencies {
     implementation 'com.github.lzyzsd:circleprogress:1.2.1'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
     implementation 'com.txusballesteros:FitChart:1.0'
+    implementation 'com.github.AnyChart:AnyChart-Android:1.1.2'
 
 
     implementation 'com.google.firebase:firebase-database:16.0.4'

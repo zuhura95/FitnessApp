@@ -17,14 +17,24 @@ import android.view.MenuItem;
 import android.view.View;
 
 
+import com.anychart.APIlib;
+import com.anychart.AnyChartView;
+import com.anychart.chart.common.dataentry.DataEntry;
+import com.anychart.chart.common.dataentry.ValueDataEntry;
+import com.example.fitnesssapp.Locations.LocationsActivity;
 import com.example.fitnesssapp.services.AppWorker;
 import com.github.lzyzsd.circleprogress.ArcProgress;
-import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
+import com.anychart.AnyChart;
+import com.anychart.AnyChartView;
+import com.anychart.chart.common.dataentry.DataEntry;
+import com.anychart.chart.common.dataentry.ValueDataEntry;
+import com.anychart.charts.Cartesian;
+import com.anychart.core.cartesian.series.Column;
+import com.anychart.enums.Anchor;
+import com.anychart.enums.HoverMode;
+import com.anychart.enums.Position;
+import com.anychart.enums.TooltipPositionMode;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
@@ -104,18 +114,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     SharedPreferences sharedPreferences;
     TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
     ArcProgress stepsCounter;
+    AnyChartView anyChart;
     AppController appController;
 
     private float distanceInMeters;
     private float kCals;
     private float movemins;
-    /*List to store steps data*/
-    private List<Integer> graphData = new ArrayList<>();
 
-    /*List of String which contains X-axis values */
-    ArrayList<String> xAxisValuesList = new ArrayList<>();
     Button daybtn,weekbtn, monthbtn;
-    BarChart chart;
+
     String today,uid;
 
 
@@ -155,16 +162,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         today = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
         appController.setToday(today);
 
-        chart = findViewById(R.id.chart);
-
-
-
-//        YAxis leftAxis = chart.getAxisLeft();
-//        leftAxis.setPosition(YAxis.YAxisLabelPosition.OUTSIDE_CHART);
-
-
-
-
 
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         auth = FirebaseAuth.getInstance();
@@ -195,6 +192,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         stepsCounter = (ArcProgress)findViewById(R.id.arc_progress);
+        anyChart = (AnyChartView) findViewById(R.id.chart);
 
         //get the user's steps goal and set it as maximum value for Arc Progress widget
         stepsCounter.setMax(sharedPreferences.getInt("Goal",5000));
@@ -260,13 +258,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     fitnessOptions);
         } else {
             accessGoogleFit();
-//            accessHourlySteps();
         }
 
         retrieveUserDetails(uid);
         extractvalues(uid);
         displayNotification();
-        displayDataOnChart();
+        displayDataOnChart(uid);
 
         daybtn = findViewById(R.id.day_button);
         weekbtn = findViewById(R.id.week_button);
@@ -294,6 +291,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 Toast.makeText(HomeActivity.this, "Show day graph", Toast.LENGTH_SHORT).show();
               extractvalues(uid);
 
+
             }
         });
 
@@ -314,34 +312,85 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
     }
-    private List<BarEntry> dataValue1(){
-
-        // create BarEntry for group
-        ArrayList<BarEntry> group = new ArrayList<>();
-        for (int i = 0; i < graphData.size(); i++) {
-            Log.d(TAG, "generating for:" + graphData.get(i));
-            group.add(new BarEntry(graphData.get(i), i));
-        }
 
 
-        return group;
-    }
-
-    private void displayDataOnChart() {
-
-        XAxis xAxis = chart.getXAxis();
+    private void displayDataOnChart(String uid) {
 
 
+        Cartesian cartesian = AnyChart.column();
+     final List<Integer> stepsData = new ArrayList<>();
+     final List<String> graph_data = new ArrayList<>();
+         final List<DataEntry> data = new ArrayList<>();
+         int sp;
 
-        BarDataSet barDataSet = new BarDataSet(dataValue1(),"STEPS");
-        BarData barData = new BarData();
-        barData.addDataSet(barDataSet);
-        xAxis.setValueFormatter(new AxisValueFormatter());
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        //add to bar chart
-        chart.setData(barData);
-        chart.invalidate();
+        CollectionReference documentReference = db.collection("users").document(uid).collection(today);
+        documentReference.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        String time = document.getId();
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa");
+                        SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh aa");
+                        try {
+                            Date date = dateFormat.parse(time);
+                            time = dateFormat2.format(date);
 
+                        } catch (ParseException e) {
+                        }
+
+                        int steps = Integer.parseInt(String.valueOf(document.get("steps")));
+
+//                        data.add(new ValueDataEntry(time,steps));
+                            stepsData.add(steps);
+                            graph_data.add(time);
+
+
+
+                    }
+                } else {
+                    Log.d(TAG, "Error getting documents: ", task.getException());
+                }
+
+
+                Log.d(TAG,"While Loop");
+                int count = 0;
+                while (stepsData.size() > count) {
+
+                    Log.d(TAG,graph_data.get(count));
+                    count++;
+                }
+
+
+            }
+
+        });
+
+
+
+        data.add(new CustomDataEntry("4 pm",9));
+        data.add(new CustomDataEntry("5 pm",8));
+        data.add(new CustomDataEntry("6 pm",4));
+        data.add(new CustomDataEntry("7 pm",28));
+        Column column = cartesian.column(data);
+
+        column.tooltip()
+                .position(Position.CENTER_BOTTOM)
+                .anchor(Anchor.CENTER_BOTTOM)
+                .offsetX(0d)
+                .offsetY(5d);
+
+
+        cartesian.animation(true);
+
+        cartesian.yScale().minimum(0d);
+
+        cartesian.tooltip().positionMode(TooltipPositionMode.POINT);
+        cartesian.interactivity().hoverMode(HoverMode.BY_X);
+
+        cartesian.yAxis(0).title("Steps");
+
+        anyChart.setChart(cartesian);
 
     }
 
@@ -368,12 +417,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                         }
 
                         int steps = Integer.parseInt(String.valueOf(document.get("steps")));
-                        graphData.add(steps);
-                        xAxisValuesList.add(time);
 
 
-
-                        Log.d(TAG, time + " => " + steps);
                     }
                 } else {
                     Log.d(TAG, "Error getting documents: ", task.getException());
@@ -763,6 +808,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(HomeActivity.this, AboutActivity.class));
             finish();
         }
+        else if (id == R.id.nav_locations){
+            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
+            finish();
+        }
         else if (id == R.id.nav_awards){
             startActivity(new Intent(HomeActivity.this, AchievementsActivity.class));
             finish();
@@ -790,11 +839,16 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 Log.d(TAG, "accessing...");
                 accessGoogleFit();
 
-//                accessHourlySteps();
 
             }
         }
     }
 
+    private class CustomDataEntry extends DataEntry {
+        CustomDataEntry(String time, Integer steps) {
+            setValue("x", time);
+            setValue("steps", steps);
+        }
+    }
 
 }
