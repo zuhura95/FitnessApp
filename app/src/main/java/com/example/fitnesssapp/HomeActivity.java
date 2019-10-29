@@ -2,12 +2,16 @@ package com.example.fitnesssapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -21,6 +25,7 @@ import com.anychart.APIlib;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
+import com.anychart.core.cartesian.series.Bar;
 import com.example.fitnesssapp.Locations.LocationsActivity;
 import com.example.fitnesssapp.services.AppWorker;
 import com.github.lzyzsd.circleprogress.ArcProgress;
@@ -73,6 +78,7 @@ import androidx.work.WorkManager;
 
 import android.view.Menu;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -115,11 +121,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
     ArcProgress stepsCounter;
     AnyChartView anyChart;
+    Dialog awardPopup;
+    ImageView awardImage;
+
     AppController appController;
 
     private float distanceInMeters;
     private float kCals;
     private float movemins;
+    private int totalStepsFromDataPoints = 0;
 
     Button daybtn,weekbtn, monthbtn;
 
@@ -127,7 +137,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
      List<Integer> stepsData = new ArrayList<>();
      List<String> graph_data = new ArrayList<>();
-
+    List<Integer> weekData = new ArrayList<>();
+    List<String> week_graph_data = new ArrayList<>();
 
 
     @Override
@@ -137,6 +148,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(getString(R.string.title_activity_home));
         setSupportActionBar(toolbar);
+
+        awardPopup = new Dialog(this);
 
         appController = new AppController();
 //        //Display health tips pop up once a day
@@ -195,7 +208,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         stepsCounter = (ArcProgress)findViewById(R.id.arc_progress);
+
         anyChart = (AnyChartView) findViewById(R.id.chart);
+
 
         //get the user's steps goal and set it as maximum value for Arc Progress widget
         stepsCounter.setMax(sharedPreferences.getInt("Goal",5000));
@@ -264,7 +279,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
         displayNotification();
         retrieveUserDetails(uid);
-        hourlyDataOnChart(uid);
+       // hourlyDataOnChart(uid);
 
         daybtn = findViewById(R.id.day_button);
         weekbtn = findViewById(R.id.week_button);
@@ -274,6 +289,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         weekbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                weeklyDataChart(uid);
                 Toast.makeText(HomeActivity.this, "Showing week graph", Toast.LENGTH_SHORT).show();
             }
         });
@@ -312,43 +329,45 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 Toast.makeText(HomeActivity.this, status, Toast.LENGTH_SHORT).show();
             }
         });
+//        calculateTotalSteps();
 
     }
 
 
 
-    private void hourlyDataOnChart(String uid) {
+    private void hourlyDataOnChart(final String uid) {
 
 
         CollectionReference documentReference = db.collection("users").document(uid).collection(today);
-        documentReference.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        documentReference.orderBy("steps").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
 
                     for (QueryDocumentSnapshot document : task.getResult()) {
                         if (document.exists()) {
-                        String time = document.getId();
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa");
-                        SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh aa");
-                        try {
-                            Date date = dateFormat.parse(time);
-                            time = dateFormat2.format(date);
 
-                        } catch (ParseException e) {
-                        }
+                                String time = document.getId();
+                                SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa");
+                                SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh aa");
+                                try {
+                                    Date date = dateFormat.parse(time);
+                                    time = dateFormat2.format(date);
 
-                        int steps = Integer.parseInt(String.valueOf(document.get("steps")));
+                                } catch (ParseException e) {
+                                }
 
-
-                        stepsData.add(steps);
-                        graph_data.add(time);
+                                int steps = Integer.parseInt(String.valueOf(document.get("steps")));
 
 
-                         }
-                        else{
-                            Toast.makeText(HomeActivity.this, "No steps for today", Toast.LENGTH_SHORT).show();
-                        }
+                                stepsData.add(steps);
+                                graph_data.add(time);
+
+
+                            } else {
+                                Toast.makeText(HomeActivity.this, "No steps for today", Toast.LENGTH_SHORT).show();
+                            }
+
                     }
 
                 } else {
@@ -357,10 +376,101 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
                 showGraph();
-
+                calculateTotalSteps(uid);
 
             }
 
+        });
+
+
+
+
+    }
+
+
+
+    private void weeklyDataChart(final String uid) {
+
+        String weekDay;
+//        int i = 0;
+//        while (i != (-4)){
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        Date date = null;
+        try {
+            date = simpleDateFormat.parse(today);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.DATE, 0);
+        weekDay = simpleDateFormat.format(calendar.getTime());
+
+
+        CollectionReference documentReference = db.collection("users").document(uid).collection(weekDay);
+        documentReference.orderBy("total").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        if (document.exists()) {
+                            String weekday = document.getId();
+                            int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
+                            weekData.add(totalsteps);
+                            week_graph_data.add(weekday);
+                        }
+
+                    }
+                }
+                showWeekGraph();
+            }
+        });
+//        i--;
+
+
+
+    }
+
+
+
+
+    private void calculateTotalSteps(String uid){
+
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
+        Date date = null;
+        try {
+            date= format.parse(today);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("E");
+        Log.d(TAG,"=============!!!!!!!!!!!!!!===================");
+        String weekday = sdf.format(date);
+        Log.d(TAG,weekday);
+
+        int sum = 0;
+        for(int i = 0; i < stepsData.size(); i++) {
+            sum += stepsData.get(i);
+
+        }
+        Log.d(TAG,"wwwwwwwwwwwTOTALwwwwwwwwwwww");
+        Log.d(TAG, String.valueOf(sum));
+
+        //Log daily total in Firestore
+        Map<String, Integer> totalsteps = new HashMap<>();
+        totalsteps.put("total",sum);
+        db.collection("users").document(uid)
+                .collection(today).document(weekday).set(totalsteps)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG,"wwwwwwwwwwwTOTAL SAVED!!!!wwwwwwwwwwww");
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
         });
 
 
@@ -370,15 +480,54 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     private void showGraph() {
 
+
+        APIlib.getInstance().setActiveAnyChartView(anyChart);
         Cartesian cartesian = AnyChart.column();
-        final List<DataEntry> data = new ArrayList<>();
+
+         List<DataEntry> data2 = new ArrayList<>();
         
         Log.d(TAG,"While Loop");
         int count = 0;
         while (stepsData.size() > count) {
 
-            data.add(new ValueDataEntry(graph_data.get(count),stepsData.get(count)));
+            data2.add(new ValueDataEntry(graph_data.get(count),stepsData.get(count)));
             Log.d(TAG,graph_data.get(count));
+            count++;
+        }
+
+        Column column = cartesian.column(data2);
+
+        column.tooltip()
+                .position(Position.CENTER_BOTTOM)
+                .anchor(Anchor.CENTER_BOTTOM)
+                .offsetX(0d)
+                .offsetY(5d);
+
+
+        cartesian.animation(true);
+
+        cartesian.yScale().minimum(0d);
+
+        cartesian.tooltip().positionMode(TooltipPositionMode.POINT);
+        cartesian.interactivity().hoverMode(HoverMode.BY_X);
+
+        cartesian.yAxis(0).title("Steps");
+
+        anyChart.setChart(cartesian);
+
+    }
+    private void showWeekGraph() {
+
+        APIlib.getInstance().setActiveAnyChartView(anyChart);
+        Cartesian cartesian = AnyChart.column();
+
+         List<DataEntry> data = new ArrayList<>();
+
+        int count = 0;
+        while (weekData.size() > count) {
+
+            data.add(new ValueDataEntry(week_graph_data.get(count),weekData.get(count)));
+            Log.d(TAG,week_graph_data.get(count));
             count++;
         }
 
@@ -553,7 +702,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getTimeInstance();
 
-        int totalStepsFromDataPoints = 0;
+
         float distanceTraveledFromDataPoints = 0;
         float kcals = 0;
         long mins = 0;
@@ -618,6 +767,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             calories.setText(String.format("%.2f", kcals/1000.00));
             kCals = kcals;
         }
+        checkForRewards();
 
     }
 
@@ -735,6 +885,138 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
 
+    public void checkForRewards(){
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        TextView txtclose, awardMessage;
+        awardPopup.setContentView(R.layout.custompopup);
+        txtclose = awardPopup.findViewById(R.id.txtclose);
+        awardImage = awardPopup.findViewById(R.id.award_image);
+        awardMessage= awardPopup.findViewById(R.id.awardmsg);
+        Drawable myTrophy = getResources().getDrawable(R.drawable.rewardcup2);
+        Drawable myMedal = getResources().getDrawable(R.drawable.rewardmedal);
+
+
+        Log.d(TAG,"---------------------REWARDS----------------------");
+
+
+        //daily steps = steps goal
+        if((totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000)) && (sharedPreferences.getBoolean("trophy1",false)==false)){
+           editor.putBoolean("trophy1",true);
+            editor.apply();
+            awardImage.setImageDrawable(myTrophy);
+            awardMessage.setText("Great job! You have completed your daily steps goal");
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+        //daily steps = steps goal) for 7 days
+//        if(stepsCounter.getProgress() == sharedPreferences.getInt("Goal",5000)){
+//
+//            awardMessage.setText("Achieved daily steps goal for 1 week!");
+//            awardPopup.show();
+//        }
+
+
+        //daily steps = steps goal) for 7 days
+        if((totalStepsFromDataPoints >= 20000)&& (sharedPreferences.getBoolean("trophy3",false)==false)){
+            editor.putBoolean("trophy3",true);
+            editor.apply();
+            awardImage.setImageDrawable(myTrophy);
+            awardMessage.setText("Busy bee: Congratulations! you have walked 20,000 steps in a single day");
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+
+
+
+        //distance higher than 1.5 km
+        if((distanceInMeters >= 1.5) && (sharedPreferences.getBoolean("medal1",false)==false)){
+            editor.putBoolean("medal1",true);
+            editor.apply();
+            awardImage.setImageDrawable(myMedal);
+            awardMessage.setText("Congratulations! You've just walked the distance equivalent to 5 times the height of the Torch tower, the highest tower in Qatar.");
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+
+        //distance higher than 7 km
+        if((distanceInMeters >= 7) && (sharedPreferences.getBoolean("medal2",false)==false)){
+            editor.putBoolean("medal2",true);
+            editor.apply();
+            awardImage.setImageDrawable(myMedal);
+            awardMessage.setText("Keep it up! You've just walked the distance of Doha Corniche!");
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+
+        //distance higher than 10 km
+        if((distanceInMeters >= 10) && (sharedPreferences.getBoolean("medal3",false)==false)){
+            editor.putBoolean("medal3",true);
+            editor.apply();
+            awardImage.setImageDrawable(myMedal);
+            awardMessage.setText("Great job! You've just crossed Al-Janoub stadium 36 times!");
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+        //distance higher than 33 km
+        if((distanceInMeters >= 33) && (sharedPreferences.getBoolean("medal4",false)==false)){
+            editor.putBoolean("medal4",true);
+            editor.apply();
+            awardImage.setImageDrawable(myMedal);
+            awardMessage.setText("Congratulations! You've walked the entire length of Al-Khor Coastal road, from Doha to Al-Khor.");
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+        //distance higher than 97 km
+        if((distanceInMeters >= 97) && (sharedPreferences.getBoolean("medal5",false)==false)){
+            editor.putBoolean("medal5",true);
+            editor.apply();
+            awardImage.setImageDrawable(myMedal);
+            awardMessage.setText("Thats a jump! you've walked the distance from Doha Port to Jazirat Halul! That's 96.8 km ");
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+        //distance higher than 160 km
+        if((distanceInMeters >= 160) && (sharedPreferences.getBoolean("medal6",false)==false)){
+            editor.putBoolean("medal6",true);
+            editor.apply();
+            awardImage.setImageDrawable(myMedal);
+            awardMessage.setText("Awesome job! You've walked the entire length of Qatar! ");
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+        //distance higher than 190 km
+        if((distanceInMeters >= 190) && (sharedPreferences.getBoolean("medal7",false)==false)){
+            editor.putBoolean("medal7",true);
+            editor.apply();
+            awardImage.setImageDrawable(myMedal);
+            awardMessage.setText("You're doing great! You've completed the distance from Mesaieed to Al-Shamal. That's 185 Km!");
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+        //distance higher than 571 km
+        if((distanceInMeters >= 571) && (sharedPreferences.getBoolean("medal8",false)==false)){
+            editor.putBoolean("medal8",true);
+            editor.apply();
+            awardImage.setImageDrawable(myMedal);
+            awardMessage.setText("Congratulations! You've just walked 571km which is the distance from Qatar to Kuwait!");
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+
+
+
+        txtclose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                awardPopup.dismiss();
+            }
+        });
+
+
+
+
+    }
 
 
 
@@ -820,11 +1102,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private class CustomDataEntry extends DataEntry {
-        CustomDataEntry(String time, Integer steps) {
-            setValue("x", time);
-            setValue("steps", steps);
-        }
-    }
+
 
 }
