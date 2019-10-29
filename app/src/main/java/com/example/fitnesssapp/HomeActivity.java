@@ -25,7 +25,6 @@ import com.anychart.APIlib;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
-import com.anychart.core.cartesian.series.Bar;
 import com.example.fitnesssapp.Locations.LocationsActivity;
 import com.example.fitnesssapp.services.AppWorker;
 import com.github.lzyzsd.circleprogress.ArcProgress;
@@ -279,7 +278,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
         displayNotification();
         retrieveUserDetails(uid);
-       // hourlyDataOnChart(uid);
+        hourlyDataOnChart(uid);
 
         daybtn = findViewById(R.id.day_button);
         weekbtn = findViewById(R.id.week_button);
@@ -502,6 +501,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 .anchor(Anchor.CENTER_BOTTOM)
                 .offsetX(0d)
                 .offsetY(5d);
+
+
 
 
         cartesian.animation(true);
@@ -896,9 +897,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Drawable myTrophy = getResources().getDrawable(R.drawable.rewardcup2);
         Drawable myMedal = getResources().getDrawable(R.drawable.rewardmedal);
 
+        float distanceInKm = distanceInMeters/1000;
 
         Log.d(TAG,"---------------------REWARDS----------------------");
-
 
         //daily steps = steps goal
         if((totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000)) && (sharedPreferences.getBoolean("trophy1",false)==false)){
@@ -917,11 +918,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //        }
 
 
-        //daily steps = steps goal) for 7 days
+        //daily steps >= 20000
         if((totalStepsFromDataPoints >= 20000)&& (sharedPreferences.getBoolean("trophy3",false)==false)){
             editor.putBoolean("trophy3",true);
             editor.apply();
             awardImage.setImageDrawable(myTrophy);
+
             awardMessage.setText("Busy bee: Congratulations! you have walked 20,000 steps in a single day");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
@@ -930,7 +932,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         //distance higher than 1.5 km
-        if((distanceInMeters >= 1.5) && (sharedPreferences.getBoolean("medal1",false)==false)){
+        if((distanceInKm >= 1.5) && (sharedPreferences.getBoolean("medal1",false)==false)){
             editor.putBoolean("medal1",true);
             editor.apply();
             awardImage.setImageDrawable(myMedal);
@@ -940,7 +942,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
         //distance higher than 7 km
-        if((distanceInMeters >= 7) && (sharedPreferences.getBoolean("medal2",false)==false)){
+        if((distanceInKm >= 7) && (sharedPreferences.getBoolean("medal2",false)==false)){
             editor.putBoolean("medal2",true);
             editor.apply();
             awardImage.setImageDrawable(myMedal);
@@ -950,7 +952,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
         //distance higher than 10 km
-        if((distanceInMeters >= 10) && (sharedPreferences.getBoolean("medal3",false)==false)){
+        if((distanceInKm >= 10) && (sharedPreferences.getBoolean("medal3",false)==false)){
             editor.putBoolean("medal3",true);
             editor.apply();
             awardImage.setImageDrawable(myMedal);
@@ -959,7 +961,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             awardPopup.show();
         }
         //distance higher than 33 km
-        if((distanceInMeters >= 33) && (sharedPreferences.getBoolean("medal4",false)==false)){
+        if((distanceInKm >= 33) && (sharedPreferences.getBoolean("medal4",false)==false)){
             editor.putBoolean("medal4",true);
             editor.apply();
             awardImage.setImageDrawable(myMedal);
@@ -968,7 +970,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             awardPopup.show();
         }
         //distance higher than 97 km
-        if((distanceInMeters >= 97) && (sharedPreferences.getBoolean("medal5",false)==false)){
+        if((distanceInKm >= 97) && (sharedPreferences.getBoolean("medal5",false)==false)){
             editor.putBoolean("medal5",true);
             editor.apply();
             awardImage.setImageDrawable(myMedal);
@@ -977,7 +979,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             awardPopup.show();
         }
         //distance higher than 160 km
-        if((distanceInMeters >= 160) && (sharedPreferences.getBoolean("medal6",false)==false)){
+        if((distanceInKm >= 160) && (sharedPreferences.getBoolean("medal6",false)==false)){
             editor.putBoolean("medal6",true);
             editor.apply();
             awardImage.setImageDrawable(myMedal);
@@ -986,7 +988,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             awardPopup.show();
         }
         //distance higher than 190 km
-        if((distanceInMeters >= 190) && (sharedPreferences.getBoolean("medal7",false)==false)){
+        if((distanceInKm >= 190) && (sharedPreferences.getBoolean("medal7",false)==false)){
             editor.putBoolean("medal7",true);
             editor.apply();
             awardImage.setImageDrawable(myMedal);
@@ -995,7 +997,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             awardPopup.show();
         }
         //distance higher than 571 km
-        if((distanceInMeters >= 571) && (sharedPreferences.getBoolean("medal8",false)==false)){
+        if((distanceInKm >= 571) && (sharedPreferences.getBoolean("medal8",false)==false)){
             editor.putBoolean("medal8",true);
             editor.apply();
             awardImage.setImageDrawable(myMedal);
@@ -1066,10 +1068,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(HomeActivity.this, AboutActivity.class));
             finish();
         }
-//        else if (id == R.id.nav_locations){
-//            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
-//            finish();
-//        }
+        else if (id == R.id.nav_locations){
+            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
+            finish();
+        }
         else if (id == R.id.nav_awards){
             startActivity(new Intent(HomeActivity.this, AchievementsActivity.class));
             finish();
