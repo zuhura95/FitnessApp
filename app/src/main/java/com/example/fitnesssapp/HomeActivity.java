@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -21,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 
+import com.androdocs.httprequest.HttpRequest;
 import com.anychart.APIlib;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
@@ -29,16 +31,12 @@ import com.example.fitnesssapp.Locations.LocationsActivity;
 import com.example.fitnesssapp.services.AppWorker;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.anychart.AnyChart;
-import com.anychart.AnyChartView;
-import com.anychart.chart.common.dataentry.DataEntry;
-import com.anychart.chart.common.dataentry.ValueDataEntry;
 import com.anychart.charts.Cartesian;
 import com.anychart.core.cartesian.series.Column;
 import com.anychart.enums.Anchor;
 import com.anychart.enums.HoverMode;
 import com.anychart.enums.Position;
 import com.anychart.enums.TooltipPositionMode;
-import com.github.mikephil.charting.data.BarEntry;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
@@ -91,6 +89,9 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -103,11 +104,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
 
 
     private String TAG = "Fitness";
+    String weather_API_key ="7a7f09f95d97e3e22d688438853d05f2";
     private final int OAUTH_REQUEST_CODE = 200;
     private static final int REQUEST_OAUTH_REQUEST_CODE = 0x1001;
     private final int FINE_LOCATION_REQUEST_CODE = 101;
@@ -329,6 +332,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 //        calculateTotalSteps();
+
+        new weatherTask().execute();
 
     }
 
@@ -1100,6 +1105,74 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
             }
+        }
+    }
+
+    class weatherTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+        String LAT = "25.33418633365931";
+        String LON="51.474041205731275";
+        protected String doInBackground(String... args) {
+            String response= HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?lat=" + LAT + "&lon=" + LON + "&units=metric&appid=" + weather_API_key);
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+
+            try {
+                JSONObject jsonObj = new JSONObject(result);
+                JSONObject main = jsonObj.getJSONObject("main");
+                JSONObject sys = jsonObj.getJSONObject("sys");
+                JSONObject wind = jsonObj.getJSONObject("wind");
+                JSONObject weather = jsonObj.getJSONArray("weather").getJSONObject(0);
+
+                Long updatedAt = jsonObj.getLong("dt");
+                String updatedAtText = "Updated at: " + new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.ENGLISH).format(new Date(updatedAt * 1000));
+                String temp = main.getString("temp") + "°C";
+                String tempMin = "Min Temp: " + main.getString("temp_min") + "°C";
+                String tempMax = "Max Temp: " + main.getString("temp_max") + "°C";
+                String pressure = main.getString("pressure");
+                String humidity = main.getString("humidity");
+
+                Long sunrise = sys.getLong("sunrise");
+                Long sunset = sys.getLong("sunset");
+                String windSpeed = wind.getString("speed");
+                String weatherDescription = weather.getString("description");
+
+                String address = jsonObj.getString("name") + ", " + sys.getString("country");
+
+
+                /* Populating extracted data into our views */
+//                addressTxt.setText(address);
+//                updated_atTxt.setText(updatedAtText);
+//                statusTxt.setText(weatherDescription.toUpperCase());
+//                tempTxt.setText(temp);
+//                temp_minTxt.setText(tempMin);
+//                temp_maxTxt.setText(tempMax);
+//                sunriseTxt.setText(new SimpleDateFormat("hh:mm a", Locale.ENGLISH).format(new Date(sunrise * 1000)));
+//                sunsetTxt.setText(new SimpleDateFormat("hh:mm a", Locale.ENGLISH).format(new Date(sunset * 1000)));
+//                windTxt.setText(windSpeed);
+//                pressureTxt.setText(pressure);
+//                humidityTxt.setText(humidity);
+
+                /* Views populated, Hiding the loader, Showing the main design */
+//                findViewById(R.id.loader).setVisibility(View.GONE);
+//                findViewById(R.id.mainContainer).setVisibility(View.VISIBLE);
+
+                Toast.makeText(HomeActivity.this, "Today's weather is "+temp+" and it is "+weatherDescription+" at "+address, Toast.LENGTH_SHORT).show();
+
+            } catch (JSONException e) {
+//
+                Log.d(TAG,e.getMessage());
+            }
+
         }
     }
 

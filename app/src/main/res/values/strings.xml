@@ -58,6 +58,7 @@
 
 
     <string name="google_maps_key">AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs</string>
+
     <string name="keyword">Keyword...</string>
     <string name="search">Search</string>
 </resources>
