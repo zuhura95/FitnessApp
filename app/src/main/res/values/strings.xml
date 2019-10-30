@@ -13,9 +13,10 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
 
+<!--    Titles for pages-->
     <string name="title_activity_home">Dashboard</string>
     <string name="title_activity_locations">Locations</string>
-    <string name="title_activity_profile">ProfileActivity</string>
+    <string name="title_activity_profile">Profile</string>
     <string name="title_activity_achievements">Awards</string>
     <string name="title_activity_about">About</string>
     <string name="title_activity_user_profile">Profile</string>
@@ -40,4 +41,23 @@
     </string>
 
 
+<!--    Award messages-->
+    <string name="award_1_message">Great job! You have completed your daily steps goal</string>
+    <string name="award_2_message">Active monkey: achieved daily steps goal for 1 week.</string>
+    <string name="award_3_message">Busy bee: Congratulations! you have walked 20,000 steps in a single day</string>
+    <string name="award_4_message">Awesome! you have read 10 daily health tips!</string>
+
+    <string name="award_5_message">Congratulations! You\'ve just walked the distance equivalent to 5 times the height of the Torch tower, the highest tower in Qatar.</string>
+    <string name="award_6_message">Keep it up! You\'ve just walked the distance of Doha Corniche!</string>
+    <string name="award_7_message">Great job! You\'ve just crossed Al-Janoub stadium 36 times!</string>
+    <string name="award_8_message">Congratulations! You\'ve walked the entire length of Al-Khor Coastal road, from Doha to Al-Khor.</string>
+    <string name="award_9_message">Thats a jump! you\'ve walked the distance from Doha Port to Jazirat Halul! That\'s 96.8 km </string>
+    <string name="award_10_message">Awesome job! You\'ve walked the entire length of Qatar! </string>
+    <string name="award_11_message">You\'re doing great! You\'ve completed the distance from Mesaieed to Al-Shamal. That\'s 185 Km!</string>
+    <string name="award_12_message">Congratulations! You\'ve just walked 571km which is the distance from Qatar to Kuwait! </string>
+
+
+    <string name="google_maps_key">AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs</string>
+    <string name="keyword">Keyword...</string>
+    <string name="search">Search</string>
 </resources>

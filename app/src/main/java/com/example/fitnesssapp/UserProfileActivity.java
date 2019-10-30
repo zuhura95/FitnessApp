@@ -238,6 +238,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         user.put("Height",height);
         user.put("Age",age);
         user.put("Gender",gender);
+        user.put("GenderSelection",selectedGender);
         user.put("Goal",goal);
         user.put("FromHour",fromHour);
         user.put("ToHour",toHour);

@@ -833,7 +833,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
                         String fName, lName,gender,fromHour,toHour,lunchHour,weekend;
                         Double weight,height;
-                        Long age;
+                        Long age,genderSelection;
                         /////// GET INFO FROM FIRESTORE
                         fName = document.getString("FirstName");
                         lName = document.getString("LastName");
@@ -845,10 +845,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                         weight=document.getDouble("Weight");
                         height=document.getDouble("Height");
                         age = document.getLong("Age");
+                        genderSelection = document.getLong("GenderSelection");
 
 
 
-                        saveToLocalDB(fName,lName,gender,fromHour,toHour,lunchHour,weekend,weight,height,age);
+                        saveToLocalDB(fName,lName,gender,fromHour,toHour,lunchHour,weekend,weight,height,age,genderSelection);
 
 
 
@@ -865,7 +866,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     /////// SAVE INTO LOCAL DB
 
-    private void saveToLocalDB(String fName, String lName, String gender, String fromHour, String toHour, String lunchHour, String weekend,Double weight,Double height, Long age) {
+    private void saveToLocalDB(String fName, String lName, String gender, String fromHour, String toHour, String lunchHour, String weekend,Double weight,Double height, Long age, Long genderSelection) {
 
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -879,6 +880,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         editor.putFloat("Weight",Float.valueOf(String.valueOf(weight)));
         editor.putFloat("Height",Float.valueOf(String.valueOf(height)));
         editor.putLong("Age",age);
+        editor.putLong("GenderSelection",genderSelection);
         editor.apply();
 
         helloText.setText("Hello there "+ fName +" !");
@@ -907,11 +909,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         //daily steps = steps goal && (sharedPreferences.getBoolean("trophy1",false)==false)
         if((totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000))){
-           editor.putBoolean("trophy1",true);
-            awardImage.setImageDrawable(myTrophy);
-            awardMessage.setText("Great job! You have completed your daily steps goal");
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
+
+                editor.putBoolean("trophy1", true);
+                awardImage.setImageDrawable(myTrophy);
+                awardMessage.setText(R.string.award_1_message);
+                awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                awardPopup.show();
+
         }
 
 
@@ -927,7 +931,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if((totalStepsFromDataPoints >= 20000)){
             editor.putBoolean("trophy3",true);
             awardImage.setImageDrawable(myTrophy);
-            awardMessage.setText("Busy bee: Congratulations! you have walked 20,000 steps in a single day");
+            awardMessage.setText(R.string.award_3_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
@@ -938,7 +942,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if((distanceInKm >= 1.5)){
             editor.putBoolean("medal1",true);
             awardImage.setImageDrawable(myMedal);
-            awardMessage.setText("Congratulations! You've just walked the distance equivalent to 5 times the height of the Torch tower, the highest tower in Qatar.");
+            awardMessage.setText(R.string.award_5_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
@@ -947,7 +951,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if((distanceInKm >= 7) ){
             editor.putBoolean("medal2",true);
             awardImage.setImageDrawable(myMedal);
-            awardMessage.setText("Keep it up! You've just walked the distance of Doha Corniche!");
+            awardMessage.setText(R.string.award_6_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
@@ -956,7 +960,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if((distanceInKm >= 10)){
             editor.putBoolean("medal3",true);
             awardImage.setImageDrawable(myMedal);
-            awardMessage.setText("Great job! You've just crossed Al-Janoub stadium 36 times!");
+            awardMessage.setText(R.string.award_7_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
@@ -964,7 +968,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if((distanceInKm >= 33) ){
             editor.putBoolean("medal4",true);
             awardImage.setImageDrawable(myMedal);
-            awardMessage.setText("Congratulations! You've walked the entire length of Al-Khor Coastal road, from Doha to Al-Khor.");
+            awardMessage.setText(R.string.award_8_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
@@ -972,7 +976,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if((distanceInKm >= 97) ){
             editor.putBoolean("medal5",true);
             awardImage.setImageDrawable(myMedal);
-            awardMessage.setText("Thats a jump! you've walked the distance from Doha Port to Jazirat Halul! That's 96.8 km ");
+            awardMessage.setText(R.string.award_9_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
@@ -980,7 +984,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if((distanceInKm >= 160)){
             editor.putBoolean("medal6",true);
             awardImage.setImageDrawable(myMedal);
-            awardMessage.setText("Awesome job! You've walked the entire length of Qatar! ");
+            awardMessage.setText(R.string.award_10_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
@@ -988,7 +992,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if((distanceInKm >= 190) ){
             editor.putBoolean("medal7",true);
             awardImage.setImageDrawable(myMedal);
-            awardMessage.setText("You're doing great! You've completed the distance from Mesaieed to Al-Shamal. That's 185 Km!");
+            awardMessage.setText(R.string.award_11_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
@@ -996,7 +1000,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if((distanceInKm >= 571)){
             editor.putBoolean("medal8",true);
             awardImage.setImageDrawable(myMedal);
-            awardMessage.setText("Congratulations! You've just walked 571km which is the distance from Qatar to Kuwait!");
+            awardMessage.setText(R.string.award_12_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
