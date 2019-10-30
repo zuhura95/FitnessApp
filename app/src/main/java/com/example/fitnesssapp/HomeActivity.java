@@ -121,7 +121,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     ArcProgress stepsCounter;
     AnyChartView anyChart;
     Dialog awardPopup;
-    ImageView awardImage;
+
 
     AppController appController;
 
@@ -890,6 +890,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         TextView txtclose, awardMessage;
+        ImageView awardImage;
+
+        boolean gotReward = sharedPreferences.getBoolean("trophy1",false);
         awardPopup.setContentView(R.layout.custompopup);
         txtclose = awardPopup.findViewById(R.id.txtclose);
         awardImage = awardPopup.findViewById(R.id.award_image);
@@ -900,16 +903,18 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         float distanceInKm = distanceInMeters/1000;
 
         Log.d(TAG,"---------------------REWARDS----------------------");
+        Log.d(TAG, String.valueOf(gotReward));
 
-        //daily steps = steps goal
-        if((totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000)) && (sharedPreferences.getBoolean("trophy1",false)==false)){
+        //daily steps = steps goal && (sharedPreferences.getBoolean("trophy1",false)==false)
+        if((totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000))){
            editor.putBoolean("trophy1",true);
-            editor.apply();
             awardImage.setImageDrawable(myTrophy);
             awardMessage.setText("Great job! You have completed your daily steps goal");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
+
+
         //daily steps = steps goal) for 7 days
 //        if(stepsCounter.getProgress() == sharedPreferences.getInt("Goal",5000)){
 //
@@ -919,11 +924,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         //daily steps >= 20000
-        if((totalStepsFromDataPoints >= 20000)&& (sharedPreferences.getBoolean("trophy3",false)==false)){
+        if((totalStepsFromDataPoints >= 20000)){
             editor.putBoolean("trophy3",true);
-            editor.apply();
             awardImage.setImageDrawable(myTrophy);
-
             awardMessage.setText("Busy bee: Congratulations! you have walked 20,000 steps in a single day");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
@@ -932,9 +935,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         //distance higher than 1.5 km
-        if((distanceInKm >= 1.5) && (sharedPreferences.getBoolean("medal1",false)==false)){
+        if((distanceInKm >= 1.5)){
             editor.putBoolean("medal1",true);
-            editor.apply();
             awardImage.setImageDrawable(myMedal);
             awardMessage.setText("Congratulations! You've just walked the distance equivalent to 5 times the height of the Torch tower, the highest tower in Qatar.");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -942,9 +944,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
         //distance higher than 7 km
-        if((distanceInKm >= 7) && (sharedPreferences.getBoolean("medal2",false)==false)){
+        if((distanceInKm >= 7) ){
             editor.putBoolean("medal2",true);
-            editor.apply();
             awardImage.setImageDrawable(myMedal);
             awardMessage.setText("Keep it up! You've just walked the distance of Doha Corniche!");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -952,54 +953,48 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
         //distance higher than 10 km
-        if((distanceInKm >= 10) && (sharedPreferences.getBoolean("medal3",false)==false)){
+        if((distanceInKm >= 10)){
             editor.putBoolean("medal3",true);
-            editor.apply();
             awardImage.setImageDrawable(myMedal);
             awardMessage.setText("Great job! You've just crossed Al-Janoub stadium 36 times!");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
         //distance higher than 33 km
-        if((distanceInKm >= 33) && (sharedPreferences.getBoolean("medal4",false)==false)){
+        if((distanceInKm >= 33) ){
             editor.putBoolean("medal4",true);
-            editor.apply();
             awardImage.setImageDrawable(myMedal);
             awardMessage.setText("Congratulations! You've walked the entire length of Al-Khor Coastal road, from Doha to Al-Khor.");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
         //distance higher than 97 km
-        if((distanceInKm >= 97) && (sharedPreferences.getBoolean("medal5",false)==false)){
+        if((distanceInKm >= 97) ){
             editor.putBoolean("medal5",true);
-            editor.apply();
             awardImage.setImageDrawable(myMedal);
             awardMessage.setText("Thats a jump! you've walked the distance from Doha Port to Jazirat Halul! That's 96.8 km ");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
         //distance higher than 160 km
-        if((distanceInKm >= 160) && (sharedPreferences.getBoolean("medal6",false)==false)){
+        if((distanceInKm >= 160)){
             editor.putBoolean("medal6",true);
-            editor.apply();
             awardImage.setImageDrawable(myMedal);
             awardMessage.setText("Awesome job! You've walked the entire length of Qatar! ");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
         //distance higher than 190 km
-        if((distanceInKm >= 190) && (sharedPreferences.getBoolean("medal7",false)==false)){
+        if((distanceInKm >= 190) ){
             editor.putBoolean("medal7",true);
-            editor.apply();
             awardImage.setImageDrawable(myMedal);
             awardMessage.setText("You're doing great! You've completed the distance from Mesaieed to Al-Shamal. That's 185 Km!");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
         //distance higher than 571 km
-        if((distanceInKm >= 571) && (sharedPreferences.getBoolean("medal8",false)==false)){
+        if((distanceInKm >= 571)){
             editor.putBoolean("medal8",true);
-            editor.apply();
             awardImage.setImageDrawable(myMedal);
             awardMessage.setText("Congratulations! You've just walked 571km which is the distance from Qatar to Kuwait!");
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1007,7 +1002,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-
+        editor.apply();
         txtclose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
