@@ -54,6 +54,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 
 import androidx.annotation.NonNull;
@@ -102,6 +103,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
@@ -116,6 +118,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private final int FINE_LOCATION_REQUEST_CODE = 101;
     private FirebaseAuth auth;
     private FirebaseFirestore db;
+    private FirebaseAnalytics analytics;
     private static OnDataPointListener stepListener;
     private static OnDataPointListener distanceListener;
 
@@ -123,7 +126,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
     ArcProgress stepsCounter;
     AnyChartView anyChart;
-    Dialog awardPopup;
+    Dialog awardPopup, healthtip;
 
 
     AppController appController;
@@ -151,43 +154,36 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         toolbar.setTitle(getString(R.string.title_activity_home));
         setSupportActionBar(toolbar);
 
-        awardPopup = new Dialog(this);
-
         appController = new AppController();
-//        //Display health tips pop up once a day
-//        Calendar calendar = Calendar.getInstance();
-//        int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
-//        SharedPreferences settings = getSharedPreferences("PREFS",0);
-//        int lastDay = settings.getInt("day", 0);
-//
-//        if (lastDay != currentDay) {
-//            SharedPreferences.Editor editor = settings.edit();
-//            editor.putInt("day", currentDay);
-//            editor.commit();
-//
-//            //run code that will be displayed once a day
-//            Toast.makeText(this, "Hello!!!! Can you see me???", Toast.LENGTH_SHORT).show();
-//            Log.d(TAG, "Different!");
-//        } else {
-//            Toast.makeText(this, "Same day again!", Toast.LENGTH_SHORT).show();
-//            Log.d("MYINT", "Current Day: " + currentDay);
-//            Log.d("MYINT", "Last Day: " + lastDay);
-//
-//            startActivity(new Intent(HomeActivity.this, Popup.class));
-//
-//
-//        }
         today = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
         appController.setToday(today);
-
-
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
+        analytics = FirebaseAnalytics.getInstance(this);
         uid = auth.getCurrentUser().getUid();
+        analytics.setUserId(uid);
         appController.setUid(uid);
 
+        awardPopup = new Dialog(this);
+        healthtip = new Dialog(this);
 
+
+
+        //Display health tips pop up once a day
+        Calendar calendar = Calendar.getInstance();
+        int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
+        int lastDay = sharedPreferences.getInt("day", 0);
+
+        if (lastDay != currentDay) {
+              SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putInt("day", currentDay);
+            editor.apply();
+
+            //run code that will be displayed once a day
+           showHealthTip();
+
+        }
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -334,6 +330,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //        calculateTotalSteps();
 
         new weatherTask().execute();
+       showHealthTip();
 
     }
 
@@ -507,10 +504,40 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 .offsetX(0d)
                 .offsetY(5d);
 
+        column.pointWidth(10d);
 
 
 
         cartesian.animation(true);
+
+        //Round corner
+        column.rendering().point("function() {\n" +
+                "    // if missing (not correct data), then skipping this point drawing\n" +
+                "    if (this.missing) {\n" +
+                "return;\n" +
+                "    }\n" +
+                "\n" +
+                "    // get shapes group\n" +
+                "    var shapes = this.shapes || this.getShapesGroup(this.pointState);\n" +
+                "    // calculate the left value of the x-axis\n" +
+                "    var leftX = this.x - this.pointWidth / 2;\n" +
+                "    // calculate the right value of the x-axis\n" +
+                "    var rightX = leftX + this.pointWidth;\n" +
+                "    // calculate the half of point width\n" +
+                "    var rx = this.pointWidth / 2;\n" +
+                "\n" +
+                "    shapes['path']\n" +
+                "    // resets all 'line' operations\n" +
+                "    .clear()\n" +
+                "    // draw column with rounded edges\n" +
+                "    .moveTo(leftX, this.zero)\n" +
+                "    .lineTo(leftX, this.value + rx)\n" +
+                "    .circularArc(leftX + rx, this.value + rx, rx, rx, 180, 180)\n" +
+                "    .lineTo(rightX, this.zero)\n" +
+                "    // close by connecting the last point with the first straight line\n" +
+                "    .close();\n" +
+                "}");
+
 
         cartesian.yScale().minimum(0d);
 
@@ -546,7 +573,40 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 .offsetY(5d);
 
 
+
+        column.pointWidth(10d);
+
+
+
         cartesian.animation(true);
+
+        //Round corner
+        column.rendering().point("function() {\n" +
+                "    // if missing (not correct data), then skipping this point drawing\n" +
+                "    if (this.missing) {\n" +
+                "return;\n" +
+                "    }\n" +
+                "\n" +
+                "    // get shapes group\n" +
+                "    var shapes = this.shapes || this.getShapesGroup(this.pointState);\n" +
+                "    // calculate the left value of the x-axis\n" +
+                "    var leftX = this.x - this.pointWidth / 2;\n" +
+                "    // calculate the right value of the x-axis\n" +
+                "    var rightX = leftX + this.pointWidth;\n" +
+                "    // calculate the half of point width\n" +
+                "    var rx = this.pointWidth / 2;\n" +
+                "\n" +
+                "    shapes['path']\n" +
+                "    // resets all 'line' operations\n" +
+                "    .clear()\n" +
+                "    // draw column with rounded edges\n" +
+                "    .moveTo(leftX, this.zero)\n" +
+                "    .lineTo(leftX, this.value + rx)\n" +
+                "    .circularArc(leftX + rx, this.value + rx, rx, rx, 180, 180)\n" +
+                "    .lineTo(rightX, this.zero)\n" +
+                "    // close by connecting the last point with the first straight line\n" +
+                "    .close();\n" +
+                "}");
 
         cartesian.yScale().minimum(0d);
 
@@ -757,9 +817,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         //update the proper labels
         if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
 
-            String stepCount = String.valueOf(totalStepsFromDataPoints);
-                stepsCounter.setProgress(Integer.parseInt(stepCount));
-               double steps = Double.parseDouble(stepCount);
+
+                stepsCounter.setProgress(totalStepsFromDataPoints);
+               double steps = Double.parseDouble(String.valueOf(totalStepsFromDataPoints));
                double value =( steps / sharedPreferences.getInt("Goal",5000)) * 100;
                 stepsPercentage.setText(String.format("%.2f",value)+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
 
@@ -1024,6 +1084,26 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    private void showHealthTip(){
+
+        TextView healthMessage;
+        ImageView healthImage;
+
+//        String[] array = context.getResources().getStringArray(R.array.animals_array);
+        String[] array = this.getResources().getStringArray(R.array.health_tips);
+       // String[] imagearray = this.getResources().getStringArray(R.array.pic_name);
+        int i= new Random().nextInt(array.length);
+        String randomStr = array[i];
+
+        healthtip.setContentView(R.layout.dailypopup);
+        healthImage = healthtip.findViewById(R.id.message_image);
+        healthMessage= healthtip.findViewById(R.id.dailymsg);
+        healthMessage.setText(randomStr);
+//        healthImage.setImageDrawable(drawable);
+        healthtip.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        healthtip.show();
+
+    }
 
 
 
@@ -1098,6 +1178,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
                 Log.d(TAG, "accessing...");
