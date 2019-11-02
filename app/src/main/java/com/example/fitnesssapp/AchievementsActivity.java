@@ -16,8 +16,7 @@ import android.widget.ImageView;
 
 public class AchievementsActivity extends AppCompatActivity {
 
-
-    ImageView trophy1,trophy2,trophy3,trophy4,medal1,medal2,medal3,medal4,medal5,medal6,medal7,medal8;
+    ImageView trophy1, trophy2, trophy3, trophy4, medal1, medal2, medal3, medal4, medal5, medal6, medal7, medal8;
     SharedPreferences sharedPreferences;
 
     @Override
@@ -64,65 +63,58 @@ public class AchievementsActivity extends AppCompatActivity {
         medal8.setImageAlpha(100);
 
 
-
-
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         checkForUnlockedRewards();
-
-
     }
 
     private void checkForUnlockedRewards() {
-
-        if(sharedPreferences.getBoolean("trophy1",false) == true){
+        if (sharedPreferences.getBoolean("trophy1", false) == true) {
             trophy1.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("trophy2",false) == true){
+        if (sharedPreferences.getBoolean("trophy2", false) == true) {
             trophy2.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("trophy3",false) == true){
+        if (sharedPreferences.getBoolean("trophy3", false) == true) {
             trophy3.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("trophy4",false) == true){
+        if (sharedPreferences.getBoolean("trophy4", false) == true) {
             trophy4.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("medal1",false) == true){
+        if (sharedPreferences.getBoolean("medal1", false) == true) {
             medal1.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("medal2",false) == true){
+        if (sharedPreferences.getBoolean("medal2", false) == true) {
             medal2.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("medal3",false) == true){
+        if (sharedPreferences.getBoolean("medal3", false) == true) {
             medal3.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("medal4",false) == true){
+        if (sharedPreferences.getBoolean("medal4", false) == true) {
             medal4.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("medal5",false) == true){
+        if (sharedPreferences.getBoolean("medal5", false) == true) {
             medal5.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("medal6",false) == true){
+        if (sharedPreferences.getBoolean("medal6", false) == true) {
             medal6.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("medal7",false) == true){
+        if (sharedPreferences.getBoolean("medal7", false) == true) {
             medal7.setImageAlpha(255);
 
         }
-        if(sharedPreferences.getBoolean("medal8",false) == true){
+        if (sharedPreferences.getBoolean("medal8", false) == true) {
             medal8.setImageAlpha(255);
 
         }
     }
-
-
 }

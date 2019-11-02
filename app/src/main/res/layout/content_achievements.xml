@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    android:orientation="vertical"
+    android:weightSum="10"
     tools:context=".AchievementsActivity"
     tools:showIn="@layout/activity_achievements">
 
@@ -20,7 +21,7 @@
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="412dp"
+                android:layout_width="match_parent"
                 android:layout_height="173dp"
                 android:src="@drawable/stadium" />
 
@@ -36,13 +37,14 @@
                 android:orientation="horizontal">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/trophy_1"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardcup2" />
 
@@ -57,13 +59,14 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/trophy_2"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardcup2" />
 
@@ -77,13 +80,14 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/trophy_3"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardcup2" />
 
@@ -97,13 +101,14 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/trophy_4"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardcup2" />
 
@@ -129,13 +134,14 @@
                 android:orientation="horizontal">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/medal_1"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardmedal" />
 
@@ -149,13 +155,14 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/medal_2"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardmedal" />
 
@@ -169,13 +176,14 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/medal_3"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardmedal" />
 
@@ -189,13 +197,14 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/medal_4"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardmedal" />
 
@@ -207,8 +216,6 @@
                         android:textAlignment="center"
                         android:textSize="10dp" />
                 </LinearLayout>
-
-
             </LinearLayout>
 
             <LinearLayout
@@ -217,13 +224,14 @@
                 android:orientation="horizontal">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/medal_5"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardmedal" />
 
@@ -237,13 +245,14 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/medal_6"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardmedal" />
 
@@ -257,13 +266,14 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/medal_7"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardmedal" />
 
@@ -277,13 +287,14 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight=".25"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/medal_8"
-                        android:layout_width="100dp"
+                        android:layout_width="match_parent"
                         android:layout_height="100dp"
                         android:src="@drawable/rewardmedal" />
 
@@ -298,5 +309,4 @@
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

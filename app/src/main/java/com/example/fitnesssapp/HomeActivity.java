@@ -107,12 +107,11 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
-
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
 
     private String TAG = "Fitness";
-    String weather_API_key ="7a7f09f95d97e3e22d688438853d05f2";
+    String weather_API_key = "7a7f09f95d97e3e22d688438853d05f2";
     private final int OAUTH_REQUEST_CODE = 200;
     private static final int REQUEST_OAUTH_REQUEST_CODE = 0x1001;
     private final int FINE_LOCATION_REQUEST_CODE = 101;
@@ -136,12 +135,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private float movemins;
     private int totalStepsFromDataPoints = 0;
 
-    Button daybtn,weekbtn, monthbtn;
+    Button daybtn, weekbtn, monthbtn;
 
-    String today,uid;
+    String today, uid;
 
-     List<Integer> stepsData = new ArrayList<>();
-     List<String> graph_data = new ArrayList<>();
+    List<Integer> stepsData = new ArrayList<>();
+    List<String> graph_data = new ArrayList<>();
     List<Integer> weekData = new ArrayList<>();
     List<String> week_graph_data = new ArrayList<>();
 
@@ -169,30 +168,29 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         healthtip = new Dialog(this);
 
 
-
         //Display health tips pop up once a day
         Calendar calendar = Calendar.getInstance();
         int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
         int lastDay = sharedPreferences.getInt("day", 0);
 
         if (lastDay != currentDay) {
-              SharedPreferences.Editor editor = sharedPreferences.edit();
+            SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putInt("day", currentDay);
             editor.apply();
 
             //run code that will be displayed once a day
-           showHealthTip();
+            showHealthTip();
 
         }
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         View headerView = navigationView.getHeaderView(0);
 
         //Display Name of the user in the navigation header
-        helloText = (TextView)headerView.findViewById(R.id.helloTextView);
-        stepsPercentage = (TextView)findViewById(R.id.stepsPercent);
-        dateTextView = (TextView)findViewById(R.id.todayDate);
+        helloText = headerView.findViewById(R.id.helloTextView);
+        stepsPercentage = findViewById(R.id.stepsPercent);
+        dateTextView = findViewById(R.id.todayDate);
         calories = findViewById(R.id.caloriesTextview);
         distance = findViewById(R.id.distanceTextview);
         activeTime = findViewById(R.id.activetimeTextview);
@@ -204,16 +202,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         dateTextView.setText(currentDateandTime);
 
 
+        stepsCounter = findViewById(R.id.arc_progress);
 
-        stepsCounter = (ArcProgress)findViewById(R.id.arc_progress);
-
-        anyChart = (AnyChartView) findViewById(R.id.chart);
+        anyChart = findViewById(R.id.chart);
 
 
         //get the user's steps goal and set it as maximum value for Arc Progress widget
-        stepsCounter.setMax(sharedPreferences.getInt("Goal",5000));
-
-
+        stepsCounter.setMax(sharedPreferences.getInt("Goal", 5000));
 
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -223,8 +218,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this,new String[] {Manifest.permission.ACCESS_FINE_LOCATION},FINE_LOCATION_REQUEST_CODE);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_REQUEST_CODE);
         else {
             Log.d(TAG, "Fine Location permission already granted");
 
@@ -256,21 +251,19 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 });
 
 
-
-
-            FitnessOptions fitnessOptions = FitnessOptions.builder()
-                    .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-                    .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
-                    .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
-                    .addDataType(DataType.TYPE_MOVE_MINUTES,FitnessOptions.ACCESS_READ)
-                    .build();
+        FitnessOptions fitnessOptions = FitnessOptions.builder()
+                .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_MOVE_MINUTES, FitnessOptions.ACCESS_READ)
+                .build();
 
         // check if app has permissions
-        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount( this), fitnessOptions)) {
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this), fitnessOptions)) {
             GoogleSignIn.requestPermissions(
                     this,
                     REQUEST_OAUTH_REQUEST_CODE,
-                    GoogleSignIn.getLastSignedInAccount( this),
+                    GoogleSignIn.getLastSignedInAccount(this),
                     fitnessOptions);
         } else {
             accessGoogleFit();
@@ -300,13 +293,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-
         daybtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 hourlyDataOnChart(uid);
                 Toast.makeText(HomeActivity.this, "Showing day graph", Toast.LENGTH_SHORT).show();
-
 
 
             }
@@ -317,7 +308,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 .setRequiresBatteryNotLow(true)
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
-        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(AppWorker.class,1,TimeUnit.MINUTES).setConstraints(constraints).build();
+        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(AppWorker.class, 1, TimeUnit.MINUTES).setConstraints(constraints).build();
         WorkManager.getInstance(this).enqueue(request);
         //display status of work
         WorkManager.getInstance().getWorkInfoByIdLiveData(request.getId()).observe(this, new Observer<WorkInfo>() {
@@ -330,10 +321,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //        calculateTotalSteps();
 
         new weatherTask().execute();
-       showHealthTip();
+        showHealthTip();
 
     }
-
 
 
     private void hourlyDataOnChart(final String uid) {
@@ -348,26 +338,26 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     for (QueryDocumentSnapshot document : task.getResult()) {
                         if (document.exists()) {
 
-                                String time = document.getId();
-                                SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa");
-                                SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh aa");
-                                try {
-                                    Date date = dateFormat.parse(time);
-                                    time = dateFormat2.format(date);
+                            String time = document.getId();
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa");
+                            SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh aa");
+                            try {
+                                Date date = dateFormat.parse(time);
+                                time = dateFormat2.format(date);
 
-                                } catch (ParseException e) {
-                                }
-
-                                int steps = Integer.parseInt(String.valueOf(document.get("steps")));
-
-
-                                stepsData.add(steps);
-                                graph_data.add(time);
-
-
-                            } else {
-                                Toast.makeText(HomeActivity.this, "No steps for today", Toast.LENGTH_SHORT).show();
+                            } catch (ParseException e) {
                             }
+
+                            int steps = Integer.parseInt(String.valueOf(document.get("steps")));
+
+
+                            stepsData.add(steps);
+                            graph_data.add(time);
+
+
+                        } else {
+                            Toast.makeText(HomeActivity.this, "No steps for today", Toast.LENGTH_SHORT).show();
+                        }
 
                     }
 
@@ -384,10 +374,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-
-
     }
-
 
 
     private void weeklyDataChart(final String uid) {
@@ -395,7 +382,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         String weekDay;
 //        int i = 0;
 //        while (i != (-4)){
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
         Date date = null;
         try {
             date = simpleDateFormat.parse(today);
@@ -429,43 +416,40 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //        i--;
 
 
-
     }
 
 
-
-
-    private void calculateTotalSteps(String uid){
+    private void calculateTotalSteps(String uid) {
 
         SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
         Date date = null;
         try {
-            date= format.parse(today);
+            date = format.parse(today);
         } catch (ParseException e) {
             e.printStackTrace();
         }
         SimpleDateFormat sdf = new SimpleDateFormat("E");
-        Log.d(TAG,"=============!!!!!!!!!!!!!!===================");
+        Log.d(TAG, "=============!!!!!!!!!!!!!!===================");
         String weekday = sdf.format(date);
-        Log.d(TAG,weekday);
+        Log.d(TAG, weekday);
 
         int sum = 0;
-        for(int i = 0; i < stepsData.size(); i++) {
+        for (int i = 0; i < stepsData.size(); i++) {
             sum += stepsData.get(i);
 
         }
-        Log.d(TAG,"wwwwwwwwwwwTOTALwwwwwwwwwwww");
+        Log.d(TAG, "wwwwwwwwwwwTOTALwwwwwwwwwwww");
         Log.d(TAG, String.valueOf(sum));
 
         //Log daily total in Firestore
         Map<String, Integer> totalsteps = new HashMap<>();
-        totalsteps.put("total",sum);
+        totalsteps.put("total", sum);
         db.collection("users").document(uid)
                 .collection(today).document(weekday).set(totalsteps)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG,"wwwwwwwwwwwTOTAL SAVED!!!!wwwwwwwwwwww");
+                        Log.d(TAG, "wwwwwwwwwwwTOTAL SAVED!!!!wwwwwwwwwwww");
                     }
                 }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -478,21 +462,20 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
     private void showGraph() {
 
 
         APIlib.getInstance().setActiveAnyChartView(anyChart);
         Cartesian cartesian = AnyChart.column();
 
-         List<DataEntry> data2 = new ArrayList<>();
-        
-        Log.d(TAG,"While Loop");
+        List<DataEntry> data2 = new ArrayList<>();
+
+        Log.d(TAG, "While Loop");
         int count = 0;
         while (stepsData.size() > count) {
 
-            data2.add(new ValueDataEntry(graph_data.get(count),stepsData.get(count)));
-            Log.d(TAG,graph_data.get(count));
+            data2.add(new ValueDataEntry(graph_data.get(count), stepsData.get(count)));
+            Log.d(TAG, graph_data.get(count));
             count++;
         }
 
@@ -507,7 +490,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         column.pointWidth(10d);
 
 
-
         cartesian.animation(true);
 
         //Round corner
@@ -549,18 +531,19 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         anyChart.setChart(cartesian);
 
     }
+
     private void showWeekGraph() {
 
         APIlib.getInstance().setActiveAnyChartView(anyChart);
         Cartesian cartesian = AnyChart.column();
 
-         List<DataEntry> data = new ArrayList<>();
+        List<DataEntry> data = new ArrayList<>();
 
         int count = 0;
         while (weekData.size() > count) {
 
-            data.add(new ValueDataEntry(week_graph_data.get(count),weekData.get(count)));
-            Log.d(TAG,week_graph_data.get(count));
+            data.add(new ValueDataEntry(week_graph_data.get(count), weekData.get(count)));
+            Log.d(TAG, week_graph_data.get(count));
             count++;
         }
 
@@ -573,9 +556,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 .offsetY(5d);
 
 
-
         column.pointWidth(10d);
-
 
 
         cartesian.animation(true);
@@ -620,15 +601,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
     private void displayNotification() {
         NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            NotificationChannel channel = new NotificationChannel("fitnessapp","fitnessapp",NotificationManager.IMPORTANCE_DEFAULT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
             manager.createNotificationChannel(channel);
         }
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),"fitnessapp")
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "fitnessapp")
                 .setContentTitle("Keep Staying Fit")
                 .setContentText("Fetching Steps")
                 .setAutoCancel(false)
@@ -642,7 +622,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         // Subscribe to recordings
-        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .subscribe(DataType.AGGREGATE_STEP_COUNT_DELTA)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -658,8 +638,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 });
 
 
-
-        Fitness.getRecordingClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .subscribe(DataType.TYPE_DISTANCE_DELTA)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -673,7 +652,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                         Log.d(TAG, "There was a problem subscribing...", e);
                     }
                 });
-        Fitness.getRecordingClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .subscribe(DataType.TYPE_CALORIES_EXPENDED)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -688,7 +667,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     }
                 });
 
-        Fitness.getRecordingClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .subscribe(DataType.TYPE_MOVE_MINUTES)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -705,31 +684,30 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         // end of subscriptions
 
 
-
         // prepare to get history
 
         Calendar cal = Calendar.getInstance();
         long endTime = cal.getTimeInMillis();
         cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE,0);
-        cal.set(Calendar.SECOND,0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
         long startTime = cal.getTimeInMillis();
 
         DateFormat dateFormat = DateFormat.getDateTimeInstance();
-        Log.d(TAG,"Range Start: " + dateFormat.format(startTime));
+        Log.d(TAG, "Range Start: " + dateFormat.format(startTime));
         Log.d(TAG, "Range End: " + dateFormat.format(endTime));
 
         DataReadRequest readRequest = new DataReadRequest.Builder()
                 .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
                 .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
-                .aggregate(DataType.TYPE_CALORIES_EXPENDED,DataType.AGGREGATE_CALORIES_EXPENDED)
-                .aggregate(DataType.TYPE_MOVE_MINUTES,DataType.AGGREGATE_MOVE_MINUTES)
+                .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED)
+                .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
                 .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                 .bucketByTime(1, TimeUnit.DAYS)
                 .build();
 
         // get history
-        Fitness.getHistoryClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
                 .readData(readRequest)
                 .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
                     @Override
@@ -747,8 +725,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
-
 
 
     private void getDataSetsFromBucket(DataReadResponse dataReadResponse) {
@@ -772,11 +748,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         float distanceTraveledFromDataPoints = 0;
         float kcals = 0;
         long mins = 0;
-        String startTime="";
-        String stime="";
-        String endTime="";
-
-
+        String startTime = "";
+        String stime = "";
+        String endTime = "";
 
 
         for (DataPoint dp : dataSet.getDataPoints()) {
@@ -790,10 +764,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Log.d(TAG, "\tEnd: " + endTime);
 
 
-
-            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES) ;
+            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
             movemins += mins;
-            activeTime.setText(String.format("%.2f", movemins/1000.00));
+            activeTime.setText(String.format("%.2f", movemins / 1000.00));
 
 
             for (Field field : dp.getDataType().getFields()) {
@@ -805,10 +778,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
                 } else if (field.getName().equals("distance")) {
                     distanceTraveledFromDataPoints += dp.getValue(field).asFloat();
-                }else if (field.getName().equals("calories")) {
+                } else if (field.getName().equals("calories")) {
                     kcals += dp.getValue(field).asFloat();
                 }
-
 
 
             }
@@ -818,25 +790,22 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
 
 
-                stepsCounter.setProgress(totalStepsFromDataPoints);
-               double steps = Double.parseDouble(String.valueOf(totalStepsFromDataPoints));
-               double value =( steps / sharedPreferences.getInt("Goal",5000)) * 100;
-                stepsPercentage.setText(String.format("%.2f",value)+"% OF GOAL "+ (sharedPreferences.getInt("Goal",5000)));
+            stepsCounter.setProgress(totalStepsFromDataPoints);
+            double steps = Double.parseDouble(String.valueOf(totalStepsFromDataPoints));
+            double value = (steps / sharedPreferences.getInt("Goal", 5000)) * 100;
+            stepsPercentage.setText(String.format("%.2f", value) + "% OF GOAL " + (sharedPreferences.getInt("Goal", 5000)));
 
 
         } else if (dataSet.getDataType().getName().equals("com.google.distance.delta")) {
-            distance.setText(String.format("%.2f", distanceTraveledFromDataPoints/1000.00));
+            distance.setText(String.format("%.2f", distanceTraveledFromDataPoints / 1000.00));
             distanceInMeters = distanceTraveledFromDataPoints;
-        }
-
-        else if (dataSet.getDataType().getName().equals("com.google.calories.expended")) {
-            calories.setText(String.format("%.2f", kcals/1000.00));
+        } else if (dataSet.getDataType().getName().equals("com.google.calories.expended")) {
+            calories.setText(String.format("%.2f", kcals / 1000.00));
             kCals = kcals;
         }
         checkForRewards();
 
     }
-
 
 
     @Override
@@ -858,10 +827,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         };
 
         // register the step listener
-        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))) {
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this))) {
             Log.d(TAG, "Not signed in...");
         } else {
-            Fitness.getSensorsClient((AppCompatActivity) this, GoogleSignIn.getLastSignedInAccount((AppCompatActivity) this))
+            Fitness.getSensorsClient(this, GoogleSignIn.getLastSignedInAccount(this))
                     .add(
                             new SensorRequest.Builder()
                                     .setDataType(DataType.AGGREGATE_STEP_COUNT_DELTA)
@@ -884,8 +853,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
-
     private void retrieveUserDetails(String uid) {
 
         DocumentReference docRef = db.collection("users").document(uid);
@@ -896,26 +863,24 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
 
-                        String fName, lName,gender,fromHour,toHour,lunchHour,weekend;
-                        Double weight,height;
-                        Long age,genderSelection;
+                        String fName, lName, gender, fromHour, toHour, lunchHour, weekend;
+                        Double weight, height;
+                        Long age, genderSelection;
                         /////// GET INFO FROM FIRESTORE
                         fName = document.getString("FirstName");
                         lName = document.getString("LastName");
                         gender = document.getString("Gender");
                         fromHour = document.getString("FromHour");
                         toHour = document.getString("ToHour");
-                        lunchHour=document.getString("LunchHour");
-                        weekend= document.getString("Weekend");
-                        weight=document.getDouble("Weight");
-                        height=document.getDouble("Height");
+                        lunchHour = document.getString("LunchHour");
+                        weekend = document.getString("Weekend");
+                        weight = document.getDouble("Weight");
+                        height = document.getDouble("Height");
                         age = document.getLong("Age");
                         genderSelection = document.getLong("GenderSelection");
 
 
-
-                        saveToLocalDB(fName,lName,gender,fromHour,toHour,lunchHour,weekend,weight,height,age,genderSelection);
-
+                        saveToLocalDB(fName, lName, gender, fromHour, toHour, lunchHour, weekend, weight, height, age, genderSelection);
 
 
                     } else {
@@ -931,55 +896,54 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     /////// SAVE INTO LOCAL DB
 
-    private void saveToLocalDB(String fName, String lName, String gender, String fromHour, String toHour, String lunchHour, String weekend,Double weight,Double height, Long age, Long genderSelection) {
+    private void saveToLocalDB(String fName, String lName, String gender, String fromHour, String toHour, String lunchHour, String weekend, Double weight, Double height, Long age, Long genderSelection) {
 
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("FirstName",fName);
-        editor.putString("LastName",lName);
-        editor.putString("Gender",gender);
-        editor.putString("FromHour",fromHour);
-        editor.putString("ToHour",toHour);
-        editor.putString("LunchHour",lunchHour);
+        editor.putString("FirstName", fName);
+        editor.putString("LastName", lName);
+        editor.putString("Gender", gender);
+        editor.putString("FromHour", fromHour);
+        editor.putString("ToHour", toHour);
+        editor.putString("LunchHour", lunchHour);
         editor.putString("Weekend", weekend);
-        editor.putFloat("Weight",Float.valueOf(String.valueOf(weight)));
-        editor.putFloat("Height",Float.valueOf(String.valueOf(height)));
-        editor.putLong("Age",age);
-        editor.putLong("GenderSelection",genderSelection);
+        editor.putFloat("Weight", Float.valueOf(String.valueOf(weight)));
+        editor.putFloat("Height", Float.valueOf(String.valueOf(height)));
+        editor.putLong("Age", age);
+        editor.putLong("GenderSelection", genderSelection);
         editor.apply();
 
-        helloText.setText("Hello there "+ fName +" !");
+        helloText.setText("Hello there " + fName + " !");
     }
 
 
-
-    public void checkForRewards(){
+    public void checkForRewards() {
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         TextView txtclose, awardMessage;
         ImageView awardImage;
 
-        boolean gotReward = sharedPreferences.getBoolean("trophy1",false);
+        boolean gotReward = sharedPreferences.getBoolean("trophy1", false);
         awardPopup.setContentView(R.layout.custompopup);
         txtclose = awardPopup.findViewById(R.id.txtclose);
         awardImage = awardPopup.findViewById(R.id.award_image);
-        awardMessage= awardPopup.findViewById(R.id.awardmsg);
+        awardMessage = awardPopup.findViewById(R.id.awardmsg);
         Drawable myTrophy = getResources().getDrawable(R.drawable.rewardcup2);
         Drawable myMedal = getResources().getDrawable(R.drawable.rewardmedal);
 
-        float distanceInKm = distanceInMeters/1000;
+        float distanceInKm = distanceInMeters / 1000;
 
-        Log.d(TAG,"---------------------REWARDS----------------------");
+        Log.d(TAG, "---------------------REWARDS----------------------");
         Log.d(TAG, String.valueOf(gotReward));
 
         //daily steps = steps goal && (sharedPreferences.getBoolean("trophy1",false)==false)
-        if((totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000))){
+        if ((totalStepsFromDataPoints == sharedPreferences.getInt("Goal", 5000))) {
 
-                editor.putBoolean("trophy1", true);
-                awardImage.setImageDrawable(myTrophy);
-                awardMessage.setText(R.string.award_1_message);
-                awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                awardPopup.show();
+            editor.putBoolean("trophy1", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.complete1));
+            awardMessage.setText(R.string.award_1_message);
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
 
         }
 
@@ -992,79 +956,87 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //        }
 
 
+        //daily steps >= 10000
+        if ((totalStepsFromDataPoints >= 10000)) {
+            editor.putBoolean("trophy2", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.monkey));
+            awardMessage.setText(R.string.award_2_message);
+            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            awardPopup.show();
+        }
+
         //daily steps >= 20000
-        if((totalStepsFromDataPoints >= 20000)){
-            editor.putBoolean("trophy3",true);
-            awardImage.setImageDrawable(myTrophy);
+        if ((totalStepsFromDataPoints >= 20000)) {
+            editor.putBoolean("trophy3", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.bee));
             awardMessage.setText(R.string.award_3_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
 
 
-
         //distance higher than 1.5 km
-        if((distanceInKm >= 1.5)){
-            editor.putBoolean("medal1",true);
-            awardImage.setImageDrawable(myMedal);
+        if ((distanceInKm >= 1.5)) {
+            editor.putBoolean("medal1", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.torch));
             awardMessage.setText(R.string.award_5_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
 
         //distance higher than 7 km
-        if((distanceInKm >= 7) ){
-            editor.putBoolean("medal2",true);
-            awardImage.setImageDrawable(myMedal);
+        if ((distanceInKm >= 7)) {
+            editor.putBoolean("medal2", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.cornish));
             awardMessage.setText(R.string.award_6_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
 
         //distance higher than 10 km
-        if((distanceInKm >= 10)){
-            editor.putBoolean("medal3",true);
-            awardImage.setImageDrawable(myMedal);
+        if ((distanceInKm >= 10)) {
+            editor.putBoolean("medal3", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.janoub));
             awardMessage.setText(R.string.award_7_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
         //distance higher than 33 km
-        if((distanceInKm >= 33) ){
-            editor.putBoolean("medal4",true);
-            awardImage.setImageDrawable(myMedal);
+        if ((distanceInKm >= 33)) {
+            editor.putBoolean("medal4", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.alkhor));
             awardMessage.setText(R.string.award_8_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
         //distance higher than 97 km
-        if((distanceInKm >= 97) ){
-            editor.putBoolean("medal5",true);
-            awardImage.setImageDrawable(myMedal);
+        if ((distanceInKm >= 97)) {
+            editor.putBoolean("medal5", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.halul));
             awardMessage.setText(R.string.award_9_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
         //distance higher than 160 km
-        if((distanceInKm >= 160)){
-            editor.putBoolean("medal6",true);
-            awardImage.setImageDrawable(myMedal);
+        if ((distanceInKm >= 160)) {
+            editor.putBoolean("medal6", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.length));
             awardMessage.setText(R.string.award_10_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
         //distance higher than 190 km
-        if((distanceInKm >= 190) ){
-            editor.putBoolean("medal7",true);
-            awardImage.setImageDrawable(myMedal);
+        if ((distanceInKm >= 190)) {
+            editor.putBoolean("medal7", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.shamal));
             awardMessage.setText(R.string.award_11_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
         }
         //distance higher than 571 km
-        if((distanceInKm >= 571)){
-            editor.putBoolean("medal8",true);
-            awardImage.setImageDrawable(myMedal);
+        if ((distanceInKm >= 571)) {
+            editor.putBoolean("medal8", true);
+            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.kuwait));
             awardMessage.setText(R.string.award_12_message);
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             awardPopup.show();
@@ -1080,24 +1052,22 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-
-
     }
 
-    private void showHealthTip(){
+    private void showHealthTip() {
 
         TextView healthMessage;
         ImageView healthImage;
 
 //        String[] array = context.getResources().getStringArray(R.array.animals_array);
         String[] array = this.getResources().getStringArray(R.array.health_tips);
-       // String[] imagearray = this.getResources().getStringArray(R.array.pic_name);
-        int i= new Random().nextInt(array.length);
+        // String[] imagearray = this.getResources().getStringArray(R.array.pic_name);
+        int i = new Random().nextInt(array.length);
         String randomStr = array[i];
 
         healthtip.setContentView(R.layout.dailypopup);
         healthImage = healthtip.findViewById(R.id.message_image);
-        healthMessage= healthtip.findViewById(R.id.dailymsg);
+        healthMessage = healthtip.findViewById(R.id.dailymsg);
         healthMessage.setText(randomStr);
 //        healthImage.setImageDrawable(drawable);
         healthtip.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1106,12 +1076,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
-
-
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -1144,36 +1111,30 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
 
         int id = menuItem.getItemId();
-        if (id == R.id.nav_profile){
+        if (id == R.id.nav_profile) {
             startActivity(new Intent(HomeActivity.this, UserProfileActivity.class));
             finish();
-        }
-       else if (id == R.id.nav_about){
+        } else if (id == R.id.nav_about) {
             startActivity(new Intent(HomeActivity.this, AboutActivity.class));
             finish();
-        }
-        else if (id == R.id.nav_locations){
+        } else if (id == R.id.nav_locations) {
             startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
             finish();
-        }
-        else if (id == R.id.nav_awards){
+        } else if (id == R.id.nav_awards) {
             startActivity(new Intent(HomeActivity.this, AchievementsActivity.class));
             finish();
-        }
-        else if (id == R.id.nav_settings){
+        } else if (id == R.id.nav_settings) {
             startActivity(new Intent(HomeActivity.this, SettingsActivity.class));
             finish();
         }
 
 
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
 
 
     }
-
 
 
     @Override
@@ -1197,9 +1158,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
         String LAT = "25.33418633365931";
-        String LON="51.474041205731275";
+        String LON = "51.474041205731275";
+
         protected String doInBackground(String... args) {
-            String response= HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?lat=" + LAT + "&lon=" + LON + "&units=metric&appid=" + weather_API_key);
+            String response = HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?lat=" + LAT + "&lon=" + LON + "&units=metric&appid=" + weather_API_key);
             return response;
         }
 
@@ -1247,16 +1209,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //                findViewById(R.id.loader).setVisibility(View.GONE);
 //                findViewById(R.id.mainContainer).setVisibility(View.VISIBLE);
 
-                Toast.makeText(HomeActivity.this, "Today's weather is "+temp+" and it is "+weatherDescription+" at "+address, Toast.LENGTH_SHORT).show();
+                Toast.makeText(HomeActivity.this, "Today's weather is " + temp + " and it is " + weatherDescription + " at " + address, Toast.LENGTH_SHORT).show();
 
             } catch (JSONException e) {
 //
-                Log.d(TAG,e.getMessage());
+                Log.d(TAG, e.getMessage());
             }
 
         }
     }
-
 
 
 }
