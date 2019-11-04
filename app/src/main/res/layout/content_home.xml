@@ -197,12 +197,20 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="15dp">
+            android:paddingTop="15dp"
+            android:orientation="vertical">
 
             <com.anychart.AnyChartView
                 android:id="@+id/chart"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
+                android:visibility="gone"
+                />
+            <com.anychart.AnyChartView
+                android:id="@+id/weekchart"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:visibility="gone"
                 />
 
 

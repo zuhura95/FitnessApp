@@ -171,7 +171,7 @@ public class AppWorker extends Worker {
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
-                                        Toast.makeText(getApplicationContext(), "check", Toast.LENGTH_SHORT).show();
+                                    //    Toast.makeText(getApplicationContext(), "check", Toast.LENGTH_SHORT).show();
 
                                     }
                                 })

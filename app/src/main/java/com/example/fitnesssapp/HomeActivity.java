@@ -124,7 +124,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     SharedPreferences sharedPreferences;
     TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
     ArcProgress stepsCounter;
-    AnyChartView anyChart;
+    AnyChartView anyChart,weekChart;
     Dialog awardPopup, healthtip;
 
 
@@ -205,6 +205,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         stepsCounter = findViewById(R.id.arc_progress);
 
         anyChart = findViewById(R.id.chart);
+        weekChart =findViewById(R.id.weekchart);
 
 
         //get the user's steps goal and set it as maximum value for Arc Progress widget
@@ -270,7 +271,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
         displayNotification();
         retrieveUserDetails(uid);
-        hourlyDataOnChart(uid);
+       // hourlyDataOnChart(uid);
 
         daybtn = findViewById(R.id.day_button);
         weekbtn = findViewById(R.id.week_button);
@@ -321,7 +322,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //        calculateTotalSteps();
 
         new weatherTask().execute();
-        showHealthTip();
+
 
     }
 
@@ -380,8 +381,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private void weeklyDataChart(final String uid) {
 
         String weekDay;
-//        int i = 0;
-//        while (i != (-4)){
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
         Date date = null;
         try {
@@ -389,32 +388,46 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.add(Calendar.DATE, 0);
-        weekDay = simpleDateFormat.format(calendar.getTime());
+
+        int i=0;
+        while(i != -6) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            calendar.add(Calendar.DATE, i);
+            weekDay = simpleDateFormat.format(calendar.getTime());
+//            Log.d(TAG,"PPPPPPPPPPPP");
+//            Log.d(TAG,weekDay);
 
 
-        CollectionReference documentReference = db.collection("users").document(uid).collection(weekDay);
-        documentReference.orderBy("total").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        if (document.exists()) {
-                            String weekday = document.getId();
-                            int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
-                            weekData.add(totalsteps);
-                            week_graph_data.add(weekday);
+
+            CollectionReference documentReference = db.collection("users").document(uid).collection(weekDay);
+            documentReference.orderBy("total").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            if (document.exists()) {
+                                String weekday = document.getId();
+                                int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
+                                weekData.add(totalsteps);
+                                week_graph_data.add(weekday);
+
+
+                            }
+                            else{
+                                Toast.makeText(HomeActivity.this, "Doesnt exist", Toast.LENGTH_SHORT).show();
+                            }
+
                         }
-
                     }
-                }
-                showWeekGraph();
-            }
-        });
-//        i--;
+                    showWeekGraph();
 
+                }
+
+
+            });
+            i--;
+        }
 
     }
 
@@ -528,13 +541,16 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         cartesian.yAxis(0).title("Steps");
 
+
         anyChart.setChart(cartesian);
+        weekChart.setVisibility(View.GONE);
+        anyChart.setVisibility(View.VISIBLE);
 
     }
 
     private void showWeekGraph() {
 
-        APIlib.getInstance().setActiveAnyChartView(anyChart);
+        APIlib.getInstance().setActiveAnyChartView(weekChart);
         Cartesian cartesian = AnyChart.column();
 
         List<DataEntry> data = new ArrayList<>();
@@ -596,7 +612,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         cartesian.yAxis(0).title("Steps");
 
-        anyChart.setChart(cartesian);
+        weekChart.setChart(cartesian);
+        anyChart.setVisibility(View.GONE);
+        weekChart.setVisibility(View.VISIBLE);
 
     }
 
