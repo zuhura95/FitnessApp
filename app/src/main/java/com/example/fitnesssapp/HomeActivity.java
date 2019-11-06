@@ -76,6 +76,7 @@ import androidx.work.WorkManager;
 
 import android.view.Menu;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -145,6 +146,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     List<String> week_graph_data = new ArrayList<>();
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -203,6 +205,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         stepsCounter = findViewById(R.id.arc_progress);
+
+//        FrameLayout frameLayout = findViewById(R.id.day_graph);
+//        FrameLayout frame = findViewById(R.id.week_graph);
 
         anyChart = findViewById(R.id.chart);
         weekChart =findViewById(R.id.weekchart);
@@ -271,8 +276,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
         displayNotification();
         retrieveUserDetails(uid);
-       // hourlyDataOnChart(uid);
-
+        hourlyDataOnChart(uid);
+//        calculateTotalSteps(uid);
+//        showGraph();
+        weeklyDataChart(uid);
         daybtn = findViewById(R.id.day_button);
         weekbtn = findViewById(R.id.week_button);
         monthbtn = findViewById(R.id.month_button);
@@ -282,7 +289,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
 
-                weeklyDataChart(uid);
+                showWeekGraph();
+                calculateWeeklySteps(uid);
                 Toast.makeText(HomeActivity.this, "Showing week graph", Toast.LENGTH_SHORT).show();
             }
         });
@@ -297,6 +305,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         daybtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+//                showGraph();
                 hourlyDataOnChart(uid);
                 Toast.makeText(HomeActivity.this, "Showing day graph", Toast.LENGTH_SHORT).show();
 
@@ -319,7 +328,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 Toast.makeText(HomeActivity.this, status, Toast.LENGTH_SHORT).show();
             }
         });
-//        calculateTotalSteps();
+
 
         new weatherTask().execute();
 
@@ -369,8 +378,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
                 showGraph();
                 calculateTotalSteps(uid);
-
             }
+
 
         });
 
@@ -379,6 +388,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
     private void weeklyDataChart(final String uid) {
+
 
         String weekDay;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
@@ -389,45 +399,42 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             e.printStackTrace();
         }
 
-        int i=0;
-        while(i != -6) {
+        for (int i = 0; i > -6; --i){
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(date);
-            calendar.add(Calendar.DATE, i);
-            weekDay = simpleDateFormat.format(calendar.getTime());
-//            Log.d(TAG,"PPPPPPPPPPPP");
-//            Log.d(TAG,weekDay);
+        calendar.setTime(date);
+        calendar.add(Calendar.DATE, i);
+        weekDay = simpleDateFormat.format(calendar.getTime());
 
 
 
-            CollectionReference documentReference = db.collection("users").document(uid).collection(weekDay);
-            documentReference.orderBy("total").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                    if (task.isSuccessful()) {
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            if (document.exists()) {
-                                String weekday = document.getId();
-                                int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
-                                weekData.add(totalsteps);
-                                week_graph_data.add(weekday);
+        CollectionReference documentReference = db.collection("users").document(uid).collection(weekDay);
+        documentReference.orderBy("total").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        if (document.exists()) {
+                            String weekday = document.getId();
+                            int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
+                            weekData.add(totalsteps);
+                            week_graph_data.add(weekday);
 
 
-                            }
-                            else{
-                                Toast.makeText(HomeActivity.this, "Doesnt exist", Toast.LENGTH_SHORT).show();
-                            }
-
+                        } else {
+                            Toast.makeText(HomeActivity.this, "Doesnt exist", Toast.LENGTH_SHORT).show();
                         }
+
                     }
-                    showWeekGraph();
 
                 }
 
 
-            });
-            i--;
-        }
+            }
+
+
+        });
+
+    }
 
     }
 
@@ -470,6 +477,31 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
+
+
+    }
+
+    private void calculateWeeklySteps(String uid){
+
+//        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
+//        Date date = null;
+//        try {
+//            date = format.parse(today);
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//        }
+//        SimpleDateFormat sdf = new SimpleDateFormat("E");
+//        Log.d(TAG, "=============WEEK TOTAL===================");
+//        String weekday = sdf.format(date);
+//        Log.d(TAG, weekday);
+
+        int sum = 0;
+        for (int i = 0; i < weekData.size();i++){
+            sum += weekData.get(i);
+        }
+
+        Log.d(TAG, "=============WEEK TOTAL===================");
+        Log.d(TAG, String.valueOf(sum));
 
 
     }

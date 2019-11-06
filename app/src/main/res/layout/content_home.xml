@@ -193,6 +193,9 @@
 
 
 
+<!--        <include layout="@layout/daygraph"/>-->
+<!--        <include layout="@layout/weekgraph"/>-->
+
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -204,7 +207,7 @@
                 android:id="@+id/chart"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:visibility="gone"
+
                 />
             <com.anychart.AnyChartView
                 android:id="@+id/weekchart"
@@ -212,6 +215,13 @@
                 android:layout_height="200dp"
                 android:visibility="gone"
                 />
+            <com.anychart.AnyChartView
+                android:id="@+id/monthchart"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:visibility="gone"
+                />
+
 
 
         </LinearLayout>
