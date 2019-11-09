@@ -206,6 +206,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             showHealthTip();
 
         }
+
         showHealthTip();
         //Set current date
         SimpleDateFormat sdf = new SimpleDateFormat("d MMM , yyyy");
@@ -430,23 +431,23 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private Drawable getImageForHealthTip(int position){
 
         int[] imageArray = {
-                R.drawable.fact1,
-                R.drawable.fact2,
-                R.drawable.fact3,
-                R.drawable.fact4,
-                R.drawable.fact5,
-                R.drawable.fact6,
-                R.drawable.fact7,
-                R.drawable.fact8,
-                R.drawable.fact9,
-                R.drawable.fact10,
-                R.drawable.fact11,
-                R.drawable.fact12,
-                R.drawable.fact13,
-                R.drawable.fact14,
-                R.drawable.fact15,
-                R.drawable.fact16,
-                R.drawable.fact17,
+                R.drawable.tip1,
+                R.drawable.tip2,
+                R.drawable.tip3,
+                R.drawable.tip4,
+                R.drawable.tip5,
+                R.drawable.tip6,
+                R.drawable.tip7,
+                R.drawable.tip8,
+                R.drawable.tip9,
+                R.drawable.tip10,
+                R.drawable.tip11,
+                R.drawable.tip12,
+                R.drawable.tip13,
+                R.drawable.tip14,
+                R.drawable.tip15,
+                R.drawable.tip16,
+                R.drawable.tip17,
         };
         Drawable drawable = getResources().getDrawable(imageArray[position]);
 
