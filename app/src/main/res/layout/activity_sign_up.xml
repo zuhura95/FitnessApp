@@ -45,7 +45,6 @@
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@android:color/white" />
-<!--            android:imeActionId="@+id/login"-->
 
         <Button
             android:id="@+id/sign_up_button"
@@ -67,7 +66,6 @@
             android:textAllCaps="false"
             android:textColor="@color/white" />
 
-<!--        Direct to login page-->
         <Button
             android:id="@+id/sign_in_button"
             android:layout_width="fill_parent"

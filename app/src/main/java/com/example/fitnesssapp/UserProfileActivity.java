@@ -65,17 +65,19 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
             }
         });
 
-        inputFName = (EditText) findViewById(R.id.firstname);
-        inputLName = (EditText) findViewById(R.id.lastname);
-        inputWeight = (EditText) findViewById(R.id.weight);
-        inputHeight = (EditText) findViewById(R.id.height);
-        inputAge = (EditText) findViewById(R.id.age);
-        inputGender = (Spinner) findViewById(R.id.genderPicker);
-        inputGoal = (EditText) findViewById(R.id.goal);
+        inputFName =  findViewById(R.id.firstname);
+        inputLName =  findViewById(R.id.lastname);
+        inputWeight = findViewById(R.id.weight);
+        inputHeight =  findViewById(R.id.height);
+        inputAge =  findViewById(R.id.age);
+        inputGender =  findViewById(R.id.genderPicker);
+        inputGoal =  findViewById(R.id.goal);
         inputFromHour =  findViewById(R.id.fromHourPicker);
         inputToHour = findViewById(R.id.toHourPicker);
         inputLunchHour = findViewById(R.id.lunchHourPicker);
         inputWeekends = findViewById(R.id.weekendsPicker);
+
+        //Set the saved user details as values in the textfields for Profile page
         inputFName.setText(sharedPreferences.getString("FirstName",null));
         inputLName.setText(sharedPreferences.getString("LastName",null));
         inputAge.setText(String.valueOf(sharedPreferences.getLong("Age",0)));
@@ -87,6 +89,8 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputToHour.setText(sharedPreferences.getString("ToHour","00:00"));
         inputLunchHour.setText(sharedPreferences.getString("LunchHour","00:00"));
         inputWeekends.setText(sharedPreferences.getString("Weekend",""));
+
+
         inputGender.setOnItemSelectedListener(this);
         inputFromHour.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -176,15 +180,14 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
                         inputWeekends.setText(stringBuilder.toString());
                     }
                 });
-                //create the dialog
+
                 alertDialog = builder.create();
-                //show the dialog
                 alertDialog.show();
 
             }
         });
 
-
+        //save button
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -194,6 +197,9 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         });
     }
 
+    /**
+     * Save any changes to user profile to local storage and firestore
+     */
     private void saveInfo(View view) {
 
         final String fName, lName, fromHour, toHour,lunchHour,weekend;
@@ -213,9 +219,10 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         toHour = inputToHour.getText().toString();
         lunchHour = inputLunchHour.getText().toString();
         weekend = inputWeekends.getText().toString();
-
         selectedGender = inputGender.getSelectedItemPosition();
 
+
+        //Save the info to local storage
         editor.putString("gender", gender);
         editor.putInt("Goal", goal);
         editor.putInt("genderSelection", selectedGender);
@@ -230,7 +237,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         editor.putString("Weekend",weekend);
         editor.apply();
 
-        ////////Save the info to Firestore
+        //Save the info to Firestore
         Map< String, Object > user = new HashMap<>();
         user.put("FirstName",fName);
         user.put("LastName",lName);
@@ -251,13 +258,11 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-//                        Toast.makeText(UserProfileActivity.this, "YAY", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-//                        Toast.makeText(UserProfileActivity.this, "OH NO", Toast.LENGTH_SHORT).show();
                     }
                 });
         Snackbar.make(view, "Profile saved!", Snackbar.LENGTH_LONG)

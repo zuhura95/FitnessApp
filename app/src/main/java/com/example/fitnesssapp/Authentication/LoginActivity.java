@@ -41,9 +41,9 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_login);
 
-
-        //Firebase auth instance
+        //Firebase authentication instance
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
@@ -51,22 +51,20 @@ public class LoginActivity extends AppCompatActivity {
         //Is the User logged in already?
         if (auth.getCurrentUser() != null) {
 
-            //then reedirect to home page
+            //then re-direct to home page
             startActivity(new Intent(LoginActivity.this, HomeActivity.class));
             finish();
         }
 
-        setContentView(R.layout.activity_login);
 
-        signInBtn = (Button) findViewById(R.id.btn_login);
-        signUpBtn = (Button) findViewById(R.id.btn_signup);
-        forgotPassBtn = (Button) findViewById(R.id.btn_reset_password);
-        inputEmail = (EditText) findViewById(R.id.email);
-        inputPassword = (EditText) findViewById(R.id.password);
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        signInBtn =  findViewById(R.id.btn_login);
+        signUpBtn = findViewById(R.id.btn_signup);
+        forgotPassBtn =  findViewById(R.id.btn_reset_password);
+        inputEmail = findViewById(R.id.email);
+        inputPassword =  findViewById(R.id.password);
+        progressBar = findViewById(R.id.progressBar);
 
-        //Firebase auth instance
-        auth = FirebaseAuth.getInstance();
+
 
 
         //On clicking 'Forgot password' button

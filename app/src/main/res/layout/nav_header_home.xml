@@ -13,18 +13,6 @@
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
 
-
-<!--    <TextView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:paddingTop="@dimen/nav_header_vertical_spacing"-->
-<!--        android:text="Fitness App"-->
-<!--        android:textSize="20dp"-->
-<!--        android:textColor="#FFF"-->
-<!--        android:textStyle="bold"-->
-<!--        android:id="@+id/tv"-->
-<!--        android:textAppearance="@style/TextAppearance.AppCompat.Body1" />-->
-
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

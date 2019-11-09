@@ -3,7 +3,7 @@ package com.example.fitnesssapp;
 public class AppController {
 
   float distance, kCals, mins;
-  String today, time, uid;
+  String today, time, uid,latitude,longitude;
   int steps;
 
     public float getDistance() {
@@ -60,5 +60,21 @@ public class AppController {
 
     public void setSteps(int steps) {
         this.steps = steps;
+    }
+
+    public String getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(String latitude) {
+        this.latitude = latitude;
+    }
+
+    public String getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(String longitude) {
+        this.longitude = longitude;
     }
 }

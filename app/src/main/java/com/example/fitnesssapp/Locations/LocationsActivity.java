@@ -11,6 +11,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 
 import com.example.fitnesssapp.AboutActivity;
+import com.example.fitnesssapp.AppController;
 import com.example.fitnesssapp.HomeActivity;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,6 +40,7 @@ public class LocationsActivity extends AppCompatActivity {
 
     private ListView listViewPlaces;
     private LocationManager locationManager;
+    AppController appController;
 
 
     @Override
@@ -58,6 +60,7 @@ public class LocationsActivity extends AppCompatActivity {
             }
         });
         listViewPlaces = findViewById(R.id.listViewPlaces);
+        appController = new AppController();
         initView();
 
 
@@ -90,9 +93,13 @@ public class LocationsActivity extends AppCompatActivity {
         public void onLocationChanged(Location location) {
 
             String key = getText(R.string.google_maps_key).toString();
-            String currentLocation = location.getLatitude() + "," + location.getLongitude();
+            String lat = String.valueOf(location.getLatitude());
+            String lon = String.valueOf(location.getLongitude());
+            appController.setLatitude(lat);
+            appController.setLongitude(lon);
+            String currentLocation = lat + "," + lon;
             int radius = 500;
-           String type="restaurant";
+            String type="restaurant";
             GoogleMapAPI googleMapAPI = APIClient.getClient().create(GoogleMapAPI.class);
             googleMapAPI.getNearBy(currentLocation, radius, type, key).enqueue(new Callback<PlacesResult>() {
                 @Override
@@ -102,7 +109,6 @@ public class LocationsActivity extends AppCompatActivity {
                         PlacesListAdapter placesListAdapter = new PlacesListAdapter(getApplicationContext(), results);
                         listViewPlaces.setAdapter(placesListAdapter);
                         Log.d(TAG, String.valueOf(results));
-                       // Toast.makeText(LocationsActivity.this, "okokokoko", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_LONG).show();
                     }

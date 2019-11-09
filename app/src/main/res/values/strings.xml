@@ -7,8 +7,6 @@
     <string name="app_name">FitnesssApp</string>
     <string name="minimum_password">Password too short, enter minimum 6 characters!</string>
     <string name="auth_failed">Authentication failed, check your email and password or sign up</string>
-    <!--    <string name="appbar_scrolling_view_behavior" translatable="false">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>-->
-
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
@@ -42,7 +40,6 @@
 
 
 <!--    Award messages-->
-
     <string name="award_1_message">Great job!\nYou have completed your daily steps goal</string>
     <string name="award_2_message">Hey active monkey!\nYou walked 10,000 steps in a day.</string>
     <string name="award_3_message">Wow Busy bee!\nYou have walked 20,000 steps in a single day</string>
@@ -59,7 +56,6 @@
 
 
     <string name="google_maps_key">AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs</string>
-
     <string name="keyword">Keyword...</string>
     <string name="search">Search</string>
 
@@ -79,19 +75,19 @@
         <item>Take the stairs instead of the elevator.</item>
         <item>It is advised to do low to moderate exercise (walking or cycling) 3 times a week.</item>
         <item>A healthy adult requires 15 to 30 minutes/day of basic physical activities</item>
-<!--        <item>Creating a balance between technology use and physical activity is an important habit in your daily life</item>-->
-<!--        <item>Routine physical activity should be done with the aim of accumulating a minimum of 30 minutes daily each day in the week or in most days of the week.</item>-->
-<!--        <item>When you exercise in hot weather, check urine color and quantity, to know how much water you have lost.</item>-->
-<!--        <item>When you exercise in hot weather, consume enough salt, potassium and other electrolytes to balance sweat loss.</item>-->
-<!--        <item>When you sit, position yourself correctly in the seat and make sure you sit straight and that your buttocks and back are square and completely squeezed into the seat.</item>-->
-<!--        <item>You don\'t have to exercise for hours if your schedule is busy, a little exercise is better than none</item>-->
-<!--        <item>Preparing meals and snacks to bring to the office is healthier and cheaper</item>-->
-<!--        <item>Sleepiness is often cause by dehydration, so stay hyderated.</item>-->
-<!--        <item>Thirst is often mistaken for hunger, so stay hyderated.</item>-->
-<!--        <item>Leave a bottle of water on your desk. And don\'t forget to drink</item>-->
-<!--        <item>You can add lemon or lime in your water for added flavor and no guilt</item>-->
-<!--        <item>Proper sleep is an essential ingredient to a healthy lifestyle</item>-->
-<!--        <item>Breathing relieves stress, remember to take deep breaths </item>-->
+        <item>Creating a balance between technology use and physical activity is an important habit in your daily life</item>
+        <item>Routine physical activity should be done with the aim of accumulating a minimum of 30 minutes daily each day in the week or in most days of the week.</item>
+        <item>When you exercise in hot weather, check urine color and quantity, to know how much water you have lost.</item>
+        <item>When you exercise in hot weather, consume enough salt, potassium and other electrolytes to balance sweat loss.</item>
+        <item>When you sit, position yourself correctly in the seat and make sure you sit straight and that your buttocks and back are square and completely squeezed into the seat.</item>
+        <item>You don\'t have to exercise for hours if your schedule is busy, a little exercise is better than none</item>
+        <item>Preparing meals and snacks to bring to the office is healthier and cheaper</item>
+        <item>Sleepiness is often cause by dehydration, so stay hyderated.</item>
+        <item>Thirst is often mistaken for hunger, so stay hyderated.</item>
+        <item>Leave a bottle of water on your desk. And don\'t forget to drink</item>
+        <item>You can add lemon or lime in your water for added flavor and no guilt</item>
+        <item>Proper sleep is an essential ingredient to a healthy lifestyle</item>
+        <item>Breathing relieves stress, remember to take deep breaths </item>
     </string-array>
 
 <!--    <string-array name="pic_name">-->

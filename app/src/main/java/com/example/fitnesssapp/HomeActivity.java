@@ -111,35 +111,32 @@ import java.util.concurrent.TimeUnit;
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
 
+    //Constants
     private String TAG = "Fitness";
-    String weather_API_key = "7a7f09f95d97e3e22d688438853d05f2";
+    private String weather_API_key = "7a7f09f95d97e3e22d688438853d05f2";
     private final int OAUTH_REQUEST_CODE = 200;
     private static final int REQUEST_OAUTH_REQUEST_CODE = 0x1001;
     private final int FINE_LOCATION_REQUEST_CODE = 101;
+
     private FirebaseAuth auth;
     private FirebaseFirestore db;
     private FirebaseAnalytics analytics;
     private static OnDataPointListener stepListener;
     private static OnDataPointListener distanceListener;
+    AppController appController;
 
     SharedPreferences sharedPreferences;
     TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
+    Button daybtn, weekbtn, monthbtn;
     ArcProgress stepsCounter;
     AnyChartView anyChart,weekChart;
     Dialog awardPopup, healthtip;
-
-
-    AppController appController;
 
     private float distanceInMeters;
     private float kCals;
     private float movemins;
     private int totalStepsFromDataPoints = 0;
-
-    Button daybtn, weekbtn, monthbtn;
-
     String today, uid;
-
     List<Integer> stepsData = new ArrayList<>();
     List<String> graph_data = new ArrayList<>();
     List<Integer> weekData = new ArrayList<>();
@@ -166,8 +163,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         analytics.setUserId(uid);
         appController.setUid(uid);
 
-        awardPopup = new Dialog(this);
-        healthtip = new Dialog(this);
+        //Is the User logged in already?
+        if (auth.getCurrentUser() == null) {
+
+            //then reedirect to login page
+            startActivity(new Intent(HomeActivity.this, LoginActivity.class));
+            finish();
+        }
 
 
         //Display health tips pop up once a day
@@ -188,36 +190,30 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         View headerView = navigationView.getHeaderView(0);
-
-        //Display Name of the user in the navigation header
         helloText = headerView.findViewById(R.id.helloTextView);
         stepsPercentage = findViewById(R.id.stepsPercent);
         dateTextView = findViewById(R.id.todayDate);
         calories = findViewById(R.id.caloriesTextview);
         distance = findViewById(R.id.distanceTextview);
         activeTime = findViewById(R.id.activetimeTextview);
-
+        stepsCounter = findViewById(R.id.arc_progress);
+        anyChart = findViewById(R.id.chart);
+        weekChart =findViewById(R.id.weekchart);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        daybtn = findViewById(R.id.day_button);
+        weekbtn = findViewById(R.id.week_button);
+        monthbtn = findViewById(R.id.month_button);
+        awardPopup = new Dialog(this);
+        healthtip = new Dialog(this);
 
         //Set current date
         SimpleDateFormat sdf = new SimpleDateFormat("d MMM , yyyy");
         String currentDateandTime = sdf.format(new Date());
         dateTextView.setText(currentDateandTime);
 
-
-        stepsCounter = findViewById(R.id.arc_progress);
-
-//        FrameLayout frameLayout = findViewById(R.id.day_graph);
-//        FrameLayout frame = findViewById(R.id.week_graph);
-
-        anyChart = findViewById(R.id.chart);
-        weekChart =findViewById(R.id.weekchart);
-
-
         //get the user's steps goal and set it as maximum value for Arc Progress widget
         stepsCounter.setMax(sharedPreferences.getInt("Goal", 5000));
 
-
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -229,15 +225,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         else {
             Log.d(TAG, "Fine Location permission already granted");
 
-        }
-
-
-        //Is the User logged in already?
-        if (auth.getCurrentUser() == null) {
-
-            //then reedirect to login page
-            startActivity(new Intent(HomeActivity.this, LoginActivity.class));
-            finish();
         }
 
 
@@ -255,7 +242,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
                     }
                 });
-
 
         FitnessOptions fitnessOptions = FitnessOptions.builder()
                 .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
@@ -277,12 +263,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         displayNotification();
         retrieveUserDetails(uid);
         hourlyDataOnChart(uid);
-//        calculateTotalSteps(uid);
-//        showGraph();
         weeklyDataChart(uid);
-        daybtn = findViewById(R.id.day_button);
-        weekbtn = findViewById(R.id.week_button);
-        monthbtn = findViewById(R.id.month_button);
 
 
         weekbtn.setOnClickListener(new View.OnClickListener() {
@@ -305,7 +286,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         daybtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                showGraph();
+
                 hourlyDataOnChart(uid);
                 Toast.makeText(HomeActivity.this, "Showing day graph", Toast.LENGTH_SHORT).show();
 
@@ -335,7 +316,413 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    /**
+     * Display ongoing Notification
+     */
+    private void displayNotification() {
+        NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
+            manager.createNotificationChannel(channel);
+        }
 
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "fitnessapp")
+                .setContentTitle("Keep Staying Fit")
+                .setContentText("Fetching Steps")
+                .setAutoCancel(false)
+                .setOngoing(true)
+                .setSmallIcon(R.drawable.ic_person_walk);
+        manager.notify(1, builder.build());
+    }
+
+    /**
+     * Retrieve user's details from Firestore
+     * @param uid
+     */
+    private void retrieveUserDetails(String uid) {
+
+        DocumentReference docRef = db.collection("users").document(uid);
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+
+                        String fName, lName, gender, fromHour, toHour, lunchHour, weekend;
+                        Double weight, height;
+                        Long age, genderSelection;
+                        /////// GET INFO FROM FIRESTORE
+                        fName = document.getString("FirstName");
+                        lName = document.getString("LastName");
+                        gender = document.getString("Gender");
+                        fromHour = document.getString("FromHour");
+                        toHour = document.getString("ToHour");
+                        lunchHour = document.getString("LunchHour");
+                        weekend = document.getString("Weekend");
+                        weight = document.getDouble("Weight");
+                        height = document.getDouble("Height");
+                        age = document.getLong("Age");
+                        genderSelection = document.getLong("GenderSelection");
+
+
+                        saveToLocalDB(fName, lName, gender, fromHour, toHour, lunchHour, weekend, weight, height, age, genderSelection);
+
+
+                    } else {
+                        Log.d("TAG", "No such document");
+                    }
+                } else {
+                    Log.d("TAG", "get failed with ", task.getException());
+                }
+            }
+        });
+    }
+
+
+    /**
+     *
+     *If returning user is using new phone, save profile details into local storage
+     */
+    private void saveToLocalDB(String fName, String lName, String gender, String fromHour, String toHour, String lunchHour, String weekend, Double weight, Double height, Long age, Long genderSelection) {
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("FirstName", fName);
+        editor.putString("LastName", lName);
+        editor.putString("Gender", gender);
+        editor.putString("FromHour", fromHour);
+        editor.putString("ToHour", toHour);
+        editor.putString("LunchHour", lunchHour);
+        editor.putString("Weekend", weekend);
+        editor.putFloat("Weight", Float.valueOf(String.valueOf(weight)));
+        editor.putFloat("Height", Float.valueOf(String.valueOf(height)));
+        editor.putLong("Age", age);
+        editor.putLong("GenderSelection", genderSelection);
+        editor.apply();
+
+        helloText.setText("Hello there " + fName + " !");
+    }
+
+    /**
+     * Display health tip pop up
+     */
+    private void showHealthTip() {
+
+        TextView healthMessage;
+        ImageView healthImage;
+//        String[] array = context.getResources().getStringArray(R.array.animals_array);
+        String[] array = this.getResources().getStringArray(R.array.health_tips);
+        // String[] imagearray = this.getResources().getStringArray(R.array.pic_name);
+        int i = new Random().nextInt(array.length);
+        String randomStr = array[i];
+
+        healthtip.setContentView(R.layout.dailypopup);
+        healthImage = healthtip.findViewById(R.id.message_image);
+        healthMessage = healthtip.findViewById(R.id.dailymsg);
+
+        healthMessage.setText(randomStr);
+//        healthImage.setImageDrawable(drawable);
+        healthtip.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        healthtip.show();
+
+    }
+
+
+    /**
+     * Weather forecast
+     */
+    class weatherTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+        String LAT = appController.getLatitude();
+        String LON = appController.getLongitude();
+
+        protected String doInBackground(String... args) {
+            String response = HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?lat=" + LAT + "&lon=" + LON + "&units=metric&appid=" + weather_API_key);
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+
+            try {
+                JSONObject jsonObj = new JSONObject(result);
+                JSONObject main = jsonObj.getJSONObject("main");
+                JSONObject sys = jsonObj.getJSONObject("sys");
+                JSONObject wind = jsonObj.getJSONObject("wind");
+                JSONObject weather = jsonObj.getJSONArray("weather").getJSONObject(0);
+                String temp = main.getString("temp") + "°C";
+                String weatherDescription = weather.getString("description");
+
+                String address = jsonObj.getString("name") + ", " + sys.getString("country");
+
+                Toast.makeText(HomeActivity.this, "Today's weather is " + temp + " and it is " + weatherDescription + " at " + address, Toast.LENGTH_SHORT).show();
+
+            } catch (JSONException e) {
+
+                Log.d(TAG, e.getMessage());
+            }
+
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "Resumed app");
+
+        // initialize the step listener
+        stepListener = new OnDataPointListener() {
+            @Override
+            public void onDataPoint(DataPoint dataPoint) {
+                for (Field field : dataPoint.getDataType().getFields()) {
+                    Log.d(TAG, "Field: " + field.getName());
+                    Log.d(TAG, "Value: " + dataPoint.getValue(field));
+
+
+                }
+            }
+        };
+
+        // register the step listener
+        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this))) {
+            Log.d(TAG, "Not signed in...");
+        } else {
+            Fitness.getSensorsClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                    .add(
+                            new SensorRequest.Builder()
+                                    .setDataType(DataType.AGGREGATE_STEP_COUNT_DELTA)
+                                    .setSamplingRate(10, TimeUnit.SECONDS)
+                                    .build(), stepListener
+                    )
+                    .addOnCompleteListener(
+                            new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Log.d(TAG, "Step Listener Registered.");
+                                    } else {
+                                        Log.e(TAG, "Step Listener not registered", task.getException());
+                                    }
+                                }
+                            }
+                    );
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
+                Log.d(TAG, "accessing...");
+                accessGoogleFit();
+
+
+            }
+        }
+    }
+
+    /**
+     * Access Google Fit recordings
+     */
+    private void accessGoogleFit() {
+
+
+        // Subscribe to recordings
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .subscribe(DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+
+
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .subscribe(DataType.TYPE_DISTANCE_DELTA)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .subscribe(DataType.TYPE_CALORIES_EXPENDED)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .subscribe(DataType.TYPE_MOVE_MINUTES)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+
+
+        Calendar cal = Calendar.getInstance();
+        long endTime = cal.getTimeInMillis();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        long startTime = cal.getTimeInMillis();
+
+        DateFormat dateFormat = DateFormat.getDateTimeInstance();
+        Log.d(TAG, "Range Start: " + dateFormat.format(startTime));
+        Log.d(TAG, "Range End: " + dateFormat.format(endTime));
+
+        DataReadRequest readRequest = new DataReadRequest.Builder()
+                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
+                .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED)
+                .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .bucketByTime(1, TimeUnit.DAYS)
+                .build();
+
+        // get history
+        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .readData(readRequest)
+                .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                    @Override
+                    public void onSuccess(DataReadResponse dataReadResponse) {
+                        Log.d(TAG, "successfully got history");
+                        getDataSetsFromBucket(dataReadResponse);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "failed to get history", e);
+                    }
+                });
+
+
+    }
+
+    private void getDataSetsFromBucket(DataReadResponse dataReadResponse) {
+
+        if (dataReadResponse.getBuckets().size() > 0) {
+            Log.d(TAG, "Number of returned buckets of DataSets is: " + dataReadResponse.getBuckets().size());
+            for (Bucket bucket : dataReadResponse.getBuckets()) {
+                List<DataSet> dataSets = bucket.getDataSets();
+                for (DataSet dataSet : dataSets) {
+                    parseDataSet(dataSet);
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * Parse Dataset and display step count on progress dialog, calories, active minutes and kilometers taken in a day
+     */
+    private void parseDataSet(DataSet dataSet) {
+        Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+        DateFormat dateFormat = DateFormat.getTimeInstance();
+
+
+        float distanceTraveledFromDataPoints = 0;
+        float kcals = 0;
+        long mins = 0;
+        String startTime = "";
+        String stime = "";
+        String endTime = "";
+
+
+        for (DataPoint dp : dataSet.getDataPoints()) {
+
+            startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
+            stime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
+            endTime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
+            Log.d(TAG, "Data point:");
+            Log.d(TAG, "\tType: " + dp.getDataType().getName());
+            Log.d(TAG, "\tStart: " + startTime);
+            Log.d(TAG, "\tEnd: " + endTime);
+
+
+            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
+            movemins += mins;
+            activeTime.setText(String.format("%.2f", movemins / 1000.00));
+
+
+            for (Field field : dp.getDataType().getFields()) {
+                Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
+
+                // increment the steps or distance
+                if (field.getName().equals("steps")) {
+                    totalStepsFromDataPoints = dp.getValue(field).asInt();
+
+                } else if (field.getName().equals("distance")) {
+                    distanceTraveledFromDataPoints += dp.getValue(field).asFloat();
+                } else if (field.getName().equals("calories")) {
+                    kcals += dp.getValue(field).asFloat();
+                }
+
+
+            }
+        }
+
+        //update the proper labels
+        if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
+
+
+            stepsCounter.setProgress(totalStepsFromDataPoints);
+            double steps = Double.parseDouble(String.valueOf(totalStepsFromDataPoints));
+            double value = (steps / sharedPreferences.getInt("Goal", 5000)) * 100;
+            stepsPercentage.setText(String.format("%.2f", value) + "% OF GOAL " + (sharedPreferences.getInt("Goal", 5000)));
+
+
+        } else if (dataSet.getDataType().getName().equals("com.google.distance.delta")) {
+            distance.setText(String.format("%.2f", distanceTraveledFromDataPoints / 1000.00));
+            distanceInMeters = distanceTraveledFromDataPoints;
+        } else if (dataSet.getDataType().getName().equals("com.google.calories.expended")) {
+            calories.setText(String.format("%.2f", kcals / 1000.00));
+            kCals = kcals;
+        }
+        checkForRewards();
+
+    }
+
+    /**
+     *Retrieve steps per hour from Firestore
+     */
     private void hourlyDataOnChart(final String uid) {
 
 
@@ -386,7 +773,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-
+    /**
+     *Retrieve total steps for one week from Firestore
+     */
     private void weeklyDataChart(final String uid) {
 
 
@@ -400,45 +789,48 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
         for (int i = 0; i > -6; --i){
+
             Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.add(Calendar.DATE, i);
-        weekDay = simpleDateFormat.format(calendar.getTime());
+            calendar.setTime(date);
+            calendar.add(Calendar.DATE, i);
+            weekDay = simpleDateFormat.format(calendar.getTime());
 
 
 
-        CollectionReference documentReference = db.collection("users").document(uid).collection(weekDay);
-        documentReference.orderBy("total").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        if (document.exists()) {
-                            String weekday = document.getId();
-                            int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
-                            weekData.add(totalsteps);
-                            week_graph_data.add(weekday);
+            CollectionReference documentReference = db.collection("users").document(uid).collection(weekDay);
+            documentReference.orderBy("total").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            if (document.exists()) {
+                                String weekday = document.getId();
+                                int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
+                                weekData.add(totalsteps);
+                                week_graph_data.add(weekday);
 
 
-                        } else {
-                            Toast.makeText(HomeActivity.this, "Doesnt exist", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(HomeActivity.this, "Doesn't exist", Toast.LENGTH_SHORT).show();
+                            }
+
                         }
 
                     }
 
+
                 }
 
 
-            }
-
-
-        });
+            });
 
     }
 
     }
 
-
+    /**
+     *Save total steps of the day to Firestore
+     */
     private void calculateTotalSteps(String uid) {
 
         SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
@@ -481,19 +873,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    /**
+     *Save total steps of the week to Firestore
+     */
     private void calculateWeeklySteps(String uid){
 
-//        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
-//        Date date = null;
-//        try {
-//            date = format.parse(today);
-//        } catch (ParseException e) {
-//            e.printStackTrace();
-//        }
-//        SimpleDateFormat sdf = new SimpleDateFormat("E");
-//        Log.d(TAG, "=============WEEK TOTAL===================");
-//        String weekday = sdf.format(date);
-//        Log.d(TAG, weekday);
 
         int sum = 0;
         for (int i = 0; i < weekData.size();i++){
@@ -506,7 +890,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-
+    /**
+     *Display steps per hour on graph
+     */
     private void showGraph() {
 
 
@@ -580,6 +966,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    /**
+     *Display total steps for one week on graph
+     */
     private void showWeekGraph() {
 
         APIlib.getInstance().setActiveAnyChartView(weekChart);
@@ -650,323 +1039,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-
-    private void displayNotification() {
-        NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
-            manager.createNotificationChannel(channel);
-        }
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "fitnessapp")
-                .setContentTitle("Keep Staying Fit")
-                .setContentText("Fetching Steps")
-                .setAutoCancel(false)
-                .setOngoing(true)
-                .setSmallIcon(R.drawable.ic_person_walk);
-        manager.notify(1, builder.build());
-    }
-
-
-    private void accessGoogleFit() {
-
-
-        // Subscribe to recordings
-        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
-                .subscribe(DataType.AGGREGATE_STEP_COUNT_DELTA)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Successfully subscribed");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "There was a problem subscribing...", e);
-                    }
-                });
-
-
-        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
-                .subscribe(DataType.TYPE_DISTANCE_DELTA)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Successfully subscribed");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "There was a problem subscribing...", e);
-                    }
-                });
-        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
-                .subscribe(DataType.TYPE_CALORIES_EXPENDED)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Successfully subscribed");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "There was a problem subscribing...", e);
-                    }
-                });
-
-        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
-                .subscribe(DataType.TYPE_MOVE_MINUTES)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Successfully subscribed");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "There was a problem subscribing...", e);
-                    }
-                });
-        // end of subscriptions
-
-
-        // prepare to get history
-
-        Calendar cal = Calendar.getInstance();
-        long endTime = cal.getTimeInMillis();
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        long startTime = cal.getTimeInMillis();
-
-        DateFormat dateFormat = DateFormat.getDateTimeInstance();
-        Log.d(TAG, "Range Start: " + dateFormat.format(startTime));
-        Log.d(TAG, "Range End: " + dateFormat.format(endTime));
-
-        DataReadRequest readRequest = new DataReadRequest.Builder()
-                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-                .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
-                .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED)
-                .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
-                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                .bucketByTime(1, TimeUnit.DAYS)
-                .build();
-
-        // get history
-        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
-                .readData(readRequest)
-                .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
-                    @Override
-                    public void onSuccess(DataReadResponse dataReadResponse) {
-                        Log.d(TAG, "successfully got history");
-                        getDataSetsFromBucket(dataReadResponse);
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, "failed to get history", e);
-                    }
-                });
-
-
-    }
-
-
-    private void getDataSetsFromBucket(DataReadResponse dataReadResponse) {
-        // number of buckets would always be 1 (bucket size was set to 365 days in readRequest)
-        if (dataReadResponse.getBuckets().size() > 0) {
-            Log.d(TAG, "Number of returned buckets of DataSets is: " + dataReadResponse.getBuckets().size());
-            for (Bucket bucket : dataReadResponse.getBuckets()) {
-                List<DataSet> dataSets = bucket.getDataSets();
-                for (DataSet dataSet : dataSets) {
-                    parseDataSet(dataSet);
-                }
-            }
-        }
-    }
-
-    private void parseDataSet(DataSet dataSet) {
-        Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-        DateFormat dateFormat = DateFormat.getTimeInstance();
-
-
-        float distanceTraveledFromDataPoints = 0;
-        float kcals = 0;
-        long mins = 0;
-        String startTime = "";
-        String stime = "";
-        String endTime = "";
-
-
-        for (DataPoint dp : dataSet.getDataPoints()) {
-
-            startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-            stime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
-            endTime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
-            Log.d(TAG, "Data point:");
-            Log.d(TAG, "\tType: " + dp.getDataType().getName());
-            Log.d(TAG, "\tStart: " + startTime);
-            Log.d(TAG, "\tEnd: " + endTime);
-
-
-            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
-            movemins += mins;
-            activeTime.setText(String.format("%.2f", movemins / 1000.00));
-
-
-            for (Field field : dp.getDataType().getFields()) {
-                Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
-
-                // increment the steps or distance
-                if (field.getName().equals("steps")) {
-                    totalStepsFromDataPoints = dp.getValue(field).asInt();
-
-                } else if (field.getName().equals("distance")) {
-                    distanceTraveledFromDataPoints += dp.getValue(field).asFloat();
-                } else if (field.getName().equals("calories")) {
-                    kcals += dp.getValue(field).asFloat();
-                }
-
-
-            }
-        }
-
-        //update the proper labels
-        if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
-
-
-            stepsCounter.setProgress(totalStepsFromDataPoints);
-            double steps = Double.parseDouble(String.valueOf(totalStepsFromDataPoints));
-            double value = (steps / sharedPreferences.getInt("Goal", 5000)) * 100;
-            stepsPercentage.setText(String.format("%.2f", value) + "% OF GOAL " + (sharedPreferences.getInt("Goal", 5000)));
-
-
-        } else if (dataSet.getDataType().getName().equals("com.google.distance.delta")) {
-            distance.setText(String.format("%.2f", distanceTraveledFromDataPoints / 1000.00));
-            distanceInMeters = distanceTraveledFromDataPoints;
-        } else if (dataSet.getDataType().getName().equals("com.google.calories.expended")) {
-            calories.setText(String.format("%.2f", kcals / 1000.00));
-            kCals = kcals;
-        }
-        checkForRewards();
-
-    }
-
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG, "Resumed app");
-
-        // initialize the step listener
-        stepListener = new OnDataPointListener() {
-            @Override
-            public void onDataPoint(DataPoint dataPoint) {
-                for (Field field : dataPoint.getDataType().getFields()) {
-                    Log.d(TAG, "Field: " + field.getName());
-                    Log.d(TAG, "Value: " + dataPoint.getValue(field));
-
-
-                }
-            }
-        };
-
-        // register the step listener
-        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this))) {
-            Log.d(TAG, "Not signed in...");
-        } else {
-            Fitness.getSensorsClient(this, GoogleSignIn.getLastSignedInAccount(this))
-                    .add(
-                            new SensorRequest.Builder()
-                                    .setDataType(DataType.AGGREGATE_STEP_COUNT_DELTA)
-                                    .setSamplingRate(10, TimeUnit.SECONDS)
-                                    .build(), stepListener
-                    )
-                    .addOnCompleteListener(
-                            new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        Log.d(TAG, "Step Listener Registered.");
-                                    } else {
-                                        Log.e(TAG, "Step Listener not registered", task.getException());
-                                    }
-                                }
-                            }
-                    );
-        }
-    }
-
-
-    private void retrieveUserDetails(String uid) {
-
-        DocumentReference docRef = db.collection("users").document(uid);
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document.exists()) {
-
-                        String fName, lName, gender, fromHour, toHour, lunchHour, weekend;
-                        Double weight, height;
-                        Long age, genderSelection;
-                        /////// GET INFO FROM FIRESTORE
-                        fName = document.getString("FirstName");
-                        lName = document.getString("LastName");
-                        gender = document.getString("Gender");
-                        fromHour = document.getString("FromHour");
-                        toHour = document.getString("ToHour");
-                        lunchHour = document.getString("LunchHour");
-                        weekend = document.getString("Weekend");
-                        weight = document.getDouble("Weight");
-                        height = document.getDouble("Height");
-                        age = document.getLong("Age");
-                        genderSelection = document.getLong("GenderSelection");
-
-
-                        saveToLocalDB(fName, lName, gender, fromHour, toHour, lunchHour, weekend, weight, height, age, genderSelection);
-
-
-                    } else {
-                        Log.d("TAG", "No such document");
-                    }
-                } else {
-                    Log.d("TAG", "get failed with ", task.getException());
-                }
-            }
-        });
-    }
-
-
-    /////// SAVE INTO LOCAL DB
-
-    private void saveToLocalDB(String fName, String lName, String gender, String fromHour, String toHour, String lunchHour, String weekend, Double weight, Double height, Long age, Long genderSelection) {
-
-
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("FirstName", fName);
-        editor.putString("LastName", lName);
-        editor.putString("Gender", gender);
-        editor.putString("FromHour", fromHour);
-        editor.putString("ToHour", toHour);
-        editor.putString("LunchHour", lunchHour);
-        editor.putString("Weekend", weekend);
-        editor.putFloat("Weight", Float.valueOf(String.valueOf(weight)));
-        editor.putFloat("Height", Float.valueOf(String.valueOf(height)));
-        editor.putLong("Age", age);
-        editor.putLong("GenderSelection", genderSelection);
-        editor.apply();
-
-        helloText.setText("Hello there " + fName + " !");
-    }
-
-
+    /**
+     * Check if the user has achieved any reward
+     */
     public void checkForRewards() {
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -983,10 +1058,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         float distanceInKm = distanceInMeters / 1000;
 
-        Log.d(TAG, "---------------------REWARDS----------------------");
+        Log.d(TAG, "-------REWARDS-------");
         Log.d(TAG, String.valueOf(gotReward));
 
-        //daily steps = steps goal && (sharedPreferences.getBoolean("trophy1",false)==false)
+
         if ((totalStepsFromDataPoints == sharedPreferences.getInt("Goal", 5000))) {
 
             editor.putBoolean("trophy1", true);
@@ -1104,27 +1179,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private void showHealthTip() {
-
-        TextView healthMessage;
-        ImageView healthImage;
-
-//        String[] array = context.getResources().getStringArray(R.array.animals_array);
-        String[] array = this.getResources().getStringArray(R.array.health_tips);
-        // String[] imagearray = this.getResources().getStringArray(R.array.pic_name);
-        int i = new Random().nextInt(array.length);
-        String randomStr = array[i];
-
-        healthtip.setContentView(R.layout.dailypopup);
-        healthImage = healthtip.findViewById(R.id.message_image);
-        healthMessage = healthtip.findViewById(R.id.dailymsg);
-        healthMessage.setText(randomStr);
-//        healthImage.setImageDrawable(drawable);
-        healthtip.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        healthtip.show();
-
-    }
-
 
     @Override
     public void onBackPressed() {
@@ -1186,88 +1240,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
-                Log.d(TAG, "accessing...");
-                accessGoogleFit();
-
-
-            }
-        }
-    }
-
-    class weatherTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-        }
-
-        String LAT = "25.33418633365931";
-        String LON = "51.474041205731275";
-
-        protected String doInBackground(String... args) {
-            String response = HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?lat=" + LAT + "&lon=" + LON + "&units=metric&appid=" + weather_API_key);
-            return response;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-
-
-            try {
-                JSONObject jsonObj = new JSONObject(result);
-                JSONObject main = jsonObj.getJSONObject("main");
-                JSONObject sys = jsonObj.getJSONObject("sys");
-                JSONObject wind = jsonObj.getJSONObject("wind");
-                JSONObject weather = jsonObj.getJSONArray("weather").getJSONObject(0);
-
-                Long updatedAt = jsonObj.getLong("dt");
-                String updatedAtText = "Updated at: " + new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.ENGLISH).format(new Date(updatedAt * 1000));
-                String temp = main.getString("temp") + "°C";
-                String tempMin = "Min Temp: " + main.getString("temp_min") + "°C";
-                String tempMax = "Max Temp: " + main.getString("temp_max") + "°C";
-                String pressure = main.getString("pressure");
-                String humidity = main.getString("humidity");
-
-                Long sunrise = sys.getLong("sunrise");
-                Long sunset = sys.getLong("sunset");
-                String windSpeed = wind.getString("speed");
-                String weatherDescription = weather.getString("description");
-
-                String address = jsonObj.getString("name") + ", " + sys.getString("country");
-
-
-                /* Populating extracted data into our views */
-//                addressTxt.setText(address);
-//                updated_atTxt.setText(updatedAtText);
-//                statusTxt.setText(weatherDescription.toUpperCase());
-//                tempTxt.setText(temp);
-//                temp_minTxt.setText(tempMin);
-//                temp_maxTxt.setText(tempMax);
-//                sunriseTxt.setText(new SimpleDateFormat("hh:mm a", Locale.ENGLISH).format(new Date(sunrise * 1000)));
-//                sunsetTxt.setText(new SimpleDateFormat("hh:mm a", Locale.ENGLISH).format(new Date(sunset * 1000)));
-//                windTxt.setText(windSpeed);
-//                pressureTxt.setText(pressure);
-//                humidityTxt.setText(humidity);
-
-                /* Views populated, Hiding the loader, Showing the main design */
-//                findViewById(R.id.loader).setVisibility(View.GONE);
-//                findViewById(R.id.mainContainer).setVisibility(View.VISIBLE);
-
-                Toast.makeText(HomeActivity.this, "Today's weather is " + temp + " and it is " + weatherDescription + " at " + address, Toast.LENGTH_SHORT).show();
-
-            } catch (JSONException e) {
-//
-                Log.d(TAG, e.getMessage());
-            }
-
-        }
-    }
 
 
 }

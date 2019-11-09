@@ -60,6 +60,10 @@ public class AppWorker extends Worker {
         return Result.success();
     }
 
+
+    /**
+     * Retrieve steps/hour
+     */
     private void accessHourlySteps(){
 
 
@@ -95,6 +99,7 @@ public class AppWorker extends Worker {
 
     }
 
+
     private void getHourlyStepsFromBucket(DataReadResponse readResponse){
 
         if(readResponse.getBuckets().size()>0){
@@ -114,6 +119,9 @@ public class AppWorker extends Worker {
         }
     }
 
+    /**
+     * Parse the datasets
+     */
     private void parseHourlySteps(DataSet dataSet) {
         Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getTimeInstance();
@@ -148,17 +156,9 @@ public class AppWorker extends Worker {
         }
 
         if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
-
             for (DataPoint dataPoint : dataSet.getDataPoints()) {
-
-
-
-
                 for (Field field : dataPoint.getDataType().getFields()) {
-
                     if (field.getName().equals("steps")) {
-
-
 
                         Map<String, Integer> fetchedsteps = new HashMap<>();
 
@@ -171,8 +171,7 @@ public class AppWorker extends Worker {
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
-                                    //    Toast.makeText(getApplicationContext(), "check", Toast.LENGTH_SHORT).show();
-
+                                        Log.d(TAG,"steps per hour fetched");
                                     }
                                 })
                                 .addOnFailureListener(new OnFailureListener() {
@@ -181,7 +180,6 @@ public class AppWorker extends Worker {
 
                                     }
                                 });
-
                     }
                 }
             }
@@ -189,6 +187,11 @@ public class AppWorker extends Worker {
 
         }
     }
+
+
+
+
+
 
 
 }

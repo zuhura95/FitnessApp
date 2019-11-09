@@ -29,17 +29,9 @@
         <activity
             android:name=".UserProfileActivity"
             android:label="@string/title_activity_user_profile"
-            android:theme="@style/AppTheme.NoActionBar" /> <!-- [START fcm_default_icon] -->
-        <!--
- Set custom default icon. This is used when no icon is set for incoming notification messages.
-     See README(https://goo.gl/l4GJaQ) for more.
-        -->
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".Authentication.ProfileActivity" />
-        <!--
- Set color used with incoming notification messages. This is used when no color is set for the incoming
-             notification message. See README(https://goo.gl/6BKBk7) for more.
-        -->
-        <!-- [END fcm_default_channel] -->
+
         <activity
             android:name=".Locations.LocationsActivity"
             android:label="@string/title_activity_locations"

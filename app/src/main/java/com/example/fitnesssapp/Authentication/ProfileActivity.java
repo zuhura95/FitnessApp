@@ -45,17 +45,12 @@ public class ProfileActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
 
-
         inputFName = (EditText) findViewById(R.id.firstname);
         inputLName = (EditText) findViewById(R.id.lastname);
         inputWeight = (EditText) findViewById(R.id.weight);
         inputHeight = (EditText) findViewById(R.id.height);
         inputAge = (EditText) findViewById(R.id.age);
         saveButton = (Button) findViewById(R.id.save_btn);
-
-
-
-
 
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,10 +69,12 @@ public class ProfileActivity extends AppCompatActivity {
             }
         });
 
-
-
     }
 
+
+    /**
+     * Save user's info to local storage
+     */
     private void getUserProfile(){
 
         final String fName, lName;
@@ -112,6 +109,9 @@ public class ProfileActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Save user's info to fireestore
+     */
     private void saveToFirebaseDB(String fName, String lName, float weight, float height, int age){
         Map< String, Object > user = new HashMap<>();
         user.put("FirstName",fName);
@@ -125,13 +125,11 @@ public class ProfileActivity extends AppCompatActivity {
                .addOnSuccessListener(new OnSuccessListener<Void>() {
                    @Override
                    public void onSuccess(Void aVoid) {
-//                       Toast.makeText(ProfileActivity.this, "YAY", Toast.LENGTH_SHORT).show();
                    }
                })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-//                        Toast.makeText(ProfileActivity.this, "OH NO", Toast.LENGTH_SHORT).show();
                     }
                 });
 
