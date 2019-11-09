@@ -172,20 +172,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        //Display health tips pop up once a day
-        Calendar calendar = Calendar.getInstance();
-        int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
-        int lastDay = sharedPreferences.getInt("day", 0);
-
-        if (lastDay != currentDay) {
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putInt("day", currentDay);
-            editor.apply();
-
-            //run code that will be displayed once a day
-            showHealthTip();
-
-        }
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -206,6 +192,21 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         awardPopup = new Dialog(this);
         healthtip = new Dialog(this);
 
+        //Display health tips pop up once a day
+        Calendar calendar = Calendar.getInstance();
+        int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
+        int lastDay = sharedPreferences.getInt("day", 0);
+
+        if (lastDay != currentDay) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putInt("day", currentDay);
+            editor.apply();
+
+            //run code that will be displayed once a day
+            showHealthTip();
+
+        }
+        showHealthTip();
         //Set current date
         SimpleDateFormat sdf = new SimpleDateFormat("d MMM , yyyy");
         String currentDateandTime = sdf.format(new Date());
@@ -410,23 +411,48 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         TextView healthMessage;
         ImageView healthImage;
-//        String[] array = context.getResources().getStringArray(R.array.animals_array);
+
         String[] array = this.getResources().getStringArray(R.array.health_tips);
-        // String[] imagearray = this.getResources().getStringArray(R.array.pic_name);
         int i = new Random().nextInt(array.length);
         String randomStr = array[i];
 
         healthtip.setContentView(R.layout.dailypopup);
         healthImage = healthtip.findViewById(R.id.message_image);
         healthMessage = healthtip.findViewById(R.id.dailymsg);
-
+        Drawable pic = getImageForHealthTip(i);
         healthMessage.setText(randomStr);
-//        healthImage.setImageDrawable(drawable);
+        healthImage.setImageDrawable(pic);
         healthtip.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         healthtip.show();
 
     }
 
+    private Drawable getImageForHealthTip(int position){
+
+        int[] imageArray = {
+                R.drawable.fact1,
+                R.drawable.fact2,
+                R.drawable.fact3,
+                R.drawable.fact4,
+                R.drawable.fact5,
+                R.drawable.fact6,
+                R.drawable.fact7,
+                R.drawable.fact8,
+                R.drawable.fact9,
+                R.drawable.fact10,
+                R.drawable.fact11,
+                R.drawable.fact12,
+                R.drawable.fact13,
+                R.drawable.fact14,
+                R.drawable.fact15,
+                R.drawable.fact16,
+                R.drawable.fact17,
+        };
+        Drawable drawable = getResources().getDrawable(imageArray[position]);
+
+        return drawable;
+
+    }
 
     /**
      * Weather forecast

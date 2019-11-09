@@ -72,14 +72,15 @@
 
     <!--    Values for Health Tips and Did You Knows-->
     <string-array name="health_tips">
-        <item>Take the stairs instead of the elevator.</item>
+       <item>Take the stairs instead of the elevator.</item>
         <item>It is advised to do low to moderate exercise (walking or cycling) 3 times a week.</item>
         <item>A healthy adult requires 15 to 30 minutes/day of basic physical activities</item>
         <item>Creating a balance between technology use and physical activity is an important habit in your daily life</item>
         <item>Routine physical activity should be done with the aim of accumulating a minimum of 30 minutes daily each day in the week or in most days of the week.</item>
         <item>When you exercise in hot weather, check urine color and quantity, to know how much water you have lost.</item>
         <item>When you exercise in hot weather, consume enough salt, potassium and other electrolytes to balance sweat loss.</item>
-        <item>When you sit, position yourself correctly in the seat and make sure you sit straight and that your buttocks and back are square and completely squeezed into the seat.</item>
+        <item>Drink at least two liters per day in normal conditions, and drink up to six liters per day in hot conditions, of water or isotonic sports drinks</item>
+        <item>When you sit position yourself correctly in the seat and make sure you sit straight and that your buttocks and back are square and completely squeezed into the seat.</item>
         <item>You don\'t have to exercise for hours if your schedule is busy, a little exercise is better than none</item>
         <item>Preparing meals and snacks to bring to the office is healthier and cheaper</item>
         <item>Sleepiness is often cause by dehydration, so stay hyderated.</item>
@@ -87,14 +88,26 @@
         <item>Leave a bottle of water on your desk. And don\'t forget to drink</item>
         <item>You can add lemon or lime in your water for added flavor and no guilt</item>
         <item>Proper sleep is an essential ingredient to a healthy lifestyle</item>
-        <item>Breathing relieves stress, remember to take deep breaths </item>
+        <item>Breathing relieves stress, remember to take deep breaths</item>
+        <item>Drink green tea after walking to help losing weight</item>
+
+<!--        <item>Drinking water can promote weight loss</item>-->
+<!--        <item>Replace your unhealthy snacks with nuts. They\'re incredibly nutritious, healthy and deliicious</item>-->
+<!--        <item>Take a walk in the morning in the outdoors to help your body producing vitamin D</item>-->
+<!--        <item> If you are feeling depressed or sad, take a walk and get some fresh air to feel better</item>-->
+<!--        <item> Walk every day to give your memory power a serious boost</item>-->
+<!--        <item>Look for walking communities to encourage each other and build social support</item>-->
+<!--        <item>To stay motivated to walk, try walking for a social cause</item>-->
+<!--        <item>To stay motivated to walk, explore different paths every day</item>-->
+<!--        <item> Go for a stroll with your friends or family in the evening or after dinner</item>-->
+<!--        <item> To stay motivated to walk, walk your dog in the morning or evening</item>-->
+<!--        <item>If you are new to walking, walk for short intervals then gradually increase the duration</item>-->
+<!--        <item>Park farther away from your office than usual and walk to and from your car</item>-->
+<!--        <item>When you feel stressed or exhausted, take a short break and walk the stress away</item>-->
+
     </string-array>
 
-<!--    <string-array name="pic_name">-->
-<!--        <item>R.drawable.water</item>-->
-<!--        <item>R.drawable.rewardmedal</item>-->
-<!--        <item>R.drawable.ic_person_walk</item>-->
-<!--    </string-array>-->
+  
 
 
     <string-array name="DYK">
