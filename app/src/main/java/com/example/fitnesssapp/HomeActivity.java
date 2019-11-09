@@ -76,7 +76,6 @@ import androidx.work.WorkManager;
 
 import android.view.Menu;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -107,6 +106,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 
@@ -139,8 +139,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private float movemins;
     private int totalStepsFromDataPoints = 0;
     String today, uid;
-    List<Integer> stepsData = new ArrayList<>();
-    List<String> graph_data = new ArrayList<>();
+
+    TreeMap<String,Integer> dayTreeMap = new TreeMap<>();
+    TreeMap<String,Integer> weekTreeMap = new TreeMap<>();
+    List<String> hourlist = new ArrayList<>();
+    List<Integer> hourlystepsList = new ArrayList<>();
+    List<String> weekdayList = new ArrayList<>();
+    List<Integer> totalDayStepsList = new ArrayList<>();
     List<Integer> weekData = new ArrayList<>();
     List<String> week_graph_data = new ArrayList<>();
 
@@ -692,14 +697,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         float kcals = 0;
         long mins = 0;
         String startTime = "";
-        String stime = "";
         String endTime = "";
 
 
         for (DataPoint dp : dataSet.getDataPoints()) {
 
             startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-            stime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
             endTime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
             Log.d(TAG, "Data point:");
             Log.d(TAG, "\tType: " + dp.getDataType().getName());
@@ -765,6 +768,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     for (QueryDocumentSnapshot document : task.getResult()) {
                         if (document.exists()) {
 
+
                             String time = document.getId();
                             SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa");
                             SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh aa");
@@ -778,8 +782,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                             int steps = Integer.parseInt(String.valueOf(document.get("steps")));
 
 
-                            stepsData.add(steps);
-                            graph_data.add(time);
+                            dayTreeMap.put(time,steps);
+
 
 
                         } else {
@@ -793,6 +797,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 }
 
 
+//                for(Map.Entry map  : dayTreeMap.entrySet()){
+//
+//                    Log.d(TAG,"======TRYING TREE MAPS======");
+//                   Log.d(TAG,map.getKey()+" "+map.getValue());
+//
+//                }
                 sortTimeArray();
                 showGraph();
                 calculateTotalSteps(uid);
@@ -806,19 +816,28 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     private void sortTimeArray() {
 
-        Collections.sort(graph_data, new Comparator<String>() {
+        List<Map.Entry<String,Integer>> copy =  new ArrayList<>(dayTreeMap.entrySet());
+        Collections.sort(copy, new Comparator<Map.Entry<String, Integer>>() {
             @Override
-            public int compare(String o1, String o2) {
+            public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+
                 try {
-                    return new SimpleDateFormat("hh aa").parse(o1).compareTo(new SimpleDateFormat("hh aa").parse(o2));
+                    return new SimpleDateFormat("hh aa").parse(o1.getKey()).compareTo(new SimpleDateFormat("hh aa").parse(o2.getKey()));
                 } catch (ParseException e) {
                     return 0;
                 }
             }
-
         });
-        Log.d(TAG,"======SORTED=========");
-        Log.d(TAG, String.valueOf(graph_data));
+
+        Log.d(TAG,"======SORTED TREEMAP=========");
+        Log.d(TAG, String.valueOf(copy));
+
+        for (Map.Entry<String, Integer> entry: dayTreeMap.entrySet()) {
+            hourlist.add(entry.getKey());
+            hourlystepsList.add(entry.getValue());
+        }
+
+
     }
 
     /**
@@ -854,9 +873,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                             if (document.exists()) {
                                 String weekday = document.getId();
                                 int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
-                                weekData.add(totalsteps);
-                                week_graph_data.add(weekday);
-
+//                                weekData.add(totalsteps);
+//                                week_graph_data.add(weekday);
+                                weekTreeMap.put(weekday,totalsteps);
 
                             } else {
                                 Toast.makeText(HomeActivity.this, "Doesn't exist", Toast.LENGTH_SHORT).show();
@@ -878,28 +897,68 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     private void sortDayArray(){
 
-        Comparator<String> dateComparator = new Comparator<String>() {
+        List<Map.Entry<String,Integer>> copy = new ArrayList<>(weekTreeMap.entrySet());
+        Collections.sort(copy, new Comparator<Map.Entry<String, Integer>>() {
             @Override
-            public int compare(String o1, String o2) {
-                try{
+            public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+                try {
                     SimpleDateFormat format = new SimpleDateFormat("EEE");
-                    Date d1 = format.parse(o1);
-                    Date d2 = format.parse(o2);
+                    Date d1 = format.parse(o1.getKey());
+                    Date d2 = format.parse(o2.getKey());
                     Calendar cal1 = Calendar.getInstance();
                     Calendar cal2 = Calendar.getInstance();
                     cal1.setTime(d1);
                     cal2.setTime(d2);
                     return cal1.get(Calendar.DAY_OF_WEEK) - cal2.get(Calendar.DAY_OF_WEEK);
 
-                }catch(ParseException pe){
-                    throw new RuntimeException(pe);
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
                 }
+
+
             }
-        };
-        Collections.sort(week_graph_data, dateComparator);
-        Log.d(TAG,"======WEEEK SORTED=========");
-        Log.d(TAG, String.valueOf(week_graph_data));
+        });
+
+        Log.d(TAG,"======SORTED WEEEK TREEMAP=========");
+        Log.d(TAG, String.valueOf(copy));
+
+        for(Map.Entry<String,Integer> entry: weekTreeMap.entrySet()){
+            weekdayList.add(entry.getKey());
+            totalDayStepsList.add(entry.getValue());
+        }
+//        Comparator<String> dateComparator = new Comparator<String>() {
+//            @Override
+//            public int compare(String o1, String o2) {
+//                try{
+//                    SimpleDateFormat format = new SimpleDateFormat("EEE");
+//                    Date d1 = format.parse(o1);
+//                    Date d2 = format.parse(o2);
+//                    Calendar cal1 = Calendar.getInstance();
+//                    Calendar cal2 = Calendar.getInstance();
+//                    cal1.setTime(d1);
+//                    cal2.setTime(d2);
+//                    return cal1.get(Calendar.DAY_OF_WEEK) - cal2.get(Calendar.DAY_OF_WEEK);
+//
+//                }catch(ParseException pe){
+//                    throw new RuntimeException(pe);
+//                }
+//            }
+//        };
+//        Collections.sort(copy, dateComparator);
+//        Log.d(TAG,"======WEEEK SORTED=========");
+//        Log.d(TAG, String.valueOf(week_graph_data));
+
+
+
+
+//        Collections.sort(copy, new Comparator<Map.Entry<String, Integer>>() {
+//            @Override
+//            public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+//                return 0;
+//            }
+//        });
     }
+
 
     /**
      *Save total steps of the day to Firestore
@@ -919,8 +978,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Log.d(TAG, weekday);
 
         int sum = 0;
-        for (int i = 0; i < stepsData.size(); i++) {
-            sum += stepsData.get(i);
+        for (int i = 0; i < hourlystepsList.size(); i++) {
+            sum += hourlystepsList.get(i);
 
         }
         Log.d(TAG, "wwwwwwwwwwwTOTALwwwwwwwwwwww");
@@ -953,8 +1012,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         int sum = 0;
-        for (int i = 0; i < weekData.size();i++){
-            sum += weekData.get(i);
+        for (int i = 0; i < totalDayStepsList.size();i++){
+            sum += totalDayStepsList.get(i);
         }
 
         Log.d(TAG, "=============WEEK TOTAL===================");
@@ -976,12 +1035,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         Log.d(TAG, "While Loop");
         int count = 0;
-        while (stepsData.size() > count) {
+        while (hourlist.size() > count) {
 
-            data2.add(new ValueDataEntry(graph_data.get(count), stepsData.get(count)));
-            Log.d(TAG, graph_data.get(count));
+            data2.add(new ValueDataEntry(hourlist.get(count), hourlystepsList.get(count)));
+           // Log.d(TAG, graph_data.get(count));
             count++;
         }
+
+
 
         Column column = cartesian.column(data2);
 
@@ -1050,10 +1111,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         List<DataEntry> data = new ArrayList<>();
 
         int count = 0;
-        while (weekData.size() > count) {
+        while (weekdayList.size() > count) {
 
-            data.add(new ValueDataEntry(week_graph_data.get(count), weekData.get(count)));
-            Log.d(TAG, week_graph_data.get(count));
+            data.add(new ValueDataEntry(weekdayList.get(count), totalDayStepsList.get(count)));
+          //  Log.d(TAG, week_graph_data.get(count));
             count++;
         }
 
