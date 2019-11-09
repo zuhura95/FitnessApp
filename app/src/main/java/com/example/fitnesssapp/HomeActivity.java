@@ -99,6 +99,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -207,7 +209,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         }
 
-        showHealthTip();
+//        showHealthTip();
         //Set current date
         SimpleDateFormat sdf = new SimpleDateFormat("d MMM , yyyy");
         String currentDateandTime = sdf.format(new Date());
@@ -790,6 +792,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 }
 
 
+                sortTimeArray();
                 showGraph();
                 calculateTotalSteps(uid);
             }
@@ -798,6 +801,23 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
+    }
+
+    private void sortTimeArray() {
+
+        Collections.sort(graph_data, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                try {
+                    return new SimpleDateFormat("hh aa").parse(o1).compareTo(new SimpleDateFormat("hh aa").parse(o2));
+                } catch (ParseException e) {
+                    return 0;
+                }
+            }
+
+        });
+        Log.d(TAG,"======SORTED=========");
+        Log.d(TAG, String.valueOf(graph_data));
     }
 
     /**

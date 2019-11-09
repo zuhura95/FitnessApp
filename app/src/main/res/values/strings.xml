@@ -72,7 +72,8 @@
 
     <!--    Values for Health Tips and Did You Knows-->
     <string-array name="health_tips">
-       <item>Take the stairs instead of the elevator.</item>
+
+        <item>Take the stairs instead of the elevator.</item>
         <item>It is advised to do low to moderate exercise (walking or cycling) 3 times a week.</item>
         <item>A healthy adult requires 15 to 30 minutes/day of basic physical activities</item>
         <item>Creating a balance between technology use and physical activity is an important habit in your daily life</item>
@@ -89,8 +90,8 @@
         <item>You can add lemon or lime in your water for added flavor and no guilt</item>
         <item>Proper sleep is an essential ingredient to a healthy lifestyle</item>
         <item>Breathing relieves stress, remember to take deep breaths</item>
-        <item>Drink green tea after walking to help losing weight</item>
 
+<!--        <item>Drink green tea after walking to help losing weight</item>-->
 <!--        <item>Drinking water can promote weight loss</item>-->
 <!--        <item>Replace your unhealthy snacks with nuts. They\'re incredibly nutritious, healthy and deliicious</item>-->
 <!--        <item>Take a walk in the morning in the outdoors to help your body producing vitamin D</item>-->
