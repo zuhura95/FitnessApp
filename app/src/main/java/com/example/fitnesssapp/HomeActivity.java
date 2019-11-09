@@ -274,6 +274,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
 
+                sortDayArray();
                 showWeekGraph();
                 calculateWeeklySteps(uid);
                 Toast.makeText(HomeActivity.this, "Showing week graph", Toast.LENGTH_SHORT).show();
@@ -871,8 +872,33 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
             });
 
+        }
+
     }
 
+    private void sortDayArray(){
+
+        Comparator<String> dateComparator = new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                try{
+                    SimpleDateFormat format = new SimpleDateFormat("EEE");
+                    Date d1 = format.parse(o1);
+                    Date d2 = format.parse(o2);
+                    Calendar cal1 = Calendar.getInstance();
+                    Calendar cal2 = Calendar.getInstance();
+                    cal1.setTime(d1);
+                    cal2.setTime(d2);
+                    return cal1.get(Calendar.DAY_OF_WEEK) - cal2.get(Calendar.DAY_OF_WEEK);
+
+                }catch(ParseException pe){
+                    throw new RuntimeException(pe);
+                }
+            }
+        };
+        Collections.sort(week_graph_data, dateComparator);
+        Log.d(TAG,"======WEEEK SORTED=========");
+        Log.d(TAG, String.valueOf(week_graph_data));
     }
 
     /**
