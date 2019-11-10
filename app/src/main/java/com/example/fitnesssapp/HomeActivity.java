@@ -456,11 +456,23 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 R.drawable.tip15,
                 R.drawable.tip16,
                 R.drawable.tip17,
+                R.drawable.tip18,
+                R.drawable.tip19,
+                R.drawable.tip20,
+                R.drawable.tip21,
+                R.drawable.tip22,
+                R.drawable.tip23,
+                R.drawable.tip24,
+                R.drawable.tip25,
+                R.drawable.tip26,
+                R.drawable.tip27,
+                R.drawable.tip28,
+                R.drawable.tip29,
+                R.drawable.tip30,
+                R.drawable.tip31,
         };
         Drawable drawable = getResources().getDrawable(imageArray[position]);
-
         return drawable;
-
     }
 
     /**

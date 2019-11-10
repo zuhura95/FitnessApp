@@ -72,7 +72,6 @@
 
     <!--    Values for Health Tips and Did You Knows-->
     <string-array name="health_tips">
-
         <item>Take the stairs instead of the elevator.</item>
         <item>It is advised to do low to moderate exercise (walking or cycling) 3 times a week.</item>
         <item>A healthy adult requires 15 to 30 minutes/day of basic physical activities</item>
@@ -90,31 +89,58 @@
         <item>You can add lemon or lime in your water for added flavor and no guilt</item>
         <item>Proper sleep is an essential ingredient to a healthy lifestyle</item>
         <item>Breathing relieves stress, remember to take deep breaths</item>
-
-<!--        <item>Drink green tea after walking to help losing weight</item>-->
-<!--        <item>Drinking water can promote weight loss</item>-->
-<!--        <item>Replace your unhealthy snacks with nuts. They\'re incredibly nutritious, healthy and deliicious</item>-->
-<!--        <item>Take a walk in the morning in the outdoors to help your body producing vitamin D</item>-->
-<!--        <item> If you are feeling depressed or sad, take a walk and get some fresh air to feel better</item>-->
-<!--        <item> Walk every day to give your memory power a serious boost</item>-->
-<!--        <item>Look for walking communities to encourage each other and build social support</item>-->
-<!--        <item>To stay motivated to walk, try walking for a social cause</item>-->
-<!--        <item>To stay motivated to walk, explore different paths every day</item>-->
-<!--        <item> Go for a stroll with your friends or family in the evening or after dinner</item>-->
-<!--        <item> To stay motivated to walk, walk your dog in the morning or evening</item>-->
-<!--        <item>If you are new to walking, walk for short intervals then gradually increase the duration</item>-->
-<!--        <item>Park farther away from your office than usual and walk to and from your car</item>-->
-<!--        <item>When you feel stressed or exhausted, take a short break and walk the stress away</item>-->
-
+        <item>Drink green tea after walking to help losing weight</item>
+        <item>Drinking water can promote weight loss</item>
+        <item>Replace your unhealthy snacks with nuts. They\'re incredibly nutritious, healthy and deliicious</item>
+        <item>Take a walk in the morning in the outdoors to help your body producing vitamin D</item>
+        <item> If you are feeling depressed or sad, take a walk and get some fresh air to feel better</item>
+        <item> Walk every day to give your memory power a serious boost</item>
+        <item>Look for walking communities to encourage each other and build social support</item>
+        <item>To stay motivated to walk, try walking for a social cause</item>
+        <item>To stay motivated to walk, explore different paths every day</item>
+        <item> Go for a stroll with your friends or family in the evening or after dinner</item>
+        <item> To stay motivated to walk, walk your dog in the morning or evening</item>
+        <item>If you are new to walking, walk for short intervals then gradually increase the duration</item>
+        <item>Park farther away from your office than usual and walk to and from your car</item>
+        <item>When you feel stressed or exhausted, take a short break and walk the stress away</item>
     </string-array>
 
-  
-
-
     <string-array name="DYK">
-        <item>
-            Regular physical activity can improve general well-being and quality of life
-        </item>
+        <item>Regular physical activity can improve general well-being and quality of life</item>
+        <item>Regular physical activity can improve insulin sensitivity and blood sugar control (patients on oral medication or insulin may be able to reduce the dose)</item>
+        <item>Regular physical activity can improve blood pressure, regulate blood lipids and reduce the risk of heart attack and stroke.</item>
+        <item>Regular physical activity can improve mental health better and lower stress levels</item>
+        <item>Regular physical activity can promote weight management/control</item>
+        <item>Regular physical activity can improve muscle strength</item>
+        <item>Regular physical activity can reduce joint pain and improve joint function</item>
+        <item>Regular physical activity can improve sleep, in duration and quality</item>
+        <item>Regular physical activity can improve posture and walking, reducing the risk of falling</item>
+        <item>It would take on average 1 hour 43 minutes of walking to burn off a 540-calorie burger!</item>
+        <item>Physical activity contributes up to 30% of the total daily calorie burn and is still one of the best ways to boost the metabolic rate</item>
+        <item>Walking helps improve confidence and self esteem</item>
+        <item>Walking, you use 200 muscles in your body</item>
+        <item>Coastal road has 34 Km cycling and foot paths! </item>
+        <item>People with more muscle and less fat generally have a faster metabolic rate</item>
+        <item>Training is important for strengthening the body, losing overweight, and raising the mental capabilities</item>
+        <item>It is preferable to train indoors during the hot summer</item>
+        <item>Walking boosts mood, relieves depression, and  improves sleeping</item>
+        <item>Walking 1 Km a day burns 100 calories</item>
+        <item>Avoiding just 16 Km of driving every week would eliminate 250 KG of CO2 emission a year</item>
+        <item>Walking helps maintaining healthy skin</item>
+        <item>Poor sleep can drive insulin resistance, disrupt your appetite hormones, and reduce your physical and mental performance</item>
+        <item>Drinkiing 2.1 cups (500 ml) of water 30 minutes before each meal increased weight loss by 44%</item>
+        <item>Eating vegetables and fruits lowers the risk of heart disease, type 2 diabetes, and obesity</item>
+        <item>30 min interval walking can help reduce blood pressure and prevent shortness of sleep</item>
+        <item>30 mins regular walking can help you lose weight, improve metabolism, and build lean muscle mass.</item>
+        <item>45 mins walking can help build and tone your leg and back muscles and prevent muscle loss.</item>
+        <item>Walking can help improve blood circulation, which helps the brain and cellular functions.</item>
+        <item>Walking after meals is great. It helps you reduce weight and also supports your digestive system</item>
+        <item>Walking at least 30 minutes a day can help bolster the activities of the immune cell</item>
+        <item>Walking regularly at a moderate pace can help prevent dementia, improve memory, and build confidence in older individuals</item>
+        <item>A medium-paced 60-minute walk can increase your lung capacity</item>
+        <item>Walking regularly can make you more active and energetic</item>
+        <item>Walking helps to increase your creativity and calm your nerves and relaxes your brain</item>
+        <item>Walking helps increasing your heart and lungs fitness</item>
     </string-array>
 
 
