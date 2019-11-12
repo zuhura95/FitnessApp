@@ -210,9 +210,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             editor.apply();
 
             //run code that will be displayed once a day
-            showHealthTip();
+           alternatePopUp();
 
         }
+
 
 //        showHealthTip();
         //Set current date
@@ -413,12 +414,30 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         helloText.setText("Hello there " + fName + " !");
     }
 
+    private void alternatePopUp(){
+
+        int i = sharedPreferences.getInt("key",0);
+
+            if (i%2 == 0){
+             showHealthTip();
+            }
+            else{
+                showDYK();
+            }
+
+
+        SharedPreferences.Editor e = sharedPreferences.edit();
+        i++;
+        e.putInt("key",i);
+        e.apply();
+    }
+
     /**
      * Display health tip pop up
      */
     private void showHealthTip() {
 
-        TextView healthMessage;
+        TextView healthMessage, title;
         ImageView healthImage;
 
         String[] array = this.getResources().getStringArray(R.array.health_tips);
@@ -428,8 +447,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         healthtip.setContentView(R.layout.dailypopup);
         healthImage = healthtip.findViewById(R.id.message_image);
         healthMessage = healthtip.findViewById(R.id.dailymsg);
+        title = healthtip.findViewById(R.id.popuptitle);
         Drawable pic = getImageForHealthTip(i);
         healthMessage.setText(randomStr);
+        title.setText("Health Tip");
         healthImage.setImageDrawable(pic);
         healthtip.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         healthtip.show();
@@ -474,6 +495,78 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Drawable drawable = getResources().getDrawable(imageArray[position]);
         return drawable;
     }
+
+
+    /**
+     * Display Did You Know? pop up
+     */
+    private void showDYK() {
+
+        TextView dykMessage, title;
+        ImageView dykImage;
+
+        String[] array = this.getResources().getStringArray(R.array.DYK);
+        int i = new Random().nextInt(array.length);
+        String randomStr = array[i];
+
+        healthtip.setContentView(R.layout.dailypopup);
+        dykImage = healthtip.findViewById(R.id.message_image);
+        dykMessage = healthtip.findViewById(R.id.dailymsg);
+        title = healthtip.findViewById(R.id.popuptitle);
+        Drawable pic = getImageForDYK(i);
+        dykMessage.setText(randomStr);
+        title.setText("Did You Know?");
+        dykImage.setImageDrawable(pic);
+        healthtip.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        healthtip.show();
+
+    }
+
+    private Drawable getImageForDYK(int position){
+
+        int[] imageArray = {
+                R.drawable.fact1,
+                R.drawable.fact2,
+                R.drawable.fact3,
+                R.drawable.fact4,
+                R.drawable.fact5,
+                R.drawable.fact6,
+                R.drawable.fact7,
+                R.drawable.fact8,
+                R.drawable.fact9,
+                R.drawable.fact10,
+                R.drawable.fact11,
+                R.drawable.fact12,
+                R.drawable.fact13,
+                R.drawable.fact14,
+                R.drawable.fact15,
+                R.drawable.fact16,
+                R.drawable.fact17,
+                R.drawable.fact18,
+                R.drawable.fact19,
+                R.drawable.fact20,
+                R.drawable.fact21,
+                R.drawable.fact22,
+                R.drawable.fact23,
+                R.drawable.fact24,
+                R.drawable.fact25,
+                R.drawable.fact26,
+                R.drawable.fact27,
+                R.drawable.fact28,
+                R.drawable.fact29,
+                R.drawable.fact30,
+                R.drawable.fact31,
+                R.drawable.fact32,
+                R.drawable.fact33,
+                R.drawable.fact34,
+                R.drawable.fact35,
+        };
+        Drawable drawable = getResources().getDrawable(imageArray[position]);
+        return drawable;
+    }
+
+
+
 
     /**
      * Weather forecast
