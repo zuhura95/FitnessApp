@@ -374,10 +374,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                         weight = document.getDouble("Weight");
                         height = document.getDouble("Height");
                         age = document.getLong("Age");
-                        genderSelection = document.getLong("GenderSelection");
+                     //   genderSelection = document.getLong("GenderSelection");
 
 
-                        saveToLocalDB(fName, lName, gender, fromHour, toHour, lunchHour, weekend, weight, height, age, genderSelection);
+                        saveToLocalDB(fName, lName, gender, fromHour, toHour, lunchHour, weekend, weight, height, age);
 
 
                     } else {
@@ -395,7 +395,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
      *
      *If returning user is using new phone, save profile details into local storage
      */
-    private void saveToLocalDB(String fName, String lName, String gender, String fromHour, String toHour, String lunchHour, String weekend, Double weight, Double height, Long age, Long genderSelection) {
+    private void saveToLocalDB(String fName, String lName, String gender, String fromHour, String toHour, String lunchHour, String weekend, Double weight, Double height, Long age) {
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("FirstName", fName);
@@ -408,7 +408,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         editor.putFloat("Weight", Float.valueOf(String.valueOf(weight)));
         editor.putFloat("Height", Float.valueOf(String.valueOf(height)));
         editor.putLong("Age", age);
-        editor.putLong("GenderSelection", genderSelection);
+      //  editor.putLong("GenderSelection", genderSelection);
         editor.apply();
 
         helloText.setText("Hello there " + fName + " !");
@@ -910,7 +910,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //                }
                 sortTimeArray();
                 showGraph();
-                calculateTotalSteps(uid);
+                calculateTotalSteps();
             }
 
 
@@ -1068,7 +1068,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     /**
      *Save total steps of the day to Firestore
      */
-    private void calculateTotalSteps(String uid) {
+    private void calculateTotalSteps() {
 
         SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
         Date date = null;
