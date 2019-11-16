@@ -271,9 +271,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             accessGoogleFit();
         }
         displayNotification();
-        retrieveUserDetails(uid);
-        hourlyDataOnChart(uid);
-        weeklyDataChart(uid);
+        retrieveUserDetails();
+        hourlyDataOnChart();
+        weeklyDataChart();
 
 
         weekbtn.setOnClickListener(new View.OnClickListener() {
@@ -298,7 +298,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
 
-                hourlyDataOnChart(uid);
+                hourlyDataOnChart();
                 Toast.makeText(HomeActivity.this, "Showing day graph", Toast.LENGTH_SHORT).show();
 
 
@@ -348,9 +348,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     /**
      * Retrieve user's details from Firestore
-     * @param uid
      */
-    private void retrieveUserDetails(String uid) {
+    private void retrieveUserDetails() {
 
         DocumentReference docRef = db.collection("users").document(uid);
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -360,12 +359,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
 
-                        String fName, lName, gender, fromHour, toHour, lunchHour, weekend;
+                        String nickName, gender, fromHour, toHour, lunchHour, weekend;
                         Double weight, height;
                         Long age, genderSelection;
                         /////// GET INFO FROM FIRESTORE
-                        fName = document.getString("FirstName");
-                        lName = document.getString("LastName");
+                        nickName = document.getString("NickName");
                         gender = document.getString("Gender");
                         fromHour = document.getString("FromHour");
                         toHour = document.getString("ToHour");
@@ -377,7 +375,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                      //   genderSelection = document.getLong("GenderSelection");
 
 
-                        saveToLocalDB(fName, lName, gender, fromHour, toHour, lunchHour, weekend, weight, height, age);
+                        saveToLocalDB(nickName, gender, fromHour, toHour, lunchHour, weekend, weight, height, age);
 
 
                     } else {
@@ -395,11 +393,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
      *
      *If returning user is using new phone, save profile details into local storage
      */
-    private void saveToLocalDB(String fName, String lName, String gender, String fromHour, String toHour, String lunchHour, String weekend, Double weight, Double height, Long age) {
+    private void saveToLocalDB(String nickName, String gender, String fromHour, String toHour, String lunchHour, String weekend, Double weight, Double height, Long age) {
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("FirstName", fName);
-        editor.putString("LastName", lName);
+        editor.putString("NickName", nickName);
         editor.putString("Gender", gender);
         editor.putString("FromHour", fromHour);
         editor.putString("ToHour", toHour);
@@ -411,7 +408,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
       //  editor.putLong("GenderSelection", genderSelection);
         editor.apply();
 
-        helloText.setText("Hello there " + fName + " !");
+        helloText.setText("Hello there " + nickName + " !");
     }
 
     private void alternatePopUp(){
@@ -861,7 +858,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     /**
      *Retrieve steps per hour from Firestore
      */
-    private void hourlyDataOnChart(final String uid) {
+    private void hourlyDataOnChart() {
 
 
         CollectionReference documentReference = db.collection("users").document(uid).collection(today);
@@ -948,7 +945,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     /**
      *Retrieve total steps for one week from Firestore
      */
-    private void weeklyDataChart(final String uid) {
+    private void weeklyDataChart() {
 
 
         String weekDay;
@@ -1460,10 +1457,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_about) {
             startActivity(new Intent(HomeActivity.this, AboutActivity.class));
             finish();
-        } else if (id == R.id.nav_locations) {
-            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
-            finish();
-        } else if (id == R.id.nav_awards) {
+        }
+//        else if (id == R.id.nav_locations) {
+//            startActivity(new Intent(HomeActivity.this, LocationsActivity.class));
+//            finish();
+//        }
+        else if (id == R.id.nav_awards) {
             startActivity(new Intent(HomeActivity.this, AchievementsActivity.class));
             finish();
         } else if (id == R.id.nav_settings) {

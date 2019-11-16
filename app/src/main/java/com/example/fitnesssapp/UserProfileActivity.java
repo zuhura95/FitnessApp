@@ -35,7 +35,7 @@ import java.util.Map;
 
 public class UserProfileActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener {
 
-    private EditText inputFName, inputLName, inputWeight
+    private EditText inputNickName, inputWeight
             ,inputGoal,inputHeight, inputAge, inputFromHour, inputToHour, inputLunchHour, inputWeekends;
     private Spinner  inputGender;
     private String  gender, amPm;
@@ -65,8 +65,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
             }
         });
 
-        inputFName =  findViewById(R.id.firstname);
-        inputLName =  findViewById(R.id.lastname);
+        inputNickName =  findViewById(R.id.nickname);
         inputWeight = findViewById(R.id.weight);
         inputHeight =  findViewById(R.id.height);
         inputAge =  findViewById(R.id.age);
@@ -78,8 +77,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputWeekends = findViewById(R.id.weekendsPicker);
 
         //Set the saved user details as values in the textfields for Profile page
-        inputFName.setText(sharedPreferences.getString("FirstName",null));
-        inputLName.setText(sharedPreferences.getString("LastName",null));
+        inputNickName.setText(sharedPreferences.getString("NickName",null));
         inputAge.setText(String.valueOf(sharedPreferences.getLong("Age",0)));
         inputHeight.setText(String.valueOf( sharedPreferences.getFloat("Height",0)));
         inputWeight.setText(String.valueOf( sharedPreferences.getFloat("Weight",0)));
@@ -202,15 +200,14 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
      */
     private void saveInfo(View view) {
 
-        final String fName, lName, fromHour, toHour,lunchHour,weekend;
+        final String nickName, fromHour, toHour,lunchHour,weekend;
         final float weight;
         final  float height;
         final  int  selectedGender, goal ;
         final Long age;
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        fName = inputFName.getText().toString();
-        lName = inputLName.getText().toString();
+        nickName = inputNickName.getText().toString();
         weight = Float.parseFloat(inputWeight.getText().toString());
         height = Float.parseFloat(inputHeight.getText().toString());
         age = Long.valueOf(inputAge.getText().toString());
@@ -226,8 +223,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         editor.putString("gender", gender);
         editor.putInt("Goal", goal);
         editor.putInt("genderSelection", selectedGender);
-        editor.putString("FirstName",fName);
-        editor.putString("LastName",lName);
+        editor.putString("NickName",nickName);
         editor.putFloat("Weight",weight);
         editor.putFloat("Height",height);
         editor.putLong("Age",age);
@@ -239,8 +235,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
 
         //Save the info to Firestore
         Map< String, Object > user = new HashMap<>();
-        user.put("FirstName",fName);
-        user.put("LastName",lName);
+        user.put("NickName",nickName);
         user.put("Weight",weight);
         user.put("Height",height);
         user.put("Age",age);

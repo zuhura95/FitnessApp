@@ -11,10 +11,10 @@
             android:title="My Profile"
             />
 
-        <item
-            android:id="@+id/nav_locations"
-            android:icon="@drawable/ic_pin"
-            android:title="Locations" />
+<!--        <item-->
+<!--            android:id="@+id/nav_locations"-->
+<!--            android:icon="@drawable/ic_pin"-->
+<!--            android:title="Locations" />-->
         <item
             android:id="@+id/nav_awards"
             android:icon="@drawable/achievement"

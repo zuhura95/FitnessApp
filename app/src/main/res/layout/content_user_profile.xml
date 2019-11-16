@@ -40,14 +40,9 @@
                 android:layout_weight=".5"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="First Name"
+                android:text="Nickname"
                 android:textColor="@color/colorPrimaryDark"/>
-            <TextView
-                android:layout_weight=".5"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="Last Name"
-                android:textColor="@color/colorPrimaryDark"/>
+
 
         </LinearLayout>
 
@@ -60,28 +55,16 @@
 
 
             <EditText
-                android:id="@+id/firstname"
+                android:id="@+id/nickname"
                 android:layout_weight=".5"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:layout_marginTop="10dp"
-                android:hint="First Name*"
-                android:inputType="textCapWords"
+                android:hint="Nickname*"
                 android:textColor="@color/colorAccent"
                 android:textColorHint="@color/input_hint" />
-            <EditText
-                android:id="@+id/lastname"
-                android:layout_weight=".5"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:layout_marginTop="10dp"
-                android:hint="Last Name*"
-                android:inputType="textCapWords"
-                android:textColor="@color/colorAccent"
-                android:textColorHint="@color/input_hint"
-                />
+
         </LinearLayout>
 
         <LinearLayout

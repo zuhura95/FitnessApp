@@ -28,7 +28,7 @@ import java.util.Map;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    private EditText inputFName, inputLName, inputWeight, inputHeight, inputAge;
+    private EditText inputNickname, inputWeight, inputHeight, inputAge;
     private Button saveButton;
     SharedPreferences sharedPreferences;
     private FirebaseAuth auth;
@@ -45,8 +45,7 @@ public class ProfileActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
 
-        inputFName = (EditText) findViewById(R.id.firstname);
-        inputLName = (EditText) findViewById(R.id.lastname);
+        inputNickname = (EditText) findViewById(R.id.nickname);
         inputWeight = (EditText) findViewById(R.id.weight);
         inputHeight = (EditText) findViewById(R.id.height);
         inputAge = (EditText) findViewById(R.id.age);
@@ -58,7 +57,7 @@ public class ProfileActivity extends AppCompatActivity {
 
                 //Check if First Name and Last Name fields are empty
 
-                if (inputFName.getText()== null || inputLName.getText() == null){
+                if (inputNickname.getText()== null){
 
                     Toast.makeText(ProfileActivity.this, "Please Enter your Name", Toast.LENGTH_SHORT).show();
                 }
@@ -77,20 +76,18 @@ public class ProfileActivity extends AppCompatActivity {
      */
     private void getUserProfile(){
 
-        final String fName, lName;
+        final String nickName;
         final float weight;
        final  float height;
        final  int age ;
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        fName = inputFName.getText().toString();
-        lName = inputLName.getText().toString();
+        nickName = inputNickname.getText().toString();
         weight = Float.parseFloat(inputWeight.getText().toString());
         height = Float.parseFloat(inputHeight.getText().toString());
         age = Integer.parseInt(inputAge.getText().toString());
 
 
-        editor.putString("FirstName",fName);
-        editor.putString("LastName",lName);
+        editor.putString("NickName",nickName);
         editor.putFloat("Weight",weight);
         editor.putFloat("Height",height);
         editor.putInt("Age",age);
@@ -98,7 +95,7 @@ public class ProfileActivity extends AppCompatActivity {
         Toast.makeText(ProfileActivity.this, "Profile Saved", Toast.LENGTH_SHORT).show();
 
         //Save the info to Firestore
-        saveToFirebaseDB(fName,lName,weight,height,age);
+        saveToFirebaseDB(nickName,weight,height,age);
 
         if (ContextCompat.checkSelfPermission(ProfileActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
             startActivity(new Intent(ProfileActivity.this, PermissionsActivity.class));
@@ -112,10 +109,9 @@ public class ProfileActivity extends AppCompatActivity {
     /**
      * Save user's info to fireestore
      */
-    private void saveToFirebaseDB(String fName, String lName, float weight, float height, int age){
+    private void saveToFirebaseDB(String nickName, float weight, float height, int age){
         Map< String, Object > user = new HashMap<>();
-        user.put("FirstName",fName);
-        user.put("LastName",lName);
+        user.put("NickName",nickName);
         user.put("Weight",weight);
         user.put("Height",height);
         user.put("Age",age);
