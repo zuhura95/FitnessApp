@@ -29,6 +29,7 @@ import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
 import com.example.fitnesssapp.Locations.LocationsActivity;
 import com.example.fitnesssapp.services.AppWorker;
+import com.example.fitnesssapp.services.MotivationMessages;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.anychart.AnyChart;
 import com.anychart.charts.Cartesian;
@@ -126,6 +127,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private static OnDataPointListener stepListener;
     private static OnDataPointListener distanceListener;
     AppController appController;
+    MotivationMessages motivationSender;
 
     SharedPreferences sharedPreferences;
     TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
@@ -274,6 +276,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         retrieveUserDetails();
         hourlyDataOnChart();
         weeklyDataChart();
+        motivationSender = new MotivationMessages(getApplicationContext());
+
 
 
         weekbtn.setOnClickListener(new View.OnClickListener() {
@@ -289,6 +293,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         monthbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+//                motivationSender.retrieveMessage();
                 Toast.makeText(HomeActivity.this, "Showing month graph", Toast.LENGTH_SHORT).show();
             }
         });
@@ -852,6 +857,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             kCals = kcals;
         }
         checkForRewards();
+        motivationSender.startMotivating(totalStepsFromDataPoints,movemins,uid,today);
 
     }
 
@@ -1076,7 +1082,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
         SimpleDateFormat sdf = new SimpleDateFormat("E");
         Log.d(TAG, "=============!!!!!!!!!!!!!!===================");
-        String weekday = sdf.format(date);
+         mbv
         Log.d(TAG, weekday);
 
         int sum = 0;
