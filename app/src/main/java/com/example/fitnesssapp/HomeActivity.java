@@ -15,19 +15,16 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-
-
+import android.os.Handler;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-
-
 import com.androdocs.httprequest.HttpRequest;
 import com.anychart.APIlib;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
-import com.example.fitnesssapp.Locations.LocationsActivity;
+import com.example.fitnesssapp.services.AppService;
 import com.example.fitnesssapp.services.AppWorker;
 import com.example.fitnesssapp.services.MotivationMessages;
 import com.github.lzyzsd.circleprogress.ArcProgress;
@@ -44,6 +41,7 @@ import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
+import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
@@ -107,12 +105,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    private Handler mHandler = new Handler();
+    Timer timer;
 
     //Constants
     private String TAG = "Fitness";
@@ -270,9 +272,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     GoogleSignIn.getLastSignedInAccount(this),
                     fitnessOptions);
         } else {
-            accessGoogleFit();
+
+            init.run();
+        //    accessGoogleFit();
         }
+        startService(new Intent(HomeActivity.this, AppService.class));
+
         displayNotification();
+
         retrieveUserDetails();
         hourlyDataOnChart();
         weeklyDataChart();
@@ -293,7 +300,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         monthbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                motivationSender.retrieveMessage();
+             //   motivationSender.startMotivating();
                 Toast.makeText(HomeActivity.this, "Showing month graph", Toast.LENGTH_SHORT).show();
             }
         });
@@ -311,26 +318,24 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-        Constraints constraints = new Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(AppWorker.class, 1, TimeUnit.MINUTES).setConstraints(constraints).build();
-        WorkManager.getInstance(this).enqueue(request);
-        //display status of work
-        WorkManager.getInstance().getWorkInfoByIdLiveData(request.getId()).observe(this, new Observer<WorkInfo>() {
-            @Override
-            public void onChanged(WorkInfo workInfo) {
-                String status = workInfo.getState().name();
-                Toast.makeText(HomeActivity.this, status, Toast.LENGTH_SHORT).show();
-            }
-        });
 
 
         new weatherTask().execute();
 
 
     }
+
+    private Runnable init = new Runnable() {
+        @Override
+        public void run() {
+            accessGoogleFit();
+
+            //    hourlyDataOnChart();
+          Toast.makeText(HomeActivity.this, "Accessing", Toast.LENGTH_SHORT).show();
+            mHandler.postDelayed(this, 5000);
+        }
+    };
+
 
     /**
      * Display ongoing Notification
@@ -614,6 +619,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        timer = new Timer();
+        Log.i("Main", "Invoking logout timer");
+        inActiveTimer inactivetimer = new inActiveTimer();
+        timer.schedule(inactivetimer,180000); //3 mins
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         Log.d(TAG, "Resumed app");
@@ -749,8 +763,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Log.d(TAG, "Range Start: " + dateFormat.format(startTime));
         Log.d(TAG, "Range End: " + dateFormat.format(endTime));
 
+        DataSource ESTIMATED_STEP_DELTAS = new DataSource.Builder()
+                .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+                .setType(DataSource.TYPE_DERIVED)
+                .setStreamName("estimated_steps")
+                .setAppPackageName("com.google.android.gms")
+                .build();
+
         DataReadRequest readRequest = new DataReadRequest.Builder()
-                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .aggregate(ESTIMATED_STEP_DELTAS,    DataType.AGGREGATE_STEP_COUNT_DELTA)
                 .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
                 .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED)
                 .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
@@ -817,9 +838,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Log.d(TAG, "\tEnd: " + endTime);
 
 
-            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
-            movemins += mins;
-            activeTime.setText(String.format("%.2f", movemins / 1000.00));
+//            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
+//            movemins += mins;
+//            activeTime.setText(String.format("%.2f", movemins / 1000.00));
 
 
             for (Field field : dp.getDataType().getFields()) {
@@ -856,8 +877,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             calories.setText(String.format("%.2f", kcals / 1000.00));
             kCals = kcals;
         }
+
         checkForRewards();
-        motivationSender.startMotivating(totalStepsFromDataPoints,movemins,uid,today);
 
     }
 
@@ -911,7 +932,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //                   Log.d(TAG,map.getKey()+" "+map.getValue());
 //
 //                }
-                sortTimeArray();
+                 sortTimeArray();
                 showGraph();
                 calculateTotalSteps();
             }
@@ -983,6 +1004,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                                 int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
 //                                weekData.add(totalsteps);
 //                                week_graph_data.add(weekday);
+
                                 weekTreeMap.put(weekday,totalsteps);
 
                             } else {
@@ -1082,7 +1104,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
         SimpleDateFormat sdf = new SimpleDateFormat("E");
         Log.d(TAG, "=============!!!!!!!!!!!!!!===================");
-         mbv
+        String weekday = sdf.format(date);
         Log.d(TAG, weekday);
 
         int sum = 0;
@@ -1135,7 +1157,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
      */
     private void showGraph() {
 
-
+        Log.d(TAG, "=============SHOWING DAY GRAPH===================");
         APIlib.getInstance().setActiveAnyChartView(anyChart);
         Cartesian cartesian = AnyChart.column();
 
@@ -1485,5 +1507,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
+    private class inActiveTimer extends TimerTask {
+        @Override
+        public void run() {
+            motivationSender.startMotivating(totalStepsFromDataPoints,movemins,today);
 
+        }
+    }
 }

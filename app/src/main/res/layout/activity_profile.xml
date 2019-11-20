@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
             android:layout_marginTop="20dp"
-            android:hint="First Name*"
+            android:hint="Nick Name*"
             android:inputType="textCapWords"
             android:textColor="@android:color/white"
             android:textColorHint="@android:color/white" />
