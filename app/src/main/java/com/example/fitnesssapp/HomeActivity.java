@@ -24,6 +24,7 @@ import com.anychart.APIlib;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
+import com.example.fitnesssapp.Locations.LocationsActivity;
 import com.example.fitnesssapp.services.AppService;
 import com.example.fitnesssapp.services.AppWorker;
 import com.example.fitnesssapp.services.MotivationMessages;
@@ -113,8 +114,8 @@ import java.util.concurrent.TimeUnit;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    private Handler mHandler = new Handler();
-    Timer timer;
+  //  private Handler mHandler = new Handler();
+
 
     //Constants
     private String TAG = "Fitness";
@@ -162,7 +163,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(getString(R.string.title_activity_home));
         setSupportActionBar(toolbar);
-
         appController = new AppController();
         today = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
         appController.setToday(today);
@@ -202,6 +202,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         monthbtn = findViewById(R.id.month_button);
         awardPopup = new Dialog(this);
         healthtip = new Dialog(this);
+        motivationSender = new MotivationMessages(getApplicationContext());
 
         //Display health tips pop up once a day
         Calendar calendar = Calendar.getInstance();
@@ -273,8 +274,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     fitnessOptions);
         } else {
 
-            init.run();
-        //    accessGoogleFit();
+       //   init.run();
+           accessGoogleFit();
         }
         startService(new Intent(HomeActivity.this, AppService.class));
 
@@ -283,7 +284,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         retrieveUserDetails();
         hourlyDataOnChart();
         weeklyDataChart();
-        motivationSender = new MotivationMessages(getApplicationContext());
+
+
 
 
 
@@ -300,7 +302,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         monthbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-             //   motivationSender.startMotivating();
                 Toast.makeText(HomeActivity.this, "Showing month graph", Toast.LENGTH_SHORT).show();
             }
         });
@@ -319,22 +320,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-
-        new weatherTask().execute();
-
-
     }
 
-    private Runnable init = new Runnable() {
-        @Override
-        public void run() {
-            accessGoogleFit();
 
-            //    hourlyDataOnChart();
-          Toast.makeText(HomeActivity.this, "Accessing", Toast.LENGTH_SHORT).show();
-            mHandler.postDelayed(this, 5000);
-        }
-    };
 
 
     /**
@@ -575,56 +563,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
 
-    /**
-     * Weather forecast
-     */
-    class weatherTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-        }
-
-        String LAT = appController.getLatitude();
-        String LON = appController.getLongitude();
-
-        protected String doInBackground(String... args) {
-            String response = HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?lat=" + LAT + "&lon=" + LON + "&units=metric&appid=" + weather_API_key);
-            return response;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-
-
-            try {
-                JSONObject jsonObj = new JSONObject(result);
-                JSONObject main = jsonObj.getJSONObject("main");
-                JSONObject sys = jsonObj.getJSONObject("sys");
-                JSONObject wind = jsonObj.getJSONObject("wind");
-                JSONObject weather = jsonObj.getJSONArray("weather").getJSONObject(0);
-                String temp = main.getString("temp") + "°C";
-                String weatherDescription = weather.getString("description");
-
-                String address = jsonObj.getString("name") + ", " + sys.getString("country");
-
-                Toast.makeText(HomeActivity.this, "Today's weather is " + temp + " and it is " + weatherDescription + " at " + address, Toast.LENGTH_SHORT).show();
-
-            } catch (JSONException e) {
-
-                Log.d(TAG, e.getMessage());
-            }
-
-        }
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
-        timer = new Timer();
-        Log.i("Main", "Invoking logout timer");
-        inActiveTimer inactivetimer = new inActiveTimer();
-        timer.schedule(inactivetimer,180000); //3 mins
+
     }
 
     @Override
@@ -669,6 +611,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                             }
                     );
         }
+
+
+
     }
 
     @Override
@@ -687,7 +632,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     /**
      * Access Google Fit recordings
      */
-    private void accessGoogleFit() {
+    public void accessGoogleFit() {
+
 
 
         // Subscribe to recordings
@@ -878,6 +824,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             kCals = kcals;
         }
 
+        motivationSender.startMotivating();
         checkForRewards();
 
     }
@@ -1002,8 +949,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                             if (document.exists()) {
                                 String weekday = document.getId();
                                 int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
-//                                weekData.add(totalsteps);
-//                                week_graph_data.add(weekday);
 
                                 weekTreeMap.put(weekday,totalsteps);
 
@@ -1432,6 +1377,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
+
         editor.apply();
         txtclose.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1507,11 +1453,5 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    private class inActiveTimer extends TimerTask {
-        @Override
-        public void run() {
-            motivationSender.startMotivating(totalStepsFromDataPoints,movemins,today);
 
-        }
-    }
 }

@@ -3,8 +3,49 @@ package com.example.fitnesssapp;
 public class AppController {
 
   float distance, kCals, mins;
-  String today, time, uid,latitude,longitude;
-  int steps;
+  String today, time, uid,latitude,longitude,weatherDesc,type;
+  int steps,pressure;
+  double temp, humidity;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getWeatherDesc() {
+        return weatherDesc;
+    }
+
+    public void setWeatherDesc(String weatherDesc) {
+        this.weatherDesc = weatherDesc;
+    }
+
+    public double getTemp() {
+        return temp;
+    }
+
+    public void setTemp(double temp) {
+        this.temp = temp;
+    }
+
+    public double getHumidity() {
+        return humidity;
+    }
+
+    public void setHumidity(double humidity) {
+        this.humidity = humidity;
+    }
+
+    public int getPressure() {
+        return pressure;
+    }
+
+    public void setPressure(int pressure) {
+        this.pressure = pressure;
+    }
 
     public float getDistance() {
         return distance;
