@@ -206,21 +206,21 @@
             <com.anychart.AnyChartView
                 android:id="@+id/chart"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="300dp"
 
                 />
+
             <com.anychart.AnyChartView
                 android:id="@+id/weekchart"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:visibility="gone"
-                />
+                android:layout_height="300dp"
+                android:visibility="gone" />
+
             <com.anychart.AnyChartView
                 android:id="@+id/monthchart"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:visibility="gone"
-                />
+                android:layout_height="300dp"
+                android:visibility="gone" />
 
 
 
@@ -230,13 +230,13 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-
+            android:layout_marginBottom="20dp"
             >
 
             <Button
                 android:layout_marginRight="20dp"
-                android:layout_width="50dp"
-                android:layout_height="25dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="DAY"
                 android:textSize="10dp"
                 android:id="@+id/day_button"
@@ -245,8 +245,8 @@
             <Button
                 android:layout_marginRight="20dp"
                 android:layout_marginLeft="20dp"
-                android:layout_width="50dp"
-                android:layout_height="25dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="WEEK"
                 android:textSize="10dp"
                 android:id="@+id/week_button"
@@ -255,8 +255,8 @@
             <Button
                 android:layout_marginRight="20dp"
                 android:layout_marginLeft="20dp"
-                android:layout_width="50dp"
-                android:layout_height="25dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="MONTH"
                 android:id="@+id/month_button"
                 android:textSize="10dp"

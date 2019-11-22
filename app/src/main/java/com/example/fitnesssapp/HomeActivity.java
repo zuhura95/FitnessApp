@@ -15,18 +15,20 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
+
+
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+
+
 import com.androdocs.httprequest.HttpRequest;
 import com.anychart.APIlib;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
-import com.example.fitnesssapp.services.AppService;
+import com.example.fitnesssapp.Locations.LocationsActivity;
 import com.example.fitnesssapp.services.AppWorker;
-import com.example.fitnesssapp.services.MotivationMessages;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.anychart.AnyChart;
 import com.anychart.charts.Cartesian;
@@ -41,7 +43,6 @@ import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
-import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
@@ -105,16 +106,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    private Handler mHandler = new Handler();
-    Timer timer;
 
     //Constants
     private String TAG = "Fitness";
@@ -129,13 +126,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private static OnDataPointListener stepListener;
     private static OnDataPointListener distanceListener;
     AppController appController;
-    MotivationMessages motivationSender;
 
     SharedPreferences sharedPreferences;
     TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
     Button daybtn, weekbtn, monthbtn;
     ArcProgress stepsCounter;
-    AnyChartView anyChart,weekChart;
+    AnyChartView anyChart, weekChart, monthChart;
     Dialog awardPopup, healthtip;
 
     private float distanceInMeters;
@@ -144,16 +140,17 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private int totalStepsFromDataPoints = 0;
     String today, uid;
 
-    TreeMap<String,Integer> dayTreeMap = new TreeMap<>();
-    TreeMap<String,Integer> weekTreeMap = new TreeMap<>();
+    TreeMap<String, Integer> dayTreeMap = new TreeMap<>();
+    TreeMap<String, Integer> weekTreeMap = new TreeMap<>();
+    TreeMap<String, Integer> monthTreeMap = new TreeMap<>();
     List<String> hourlist = new ArrayList<>();
     List<Integer> hourlystepsList = new ArrayList<>();
     List<String> weekdayList = new ArrayList<>();
+    List<String> monthdayList = new ArrayList<>();
     List<Integer> totalDayStepsList = new ArrayList<>();
+    List<Integer> totalMonthStepsList = new ArrayList<>();
     List<Integer> weekData = new ArrayList<>();
     List<String> week_graph_data = new ArrayList<>();
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,7 +180,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         View headerView = navigationView.getHeaderView(0);
@@ -195,7 +191,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         activeTime = findViewById(R.id.activetimeTextview);
         stepsCounter = findViewById(R.id.arc_progress);
         anyChart = findViewById(R.id.chart);
-        weekChart =findViewById(R.id.weekchart);
+        weekChart = findViewById(R.id.weekchart);
+        monthChart = findViewById(R.id.monthchart);
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         daybtn = findViewById(R.id.day_button);
         weekbtn = findViewById(R.id.week_button);
@@ -214,7 +211,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             editor.apply();
 
             //run code that will be displayed once a day
-           alternatePopUp();
+            alternatePopUp();
 
         }
 
@@ -272,35 +269,31 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     GoogleSignIn.getLastSignedInAccount(this),
                     fitnessOptions);
         } else {
-
-            init.run();
-        //    accessGoogleFit();
+            accessGoogleFit();
         }
-        startService(new Intent(HomeActivity.this, AppService.class));
-
         displayNotification();
-
         retrieveUserDetails();
         hourlyDataOnChart();
         weeklyDataChart();
-        motivationSender = new MotivationMessages(getApplicationContext());
-
+        monthlyDataChart();
 
 
         weekbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                sortDayArray();
+                weeklyDataChart();
+                parseDayArray(weekTreeMap, weekdayList, totalDayStepsList);
                 showWeekGraph();
-                calculateWeeklySteps(uid);
+                //calculateWeeklySteps(uid);
                 Toast.makeText(HomeActivity.this, "Showing week graph", Toast.LENGTH_SHORT).show();
             }
         });
         monthbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-             //   motivationSender.startMotivating();
+                monthlyDataChart();
+                sortMonthArray();
+                showMonthGraph();
                 Toast.makeText(HomeActivity.this, "Showing month graph", Toast.LENGTH_SHORT).show();
             }
         });
@@ -309,7 +302,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         daybtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 hourlyDataOnChart();
                 Toast.makeText(HomeActivity.this, "Showing day graph", Toast.LENGTH_SHORT).show();
 
@@ -318,24 +310,26 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
+        Constraints constraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(AppWorker.class, 1, TimeUnit.MINUTES).setConstraints(constraints).build();
+        WorkManager.getInstance(this).enqueue(request);
+        //display status of work
+        WorkManager.getInstance().getWorkInfoByIdLiveData(request.getId()).observe(this, new Observer<WorkInfo>() {
+            @Override
+            public void onChanged(WorkInfo workInfo) {
+                String status = workInfo.getState().name();
+                Toast.makeText(HomeActivity.this, status, Toast.LENGTH_SHORT).show();
+            }
+        });
 
 
         new weatherTask().execute();
 
 
     }
-
-    private Runnable init = new Runnable() {
-        @Override
-        public void run() {
-            accessGoogleFit();
-
-            //    hourlyDataOnChart();
-          Toast.makeText(HomeActivity.this, "Accessing", Toast.LENGTH_SHORT).show();
-            mHandler.postDelayed(this, 5000);
-        }
-    };
-
 
     /**
      * Display ongoing Notification
@@ -382,7 +376,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                         weight = document.getDouble("Weight");
                         height = document.getDouble("Height");
                         age = document.getLong("Age");
-                     //   genderSelection = document.getLong("GenderSelection");
+                        //   genderSelection = document.getLong("GenderSelection");
 
 
                         saveToLocalDB(nickName, gender, fromHour, toHour, lunchHour, weekend, weight, height, age);
@@ -400,8 +394,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
     /**
-     *
-     *If returning user is using new phone, save profile details into local storage
+     * If returning user is using new phone, save profile details into local storage
      */
     private void saveToLocalDB(String nickName, String gender, String fromHour, String toHour, String lunchHour, String weekend, Double weight, Double height, Long age) {
 
@@ -415,27 +408,26 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         editor.putFloat("Weight", Float.valueOf(String.valueOf(weight)));
         editor.putFloat("Height", Float.valueOf(String.valueOf(height)));
         editor.putLong("Age", age);
-      //  editor.putLong("GenderSelection", genderSelection);
+        //  editor.putLong("GenderSelection", genderSelection);
         editor.apply();
 
         helloText.setText("Hello there " + nickName + " !");
     }
 
-    private void alternatePopUp(){
+    private void alternatePopUp() {
 
-        int i = sharedPreferences.getInt("key",0);
+        int i = sharedPreferences.getInt("key", 0);
 
-            if (i%2 == 0){
-             showHealthTip();
-            }
-            else{
-                showDYK();
-            }
+        if (i % 2 == 0) {
+            showHealthTip();
+        } else {
+            showDYK();
+        }
 
 
         SharedPreferences.Editor e = sharedPreferences.edit();
         i++;
-        e.putInt("key",i);
+        e.putInt("key", i);
         e.apply();
     }
 
@@ -464,7 +456,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private Drawable getImageForHealthTip(int position){
+    private Drawable getImageForHealthTip(int position) {
 
         int[] imageArray = {
                 R.drawable.tip1,
@@ -529,7 +521,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private Drawable getImageForDYK(int position){
+    private Drawable getImageForDYK(int position) {
 
         int[] imageArray = {
                 R.drawable.fact1,
@@ -573,8 +565,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
-
     /**
      * Weather forecast
      */
@@ -616,15 +606,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }
 
         }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        timer = new Timer();
-        Log.i("Main", "Invoking logout timer");
-        inActiveTimer inactivetimer = new inActiveTimer();
-        timer.schedule(inactivetimer,180000); //3 mins
     }
 
     @Override
@@ -763,15 +744,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Log.d(TAG, "Range Start: " + dateFormat.format(startTime));
         Log.d(TAG, "Range End: " + dateFormat.format(endTime));
 
-        DataSource ESTIMATED_STEP_DELTAS = new DataSource.Builder()
-                .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
-                .setType(DataSource.TYPE_DERIVED)
-                .setStreamName("estimated_steps")
-                .setAppPackageName("com.google.android.gms")
-                .build();
-
         DataReadRequest readRequest = new DataReadRequest.Builder()
-                .aggregate(ESTIMATED_STEP_DELTAS,    DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
                 .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
                 .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED)
                 .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
@@ -813,7 +787,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     /**
-     *
      * Parse Dataset and display step count on progress dialog, calories, active minutes and kilometers taken in a day
      */
     private void parseDataSet(DataSet dataSet) {
@@ -838,9 +811,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Log.d(TAG, "\tEnd: " + endTime);
 
 
-//            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
-//            movemins += mins;
-//            activeTime.setText(String.format("%.2f", movemins / 1000.00));
+            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
+            movemins += mins;
+            activeTime.setText(String.format("%.2f", movemins / 1000.00));
 
 
             for (Field field : dp.getDataType().getFields()) {
@@ -877,17 +850,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             calories.setText(String.format("%.2f", kcals / 1000.00));
             kCals = kcals;
         }
-
         checkForRewards();
 
     }
 
     /**
-     *Retrieve steps per hour from Firestore
+     * Retrieve steps per hour from Firestore
      */
     private void hourlyDataOnChart() {
-
-
         CollectionReference documentReference = db.collection("users").document(uid).collection(today);
         documentReference.orderBy("steps").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
@@ -896,24 +866,17 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
                     for (QueryDocumentSnapshot document : task.getResult()) {
                         if (document.exists()) {
-
-
                             String time = document.getId();
                             SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa");
                             SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh aa");
                             try {
                                 Date date = dateFormat.parse(time);
                                 time = dateFormat2.format(date);
-
                             } catch (ParseException e) {
                             }
 
                             int steps = Integer.parseInt(String.valueOf(document.get("steps")));
-
-
-                            dayTreeMap.put(time,steps);
-
-
+                            dayTreeMap.put(time, steps);
 
                         } else {
                             Toast.makeText(HomeActivity.this, "No steps for today", Toast.LENGTH_SHORT).show();
@@ -925,14 +888,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     Log.d(TAG, "Error getting documents: ", task.getException());
                 }
 
-
-//                for(Map.Entry map  : dayTreeMap.entrySet()){
-//
-//                    Log.d(TAG,"======TRYING TREE MAPS======");
-//                   Log.d(TAG,map.getKey()+" "+map.getValue());
-//
-//                }
-                 sortTimeArray();
+                sortTimeArray();
                 showGraph();
                 calculateTotalSteps();
             }
@@ -945,8 +901,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     private void sortTimeArray() {
 
-        List<Map.Entry<String,Integer>> copy =  new ArrayList<>(dayTreeMap.entrySet());
-        Collections.sort(copy, new Comparator<Map.Entry<String, Integer>>() {
+        List<Map.Entry<String, Integer>> sorted = new ArrayList<>(dayTreeMap.entrySet());
+        Collections.sort(sorted, new Comparator<Map.Entry<String, Integer>>() {
             @Override
             public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
 
@@ -958,22 +914,16 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        Log.d(TAG,"======SORTED TREEMAP=========");
-        Log.d(TAG, String.valueOf(copy));
-
-        for (Map.Entry<String, Integer> entry: dayTreeMap.entrySet()) {
+        for (Map.Entry<String, Integer> entry : sorted) {
             hourlist.add(entry.getKey());
             hourlystepsList.add(entry.getValue());
         }
-
-
     }
 
     /**
-     *Retrieve total steps for one week from Firestore
+     * Retrieve total steps for last month from Firestore
      */
-    private void weeklyDataChart() {
-
+    private void monthlyDataChart() {
 
         String weekDay;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
@@ -984,13 +934,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             e.printStackTrace();
         }
 
-        for (int i = 0; i > -6; --i){
+        for (int i = 0; i > -30; --i) {
 
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(date);
             calendar.add(Calendar.DATE, i);
             weekDay = simpleDateFormat.format(calendar.getTime());
-
 
 
             CollectionReference documentReference = db.collection("users").document(uid).collection(weekDay);
@@ -1000,13 +949,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     if (task.isSuccessful()) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             if (document.exists()) {
-                                String weekday = document.getId();
+                                String date = document.getReference().getParent().getId();
                                 int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
-//                                weekData.add(totalsteps);
-//                                week_graph_data.add(weekday);
-
-                                weekTreeMap.put(weekday,totalsteps);
-
+                                monthTreeMap.put(date, totalsteps);
                             } else {
                                 Toast.makeText(HomeActivity.this, "Doesn't exist", Toast.LENGTH_SHORT).show();
                             }
@@ -1025,21 +970,27 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private void sortDayArray(){
+    private void parseDayArray(TreeMap<String, Integer> treeMap, List<String> dayList, List<Integer> stepsList) {
+        for (Map.Entry<String, Integer> entry : treeMap.entrySet()) {
+            dayList.add(entry.getKey());
+            stepsList.add(entry.getValue());
+        }
+    }
 
-        List<Map.Entry<String,Integer>> copy = new ArrayList<>(weekTreeMap.entrySet());
+    private void sortMonthArray() {
+        List<Map.Entry<String, Integer>> copy = new ArrayList<>(monthTreeMap.entrySet());
         Collections.sort(copy, new Comparator<Map.Entry<String, Integer>>() {
             @Override
             public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
                 try {
-                    SimpleDateFormat format = new SimpleDateFormat("EEE");
+                    SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
                     Date d1 = format.parse(o1.getKey());
                     Date d2 = format.parse(o2.getKey());
                     Calendar cal1 = Calendar.getInstance();
                     Calendar cal2 = Calendar.getInstance();
                     cal1.setTime(d1);
                     cal2.setTime(d2);
-                    return cal1.get(Calendar.DAY_OF_WEEK) - cal2.get(Calendar.DAY_OF_WEEK);
+                    return cal1.get(Calendar.DAY_OF_YEAR) - cal2.get(Calendar.DAY_OF_YEAR);
 
                 } catch (ParseException e) {
                     throw new RuntimeException(e);
@@ -1049,49 +1000,68 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        Log.d(TAG,"======SORTED WEEEK TREEMAP=========");
-        Log.d(TAG, String.valueOf(copy));
 
-        for(Map.Entry<String,Integer> entry: weekTreeMap.entrySet()){
-            weekdayList.add(entry.getKey());
-            totalDayStepsList.add(entry.getValue());
+        for (Map.Entry<String, Integer> entry : copy) {
+            monthdayList.add(entry.getKey());
+            totalMonthStepsList.add(entry.getValue());
         }
-//        Comparator<String> dateComparator = new Comparator<String>() {
-//            @Override
-//            public int compare(String o1, String o2) {
-//                try{
-//                    SimpleDateFormat format = new SimpleDateFormat("EEE");
-//                    Date d1 = format.parse(o1);
-//                    Date d2 = format.parse(o2);
-//                    Calendar cal1 = Calendar.getInstance();
-//                    Calendar cal2 = Calendar.getInstance();
-//                    cal1.setTime(d1);
-//                    cal2.setTime(d2);
-//                    return cal1.get(Calendar.DAY_OF_WEEK) - cal2.get(Calendar.DAY_OF_WEEK);
-//
-//                }catch(ParseException pe){
-//                    throw new RuntimeException(pe);
-//                }
-//            }
-//        };
-//        Collections.sort(copy, dateComparator);
-//        Log.d(TAG,"======WEEEK SORTED=========");
-//        Log.d(TAG, String.valueOf(week_graph_data));
+    }
+
+    /**
+     * Retrieve total steps for one weeke from Firestore
+     */
+    private void weeklyDataChart() {
+
+        String weekDay;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        Date date = null;
+        try {
+            date = simpleDateFormat.parse(today);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i > -7; --i) {
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            calendar.add(Calendar.DATE, i);
+            weekDay = simpleDateFormat.format(calendar.getTime());
 
 
+            CollectionReference documentReference = db.collection("users").document(uid).collection(weekDay);
+            documentReference.orderBy("total").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            if (document.exists()) {
+                                String weekday = document.getReference().getParent().getId();
+                                int totalsteps = Integer.parseInt(String.valueOf(document.get("total")));
+//                                weekData.add(totalsteps);
+//                                week_graph_data.add(weekday);
+                                weekTreeMap.put(weekday, totalsteps);
+                            } else {
+                                Toast.makeText(HomeActivity.this, "Doesn't exist", Toast.LENGTH_SHORT).show();
+                            }
+
+                        }
+
+                    }
 
 
-//        Collections.sort(copy, new Comparator<Map.Entry<String, Integer>>() {
-//            @Override
-//            public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
-//                return 0;
-//            }
-//        });
+                }
+
+
+            });
+
+        }
+
     }
 
 
     /**
-     *Save total steps of the day to Firestore
+     * Save total steps of the day to Firestore
      */
     private void calculateTotalSteps() {
 
@@ -1103,9 +1073,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             e.printStackTrace();
         }
         SimpleDateFormat sdf = new SimpleDateFormat("E");
-        Log.d(TAG, "=============!!!!!!!!!!!!!!===================");
         String weekday = sdf.format(date);
-        Log.d(TAG, weekday);
 
         int sum = 0;
         for (int i = 0; i < hourlystepsList.size(); i++) {
@@ -1118,6 +1086,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         //Log daily total in Firestore
         Map<String, Integer> totalsteps = new HashMap<>();
         totalsteps.put("total", sum);
+        Log.d(TAG, String.valueOf(totalsteps));
         db.collection("users").document(uid)
                 .collection(today).document(weekday).set(totalsteps)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -1135,46 +1104,27 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    /**
-     *Save total steps of the week to Firestore
-     */
-    private void calculateWeeklySteps(String uid){
-
-
-        int sum = 0;
-        for (int i = 0; i < totalDayStepsList.size();i++){
-            sum += totalDayStepsList.get(i);
-        }
-
-        Log.d(TAG, "=============WEEK TOTAL===================");
-        Log.d(TAG, String.valueOf(sum));
-
-
-    }
 
     /**
-     *Display steps per hour on graph
+     * Display steps per hour on graph
      */
     private void showGraph() {
 
-        Log.d(TAG, "=============SHOWING DAY GRAPH===================");
         APIlib.getInstance().setActiveAnyChartView(anyChart);
         Cartesian cartesian = AnyChart.column();
 
         List<DataEntry> data2 = new ArrayList<>();
 
-        Log.d(TAG, "While Loop");
         int count = 0;
         while (hourlist.size() > count) {
 
             data2.add(new ValueDataEntry(hourlist.get(count), hourlystepsList.get(count)));
-           // Log.d(TAG, graph_data.get(count));
             count++;
         }
 
 
-
         Column column = cartesian.column(data2);
+        column.name("Steps");
 
         column.tooltip()
                 .position(Position.CENTER_BOTTOM)
@@ -1227,14 +1177,16 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         anyChart.setChart(cartesian);
         weekChart.setVisibility(View.GONE);
         anyChart.setVisibility(View.VISIBLE);
+        monthChart.setVisibility(View.GONE);
 
     }
 
     /**
-     *Display total steps for one week on graph
+     * Display total steps for one week on graph
      */
     private void showWeekGraph() {
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE");
         APIlib.getInstance().setActiveAnyChartView(weekChart);
         Cartesian cartesian = AnyChart.column();
 
@@ -1242,13 +1194,19 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         int count = 0;
         while (weekdayList.size() > count) {
-
-            data.add(new ValueDataEntry(weekdayList.get(count), totalDayStepsList.get(count)));
-          //  Log.d(TAG, week_graph_data.get(count));
-            count++;
+            try {
+                SimpleDateFormat Date = new SimpleDateFormat("dd-MM-yyyy");
+                Date date = Date.parse(weekdayList.get(count));
+                data.add(new ValueDataEntry(dateFormat.format(date), totalDayStepsList.get(count)));
+                count++;
+            } catch (java.text.ParseException e) {
+                e.printStackTrace();
+            }
         }
 
+
         Column column = cartesian.column(data);
+        column.name("Steps");
 
         column.tooltip()
                 .position(Position.CENTER_BOTTOM)
@@ -1300,6 +1258,88 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         weekChart.setChart(cartesian);
         anyChart.setVisibility(View.GONE);
         weekChart.setVisibility(View.VISIBLE);
+        monthChart.setVisibility(View.GONE);
+
+    }
+
+
+    /**
+     * Display total steps for one month on graph
+     */
+    private void showMonthGraph() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM");
+        APIlib.getInstance().setActiveAnyChartView(monthChart);
+        Cartesian cartesian = AnyChart.column();
+
+        List<DataEntry> data = new ArrayList<>();
+
+        int count = 0;
+        while (monthdayList.size() > count) {
+            try {
+                SimpleDateFormat Date = new SimpleDateFormat("dd-MM-yyyy");
+                Date date = Date.parse(monthdayList.get(count));
+                data.add(new ValueDataEntry(dateFormat.format(date), totalMonthStepsList.get(count)));
+                count++;
+            } catch (java.text.ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        Column column = cartesian.column(data);
+        column.name("Steps");
+
+        column.tooltip()
+                .position(Position.CENTER_BOTTOM)
+                .anchor(Anchor.CENTER_BOTTOM)
+                .offsetX(0d)
+                .offsetY(5d);
+
+
+        column.pointWidth(10d);
+
+
+        cartesian.animation(true);
+
+        //Round corner
+        column.rendering().point("function() {\n" +
+                "    // if missing (not correct data), then skipping this point drawing\n" +
+                "    if (this.missing) {\n" +
+                "return;\n" +
+                "    }\n" +
+                "\n" +
+                "    // get shapes group\n" +
+                "    var shapes = this.shapes || this.getShapesGroup(this.pointState);\n" +
+                "    // calculate the left value of the x-axis\n" +
+                "    var leftX = this.x - this.pointWidth / 2;\n" +
+                "    // calculate the right value of the x-axis\n" +
+                "    var rightX = leftX + this.pointWidth;\n" +
+                "    // calculate the half of point width\n" +
+                "    var rx = this.pointWidth / 2;\n" +
+                "\n" +
+                "    shapes['path']\n" +
+                "    // resets all 'line' operations\n" +
+                "    .clear()\n" +
+                "    // draw column with rounded edges\n" +
+                "    .moveTo(leftX, this.zero)\n" +
+                "    .lineTo(leftX, this.value + rx)\n" +
+                "    .circularArc(leftX + rx, this.value + rx, rx, rx, 180, 180)\n" +
+                "    .lineTo(rightX, this.zero)\n" +
+                "    // close by connecting the last point with the first straight line\n" +
+                "    .close();\n" +
+                "}");
+
+        cartesian.yScale().minimum(0d);
+
+        cartesian.tooltip().positionMode(TooltipPositionMode.POINT);
+        cartesian.interactivity().hoverMode(HoverMode.BY_X);
+
+        cartesian.yAxis(0).title("Steps");
+
+        monthChart.setChart(cartesian);
+        anyChart.setVisibility(View.GONE);
+        weekChart.setVisibility(View.GONE);
+        monthChart.setVisibility(View.VISIBLE);
 
     }
 
@@ -1317,8 +1357,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         txtclose = awardPopup.findViewById(R.id.txtclose);
         awardImage = awardPopup.findViewById(R.id.award_image);
         awardMessage = awardPopup.findViewById(R.id.awardmsg);
-        Drawable myTrophy = getResources().getDrawable(R.drawable.rewardcup2);
-        Drawable myMedal = getResources().getDrawable(R.drawable.rewardmedal);
 
         float distanceInKm = distanceInMeters / 1000;
 
@@ -1507,11 +1545,4 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    private class inActiveTimer extends TimerTask {
-        @Override
-        public void run() {
-            motivationSender.startMotivating(totalStepsFromDataPoints,movemins,today);
-
-        }
-    }
 }
