@@ -77,7 +77,7 @@ public class AppService extends Service {
 
            // Toast.makeText(context, "OK it works", Toast.LENGTH_SHORT).show();
             //TODO : change the time  (FOR TESTING PURPOSE ONLY)
-            mHandler.postDelayed(this, 10000);
+            mHandler.postDelayed(this, 2700000 );
         }
     };
 

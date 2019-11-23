@@ -231,7 +231,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         editor.putString("ToHour",toHour);
         editor.putString("LunchHour",lunchHour);
         editor.putString("Weekend",weekend);
-        editor.apply();
+        editor.commit();
 
         //Save the info to Firestore
         Map< String, Object > user = new HashMap<>();

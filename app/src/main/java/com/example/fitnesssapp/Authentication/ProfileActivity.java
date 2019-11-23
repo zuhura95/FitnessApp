@@ -91,7 +91,7 @@ public class ProfileActivity extends AppCompatActivity {
         editor.putFloat("Weight",weight);
         editor.putFloat("Height",height);
         editor.putInt("Age",age);
-        editor.apply();
+        editor.commit();
         Toast.makeText(ProfileActivity.this, "Profile Saved", Toast.LENGTH_SHORT).show();
 
         //Save the info to Firestore

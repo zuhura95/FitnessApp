@@ -28,6 +28,7 @@ import retrofit2.Response;
 
 import com.androdocs.httprequest.HttpRequest;
 import com.example.fitnesssapp.AppController;
+import com.example.fitnesssapp.HomeActivity;
 import com.example.fitnesssapp.Locations.APIClient;
 import com.example.fitnesssapp.Locations.GoogleMapAPI;
 import com.example.fitnesssapp.Locations.LocationsActivity;
@@ -90,19 +91,23 @@ public class MotivationMessages extends Service {
     float activemins;
     boolean isWeatherGood;
     AppController appController;
+    HomeActivity homeActivity;
     private Handler mHandler = new Handler();
     private int notifid=0;
     private int breaktimeDiff;
     private int EODtimediff;
     private LocationManager locationmanager = null;
     List<String> restaurantlocationNames = new ArrayList<>();
+    List<String> parklocationNames = new ArrayList<>();
+    List<String> gymlocationNames = new ArrayList<>();
+    List<String> malllocationNames = new ArrayList<>();
+
 
     public MotivationMessages() {
 
         appController = new AppController();
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
-
         today = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
 
 
@@ -124,16 +129,18 @@ public class MotivationMessages extends Service {
             accessHourlySteps();
             accessGoogleFit();
             new weatherTask().execute();
-            startMotivating();
+            if(!isActive()){
+                startMotivating();
+            }
+            checkEOD();
     //        Toast.makeText(context, "this works fine", Toast.LENGTH_SHORT).show();
-            mHandler.postDelayed(this, 10000);
+            mHandler.postDelayed(this, 2700000);
         }
     };
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         this.context = this;
-   ///     Toast.makeText(this, "fetching...", Toast.LENGTH_SHORT).show();
        init.run();
         return START_STICKY;
     }
@@ -143,6 +150,17 @@ public class MotivationMessages extends Service {
         super.onDestroy();
     }
 
+
+    private boolean isActive(){
+
+        if((totalStepsFromDataPoints-initialSteps)<5){
+            return false;
+        }
+        else{
+            initialSteps = totalStepsFromDataPoints;
+            return true;
+        }
+    }
     /**
      * Access Google Fit recordings
      */
@@ -303,8 +321,13 @@ public class MotivationMessages extends Service {
 
                 // increment the steps or distance
                 if (field.getName().equals("steps")) {
+
                     totalStepsFromDataPoints = dp.getValue(field).asInt();
-                    //initialSteps = totalStepsFromDataPoints;
+                    if(currenthour <= 10){
+                        initialSteps = totalStepsFromDataPoints;
+                    }
+
+
 
                 } else if (field.getName().equals("distance")) {
                     distanceTraveledFromDataPoints += dp.getValue(field).asFloat();
@@ -314,6 +337,8 @@ public class MotivationMessages extends Service {
 
 
             }
+
+          //  homeActivity.checkForRewards();
         }
 
 
@@ -324,9 +349,7 @@ public class MotivationMessages extends Service {
         } else if (dataSet.getDataType().getName().equals("com.google.distance.delta")) {
             //        Toast.makeText(context, "distance: "+distanceTraveledFromDataPoints, Toast.LENGTH_SHORT).show();
         }
-        //     motivationMessages.startMotivating();
 
-        //   homeActivity.checkForRewards();
 
     }
 
@@ -481,37 +504,68 @@ public class MotivationMessages extends Service {
         String[] days_array = weekend.split(" ");
         boolean itsWeekend = Arrays.asList(days_array).contains(weekday);
 
+        /**IS it WEEKEND SOON?**/
             if (itsWeekend){
                 //TODO : DELETE THIS LINE (FOR TESTING PURPOSE ONLY)
-                fetchNearbyLocation("restaurant");
                 category = "category K";
+                fetchNearbyLocation("restaurant");
+
             }
             else{
-
+                /**IS LUNCHBREAK SOON?**/
                 if(breaktimeDiff == 1){
 
                    if(isWeatherGood){
-                       fetchNearbyLocation("restaurant");
+                       if(restaurantlocationNames.size()>0) {
+                           category = "category H";
+                           fetchNearbyLocation("restaurant");
+
+                       }
+                       else{
+                           category = "category I";
+                       }
                    }
                    else{
                        category = "category I";
                    }
 
                 }
+                /**IS EOWD SOON?**/
                 else{
                     if(EODtimediff == 1){
-                        category = "category J";
-                    }
-                    else{
-                        //weather is good
                         if(isWeatherGood){
-                            fetchNearbyLocation("park");
+                            /////////nearby parks available?
+                            if(parklocationNames.size()>0) {
+                                category = "category A";
+                                fetchNearbyLocation("park");
+                            }
+                            else{
+                               ////walk in mall/gym/street
+                            }
                         }
                         else{
 
+                            ///nearby gyms available
+
                             fetchNearbyLocation("gym");
+                            if(gymlocationNames.size()>0){
+                                category = "category C";
+                            }
+                            else{
+                                ///no nearby gyms
+                                if(malllocationNames.size()>0){
+                                    category = "category D";
+                                }
+                                else{
+                                    ///home exercise
+                                    category = "category E";
+                                }
+                            }
                         }
 
+                    }
+                    else{
+                        category = "category J";
                     }
                 }
                 category="category A";
@@ -519,11 +573,30 @@ public class MotivationMessages extends Service {
             }
 
 
-
-
         retrieveCategoryMessages();
 
     }
+
+    private void checkEOD(){
+
+        /**IS EOD SOON?  9  pm **/
+        if(currenthour == 21){
+            if(totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000)){
+                category = "category L";
+            }
+            else{
+                if(isWeatherGood){
+                    fetchNearbyLocation("park");
+                    if(parklocationNames.size()>0){
+                        category="category F";
+                    }
+                }else{
+                    category = "category G";
+                }
+            }
+        }
+    }
+
 
     @SuppressLint("MissingPermission")
     private void fetchNearbyLocation(String locationtype) {
@@ -570,11 +643,26 @@ public class MotivationMessages extends Service {
                                 restaurantlocationNames.add(name);
                                 count++;
                             }
+                            else if(type =="park") {
+
+                                name = nearbyLocationResults.getLocationName(count);
+                                parklocationNames.add(name);
+                                count++;
+                            }
+                            else if(type =="gym") {
+
+                                name = nearbyLocationResults.getLocationName(count);
+                                gymlocationNames.add(name);
+                                count++;
+                            }
+                            else if(type =="mall") {
+
+                                name = nearbyLocationResults.getLocationName(count);
+                                malllocationNames.add(name);
+                                count++;
+                            }
                         }
 
-
-
-//                            Toast.makeText(getApplicationContext(), "RESTAURANT: " + n, Toast.LENGTH_SHORT).show();
                             Log.d("====LOCATION NAMES====", String.valueOf(restaurantlocationNames));
 
 
@@ -619,7 +707,6 @@ public class MotivationMessages extends Service {
         else{
             isWeatherGood = false;
         }
-    //    Toast.makeText(context, "TEMP"+ temp+" ....is weather good? "+isWeatherGood, Toast.LENGTH_SHORT).show();
     }
 
     private void extraData() {
@@ -627,8 +714,9 @@ public class MotivationMessages extends Service {
         lunchbreak = sharedPreferences.getString("LunchHour","00:00");
         EOD = sharedPreferences.getString("ToHour","00:00");
 
-        SimpleDateFormat hourFormat1 = new SimpleDateFormat("hh:mmaa");
-        SimpleDateFormat hourFormat2 = new SimpleDateFormat("hh");
+
+        SimpleDateFormat hourFormat1 = new SimpleDateFormat("HH:mmaa");
+        SimpleDateFormat hourFormat2 = new SimpleDateFormat("kk");
         try {
             Date date = hourFormat1.parse(lunchbreak);
             lunchbreak = hourFormat2.format(date);
@@ -643,6 +731,8 @@ public class MotivationMessages extends Service {
         eodHour = Integer.parseInt(EOD);
          breaktimeDiff = lunchHour - currenthour;
          EODtimediff = eodHour - currenthour;
+
+
 
 
     }
@@ -663,7 +753,9 @@ public class MotivationMessages extends Service {
                     Log.d(TAG, "Error getting documents: ", task.getException());
                 }
 
-                retrieveMessage(messagelist);
+                if (restaurantlocationNames.size()>0) {
+                    retrieveMessage(messagelist);
+                }
             }
         });
      }
@@ -672,28 +764,73 @@ public class MotivationMessages extends Service {
 
          int i = new Random().nextInt(messagelist.size());
          String randomMsg = messagelist.get(i);
-         DocumentReference docRef = db.collection(category).document(randomMsg);
-         db.document(randomMsg).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+         DocumentReference docRef = db.collection(category).document("msg3");
+         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
              @Override
              public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                  if (task.isSuccessful()) {
                      DocumentSnapshot document = task.getResult();
                      if (document.exists()) {
                      messageTitle = document.getString("title");
+                     messageType = document.getString("type");
                      message = document.getString("text");
-                     message = document.getString("type");
 
                      }
                      }
 
 
-                 displayNotification();
+                replaceTokens();
+
 
 
              }
          });
 
      }
+
+    private void replaceTokens() {
+
+        int i = new Random().nextInt(restaurantlocationNames.size());
+        String randomPlace = restaurantlocationNames.get(i);
+        //Replace <weather>
+        if(message.contains("<weather>")){
+            message = message.replaceAll("<weather>",temp+" °C");
+        }
+        if(messageTitle.contains("<weather>")){
+            messageTitle = messageTitle.replaceAll("<weather>",temp+" °C");
+        }
+        //Replace <restaurant>
+        if(message.contains("<restaurant>")){
+            message = message.replaceAll("<restaurant>",randomPlace);
+        }
+        if(messageTitle.contains("<restaurant>")){
+            messageTitle = messageTitle.replaceAll("<restaurant>", randomPlace);
+        }
+        //Replace <park>
+        if(message.contains("<park>")){
+            message = message.replaceAll("<park>",randomPlace);
+        }
+        if(messageTitle.contains("<park>")){
+            messageTitle = messageTitle.replaceAll("<park>", randomPlace);
+        }
+        //Replace <gym>
+        if(message.contains("<gym>")){
+            message = message.replaceAll("<gym>",randomPlace);
+        }
+        if(messageTitle.contains("<gym>")){
+            messageTitle = messageTitle.replaceAll("<gym>", randomPlace);
+        }
+        //Replace <mall>
+        if(message.contains("<mall>")){
+            message = message.replaceAll("<park>",randomPlace);
+        }
+        if(messageTitle.contains("<mall>")){
+            messageTitle = messageTitle.replaceAll("<mall>", randomPlace);
+        }
+        displayNotification();
+
+    }
+
     /**
      * Weather forecast
      */
