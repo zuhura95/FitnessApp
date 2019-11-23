@@ -12,21 +12,18 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import com.androdocs.httprequest.HttpRequest;
+
 import com.anychart.APIlib;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
-import com.example.fitnesssapp.Locations.LocationsActivity;
 import com.example.fitnesssapp.services.AppService;
-import com.example.fitnesssapp.services.AppWorker;
 import com.example.fitnesssapp.services.MotivationMessages;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.anychart.AnyChart;
@@ -67,12 +64,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.Observer;
-import androidx.work.Constraints;
-import androidx.work.NetworkType;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
 
 import android.view.Menu;
 import android.widget.Button;
@@ -90,9 +81,6 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -106,15 +94,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-  //  private Handler mHandler = new Handler();
+    private Handler mHandler = new Handler();
 
 
     //Constants
@@ -130,7 +116,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private static OnDataPointListener stepListener;
     private static OnDataPointListener distanceListener;
     AppController appController;
-    MotivationMessages motivationSender;
 
     SharedPreferences sharedPreferences;
     TextView helloText, stepsPercentage, dateTextView, calories, distance, activeTime;
@@ -202,7 +187,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         monthbtn = findViewById(R.id.month_button);
         awardPopup = new Dialog(this);
         healthtip = new Dialog(this);
-        motivationSender = new MotivationMessages(getApplicationContext());
+
 
         //Display health tips pop up once a day
         Calendar calendar = Calendar.getInstance();
@@ -274,10 +259,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     fitnessOptions);
         } else {
 
-       //   init.run();
-           accessGoogleFit();
+          init.run();
         }
-        startService(new Intent(HomeActivity.this, AppService.class));
+
 
         displayNotification();
 
@@ -319,16 +303,29 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-
     }
 
 
+    private Runnable init = new Runnable() {
+        @Override
+        public void run() {
 
+          accessGoogleFit();
+            mHandler.postDelayed(this, 10000);
+        }
+    };
 
     /**
      * Display ongoing Notification
      */
     private void displayNotification() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(this, AppService.class));
+        }
+        else{
+            startService(new Intent(this,AppService.class));
+        }
         NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
@@ -824,7 +821,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             kCals = kcals;
         }
 
-        motivationSender.startMotivating();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(this, MotivationMessages.class));
+        }
+        else{
+            startService(new Intent(this,MotivationMessages.class));
+        }
         checkForRewards();
 
     }
