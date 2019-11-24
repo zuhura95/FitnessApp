@@ -794,13 +794,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Log.d(TAG, "\tEnd: " + endTime);
 
 
-//            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
-//            movemins += mins;
-//            activeTime.setText(String.format("%.2f", movemins / 1000.00));
 
-
+            Log.d(TAG,dp.getDataType().getFields().toString());
             for (Field field : dp.getDataType().getFields()) {
                 Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
+
 
                 // increment the steps or distance
                 if (field.getName().equals("steps")) {
@@ -810,6 +808,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     distanceTraveledFromDataPoints += dp.getValue(field).asFloat();
                 } else if (field.getName().equals("calories")) {
                     kcals += dp.getValue(field).asFloat();
+                }else if(field.getName().equals("duration")){
+                    movemins += dp.getValue(field).asInt();
                 }
 
 
@@ -832,6 +832,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         } else if (dataSet.getDataType().getName().equals("com.google.calories.expended")) {
             calories.setText(String.format("%.2f", kcals / 1000.00));
             kCals = kcals;
+        }else if(dataSet.getDataType().getName().equals("com.google.active_minutes")){
+            activeTime.setText(String.valueOf(movemins));
         }
 
 
@@ -882,13 +884,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     Log.d(TAG, "Error getting documents: ", task.getException());
                 }
 
-
-//                for(Map.Entry map  : dayTreeMap.entrySet()){
-//
-//                    Log.d(TAG,"======TRYING TREE MAPS======");
-//                   Log.d(TAG,map.getKey()+" "+map.getValue());
-//
-//                }
                  sortTimeArray();
                 showGraph();
                 calculateTotalSteps();
