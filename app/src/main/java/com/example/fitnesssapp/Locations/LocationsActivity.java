@@ -67,7 +67,7 @@ public class LocationsActivity extends AppCompatActivity {
 
     }
 
-    private void initView() {
+    public void initView() {
 
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -98,7 +98,7 @@ public class LocationsActivity extends AppCompatActivity {
             appController.setLatitude(lat);
             appController.setLongitude(lon);
             String currentLocation = lat + "," + lon;
-            int radius = 500;
+            int radius = 1000;
             String type="restaurant";
             GoogleMapAPI googleMapAPI = APIClient.getClient().create(GoogleMapAPI.class);
             googleMapAPI.getNearBy(currentLocation, radius, type, key).enqueue(new Callback<PlacesResult>() {
@@ -106,8 +106,8 @@ public class LocationsActivity extends AppCompatActivity {
                 public void onResponse(Call<PlacesResult> call, Response<PlacesResult> response) {
                     if (response.isSuccessful()) {
                         List<Result> results = response.body().getResults();
-                        PlacesListAdapter placesListAdapter = new PlacesListAdapter(getApplicationContext(), results);
-                        listViewPlaces.setAdapter(placesListAdapter);
+                      //  PlacesListAdapter placesListAdapter = new PlacesListAdapter(getApplicationContext(), results);
+                     //   listViewPlaces.setAdapter(placesListAdapter);
                         Log.d(TAG, String.valueOf(results));
                     } else {
                         Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_LONG).show();

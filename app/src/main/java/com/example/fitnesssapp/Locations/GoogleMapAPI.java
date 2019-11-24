@@ -12,4 +12,6 @@ public interface GoogleMapAPI {
             @Query("type") String type,
             @Query("key") String key
     );
+
+
 }

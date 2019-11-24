@@ -12,21 +12,20 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-
+import android.os.Handler;
 
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
-
-import com.androdocs.httprequest.HttpRequest;
 import com.anychart.APIlib;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
+import com.example.fitnesssapp.services.AppService;
+import com.example.fitnesssapp.services.MotivationMessages;
 import com.example.fitnesssapp.Locations.LocationsActivity;
 import com.example.fitnesssapp.services.AppWorker;
 import com.github.lzyzsd.circleprogress.ArcProgress;
@@ -43,6 +42,7 @@ import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
+import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
@@ -67,12 +67,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.Observer;
-import androidx.work.Constraints;
-import androidx.work.NetworkType;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
 
 import android.view.Menu;
 import android.widget.Button;
@@ -89,9 +83,6 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -111,6 +102,8 @@ import java.util.concurrent.TimeUnit;
 
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+
+    private Handler mHandler = new Handler();
 
 
     //Constants
@@ -159,7 +152,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(getString(R.string.title_activity_home));
         setSupportActionBar(toolbar);
-
         appController = new AppController();
         today = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
         appController.setToday(today);
@@ -199,6 +191,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         monthbtn = findViewById(R.id.month_button);
         awardPopup = new Dialog(this);
         healthtip = new Dialog(this);
+
 
         //Display health tips pop up once a day
         Calendar calendar = Calendar.getInstance();
@@ -269,12 +262,24 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     GoogleSignIn.getLastSignedInAccount(this),
                     fitnessOptions);
         } else {
-            accessGoogleFit();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(new Intent(this, MotivationMessages.class));
+            }
+            else{
+                startService(new Intent(this,MotivationMessages.class));
+            }
+          init.run();
+
         }
+
+
         displayNotification();
         retrieveUserDetails();
         hourlyDataOnChart();
         weeklyDataChart();
+
+
+
         monthlyDataChart();
 
 
@@ -310,31 +315,30 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-        Constraints constraints = new Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(AppWorker.class, 1, TimeUnit.MINUTES).setConstraints(constraints).build();
-        WorkManager.getInstance(this).enqueue(request);
-        //display status of work
-        WorkManager.getInstance().getWorkInfoByIdLiveData(request.getId()).observe(this, new Observer<WorkInfo>() {
-            @Override
-            public void onChanged(WorkInfo workInfo) {
-                String status = workInfo.getState().name();
-                Toast.makeText(HomeActivity.this, status, Toast.LENGTH_SHORT).show();
-            }
-        });
-
-
-        new weatherTask().execute();
-
-
     }
+
+
+    private Runnable init = new Runnable() {
+        @Override
+        public void run() {
+
+            Toast.makeText(HomeActivity.this, "current steps fetched", Toast.LENGTH_SHORT).show();
+          accessGoogleFit();
+            mHandler.postDelayed(this, 10000);
+        }
+    };
 
     /**
      * Display ongoing Notification
      */
     private void displayNotification() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(this, AppService.class));
+        }
+        else{
+            startService(new Intent(this,AppService.class));
+        }
         NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
@@ -565,47 +569,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    /**
-     * Weather forecast
-     */
-    class weatherTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-        }
-
-        String LAT = appController.getLatitude();
-        String LON = appController.getLongitude();
-
-        protected String doInBackground(String... args) {
-            String response = HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?lat=" + LAT + "&lon=" + LON + "&units=metric&appid=" + weather_API_key);
-            return response;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
 
 
-            try {
-                JSONObject jsonObj = new JSONObject(result);
-                JSONObject main = jsonObj.getJSONObject("main");
-                JSONObject sys = jsonObj.getJSONObject("sys");
-                JSONObject wind = jsonObj.getJSONObject("wind");
-                JSONObject weather = jsonObj.getJSONArray("weather").getJSONObject(0);
-                String temp = main.getString("temp") + "°C";
-                String weatherDescription = weather.getString("description");
+    @Override
+    protected void onPause() {
+        super.onPause();
 
-                String address = jsonObj.getString("name") + ", " + sys.getString("country");
-
-                Toast.makeText(HomeActivity.this, "Today's weather is " + temp + " and it is " + weatherDescription + " at " + address, Toast.LENGTH_SHORT).show();
-
-            } catch (JSONException e) {
-
-                Log.d(TAG, e.getMessage());
-            }
-
-        }
     }
 
     @Override
@@ -658,7 +627,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
                 Log.d(TAG, "accessing...");
-                accessGoogleFit();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(new Intent(this, MotivationMessages.class));
+                }
+                else{
+                    startService(new Intent(this,MotivationMessages.class));
+                }
+                init.run();
 
 
             }
@@ -668,7 +643,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     /**
      * Access Google Fit recordings
      */
-    private void accessGoogleFit() {
+    public void accessGoogleFit() {
+
 
 
         // Subscribe to recordings
@@ -811,9 +787,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Log.d(TAG, "\tEnd: " + endTime);
 
 
-            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
-            movemins += mins;
-            activeTime.setText(String.format("%.2f", movemins / 1000.00));
+//            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
+//            movemins += mins;
+//            activeTime.setText(String.format("%.2f", movemins / 1000.00));
 
 
             for (Field field : dp.getDataType().getFields()) {
@@ -850,6 +826,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             calories.setText(String.format("%.2f", kcals / 1000.00));
             kCals = kcals;
         }
+
+
         checkForRewards();
 
     }
@@ -1543,6 +1521,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+
 
 
 }

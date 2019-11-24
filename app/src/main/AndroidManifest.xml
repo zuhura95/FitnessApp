@@ -67,7 +67,13 @@
             android:value="Notification" />
         <service
             android:name=".services.AppService"
-            ></service> <!-- launcher activity -->
+            android:enabled="true"
+            android:exported="false"></service>
+        <service
+            android:name=".services.MotivationMessages"
+            android:enabled="true"
+            android:exported="false"></service>
+
         <service
             android:name=".services.MyFirebaseMessagingService"
             android:exported="false">
@@ -76,9 +82,10 @@
             </intent-filter>
         </service>
     </application>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.INTERNET" />
-
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>
