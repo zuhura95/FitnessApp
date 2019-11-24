@@ -145,6 +145,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     List<Integer> weekData = new ArrayList<>();
     List<String> week_graph_data = new ArrayList<>();
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -720,8 +722,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Log.d(TAG, "Range Start: " + dateFormat.format(startTime));
         Log.d(TAG, "Range End: " + dateFormat.format(endTime));
 
+        DataSource ESTIMATED_STEP_DELTAS = new DataSource.Builder()
+                .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+                .setType(DataSource.TYPE_DERIVED)
+                .setStreamName("estimated_steps")
+                .setAppPackageName("com.google.android.gms")
+                .build();
+
         DataReadRequest readRequest = new DataReadRequest.Builder()
-                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .aggregate(ESTIMATED_STEP_DELTAS,    DataType.AGGREGATE_STEP_COUNT_DELTA)
                 .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
                 .aggregate(DataType.TYPE_CALORIES_EXPENDED, DataType.AGGREGATE_CALORIES_EXPENDED)
                 .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
@@ -787,11 +796,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Log.d(TAG, "\tEnd: " + endTime);
 
 
-//            mins = dp.getEndTime(TimeUnit.MINUTES) - dp.getStartTime(TimeUnit.MINUTES);
-//            movemins += mins;
-//            activeTime.setText(String.format("%.2f", movemins / 1000.00));
 
-
+            Log.d(TAG,dp.getDataType().getFields().toString());
             for (Field field : dp.getDataType().getFields()) {
                 Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
 
@@ -803,6 +809,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     distanceTraveledFromDataPoints += dp.getValue(field).asFloat();
                 } else if (field.getName().equals("calories")) {
                     kcals += dp.getValue(field).asFloat();
+                }else if(field.getName().equals("duration")){
+                    movemins += dp.getValue(field).asInt();
                 }
 
 
@@ -825,6 +833,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         } else if (dataSet.getDataType().getName().equals("com.google.calories.expended")) {
             calories.setText(String.format("%.2f", kcals / 1000.00));
             kCals = kcals;
+        }else if(dataSet.getDataType().getName().equals("com.google.active_minutes")){
+            activeTime.setText(String.valueOf(movemins));
         }
 
 
