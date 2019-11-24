@@ -258,8 +258,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     GoogleSignIn.getLastSignedInAccount(this),
                     fitnessOptions);
         } else {
-
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(new Intent(this, MotivationMessages.class));
+            }
+            else{
+                startService(new Intent(this,MotivationMessages.class));
+            }
           init.run();
+
         }
 
 
@@ -310,6 +316,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         @Override
         public void run() {
 
+            Toast.makeText(HomeActivity.this, "current steps fetched", Toast.LENGTH_SHORT).show();
           accessGoogleFit();
             mHandler.postDelayed(this, 10000);
         }
@@ -619,7 +626,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
                 Log.d(TAG, "accessing...");
-                accessGoogleFit();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(new Intent(this, MotivationMessages.class));
+                }
+                else{
+                    startService(new Intent(this,MotivationMessages.class));
+                }
+                init.run();
 
 
             }
@@ -821,12 +834,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             kCals = kcals;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(new Intent(this, MotivationMessages.class));
-        }
-        else{
-            startService(new Intent(this,MotivationMessages.class));
-        }
+
         checkForRewards();
 
     }

@@ -77,7 +77,7 @@ public class AppService extends Service {
 
            // Toast.makeText(context, "OK it works", Toast.LENGTH_SHORT).show();
             //TODO : change the time  (FOR TESTING PURPOSE ONLY)
-            mHandler.postDelayed(this, 2700000 );
+            mHandler.postDelayed(this, 300000 );
         }
     };
 
@@ -106,7 +106,7 @@ public class AppService extends Service {
     {
         this.context = this;
 
-      // initializeLocationManager();
+       initializeLocationManager();
 
         init.run();
 
@@ -154,16 +154,6 @@ public class AppService extends Service {
         }
     };
 
-
-
-
-    public void inactiveTimer(){
-
-        if ((totalStepsFromDataPoints - defaultSteps) < 5){
-
-        }
-
-    }
     @Override
     public void onDestroy() {
         super.onDestroy();

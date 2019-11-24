@@ -119,6 +119,10 @@ public class MotivationMessages extends Service {
     @Override
     public void onCreate() {
 
+        latitude = appController.getLatitude();
+        longitude=appController.getLongitude();
+        Log.d(TAG,"LATITUDE:"+latitude+"LONGITUDE"+longitude);
+
         sharedPreferences = this.getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         userID = auth.getCurrentUser().getUid();
     }
@@ -128,13 +132,17 @@ public class MotivationMessages extends Service {
 
             accessHourlySteps();
             accessGoogleFit();
-            new weatherTask().execute();
+            fetchNearbyLocation("restaurant");
+            fetchNearbyLocation("mall");
+            fetchNearbyLocation("gym");
+            fetchNearbyLocation("park");
+            checkWeather();
             if(!isActive()){
+
                 startMotivating();
             }
             checkEOD();
-    //        Toast.makeText(context, "this works fine", Toast.LENGTH_SHORT).show();
-            mHandler.postDelayed(this, 2700000);
+            mHandler.postDelayed(this, 300000);
         }
     };
     @Override
@@ -154,10 +162,12 @@ public class MotivationMessages extends Service {
     private boolean isActive(){
 
         if((totalStepsFromDataPoints-initialSteps)<5){
+           Log.d(TAG,"NOT ACTIVE - sTART MOTIVATING");
             return false;
         }
         else{
             initialSteps = totalStepsFromDataPoints;
+            Log.d(TAG," ACTIVE");
             return true;
         }
     }
@@ -174,13 +184,13 @@ public class MotivationMessages extends Service {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Successfully subscribed");
+                    //    Log.d(TAG, "Successfully subscribed");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "There was a problem subscribing...", e);
+                     //   Log.d(TAG, "There was a problem subscribing...", e);
                     }
                 });
 
@@ -190,13 +200,13 @@ public class MotivationMessages extends Service {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Successfully subscribed");
+                      //  Log.d(TAG, "Successfully subscribed");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "There was a problem subscribing...", e);
+                      //  Log.d(TAG, "There was a problem subscribing...", e);
                     }
                 });
         Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
@@ -204,13 +214,13 @@ public class MotivationMessages extends Service {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Successfully subscribed");
+                      //  Log.d(TAG, "Successfully subscribed");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "There was a problem subscribing...", e);
+                      //  Log.d(TAG, "There was a problem subscribing...", e);
                     }
                 });
 
@@ -219,13 +229,13 @@ public class MotivationMessages extends Service {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Successfully subscribed");
+                        //Log.d(TAG, "Successfully subscribed");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "There was a problem subscribing...", e);
+                       // Log.d(TAG, "There was a problem subscribing...", e);
                     }
                 });
 
@@ -238,8 +248,8 @@ public class MotivationMessages extends Service {
         long startTime = cal.getTimeInMillis();
 
         DateFormat dateFormat = DateFormat.getDateTimeInstance();
-        Log.d(TAG, "Range Start: " + dateFormat.format(startTime));
-        Log.d(TAG, "Range End: " + dateFormat.format(endTime));
+      //  Log.d(TAG, "Range Start: " + dateFormat.format(startTime));
+       // Log.d(TAG, "Range End: " + dateFormat.format(endTime));
 
         DataSource ESTIMATED_STEP_DELTAS = new DataSource.Builder()
                 .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
@@ -263,14 +273,14 @@ public class MotivationMessages extends Service {
                 .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
                     @Override
                     public void onSuccess(DataReadResponse dataReadResponse) {
-                        Log.d(TAG, "successfully got history");
+                //        Log.d(TAG, "successfully got history");
                         getDataSetsFromBucket(dataReadResponse);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, "failed to get history", e);
+              //          Log.e(TAG, "failed to get history", e);
                     }
                 });
 
@@ -279,7 +289,7 @@ public class MotivationMessages extends Service {
     private void getDataSetsFromBucket(DataReadResponse dataReadResponse) {
 
         if (dataReadResponse.getBuckets().size() > 0) {
-            Log.d(TAG, "Number of returned buckets of DataSets is: " + dataReadResponse.getBuckets().size());
+         //   Log.d(TAG, "Number of returned buckets of DataSets is: " + dataReadResponse.getBuckets().size());
             for (Bucket bucket : dataReadResponse.getBuckets()) {
                 List<DataSet> dataSets = bucket.getDataSets();
                 for (DataSet dataSet : dataSets) {
@@ -293,7 +303,7 @@ public class MotivationMessages extends Service {
      * Parse Dataset and display step count on progress dialog, calories, active minutes and kilometers taken in a day
      */
     private void parseDataSet(DataSet dataSet) {
-        Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+      //  Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getTimeInstance();
 
 
@@ -308,16 +318,16 @@ public class MotivationMessages extends Service {
 
             startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
             endTime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
-            Log.d(TAG, "Data point:");
-            Log.d(TAG, "\tType: " + dp.getDataType().getName());
-            Log.d(TAG, "\tStart: " + startTime);
-            Log.d(TAG, "\tEnd: " + endTime);
+//            Log.d(TAG, "Data point:");
+//            Log.d(TAG, "\tType: " + dp.getDataType().getName());
+//            Log.d(TAG, "\tStart: " + startTime);
+//            Log.d(TAG, "\tEnd: " + endTime);
 
 
 
 
             for (Field field : dp.getDataType().getFields()) {
-                Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
+              //  Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
 
                 // increment the steps or distance
                 if (field.getName().equals("steps")) {
@@ -385,7 +395,7 @@ public class MotivationMessages extends Service {
                 }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.e(TAG, "failed to get history", e);
+           //     Log.e(TAG, "failed to get history", e);
             }
         });
 
@@ -396,7 +406,7 @@ public class MotivationMessages extends Service {
     private void getHourlyStepsFromBucket(DataReadResponse readResponse){
 
         if(readResponse.getBuckets().size()>0){
-            Log.d(TAG, "/////////Number of returned buckets of DataSets is: " + readResponse.getBuckets().size());
+      //      Log.d(TAG, "/////////Number of returned buckets of DataSets is: " + readResponse.getBuckets().size());
             for (Bucket bucket : readResponse.getBuckets()) {
                 List<DataSet> dataSets = bucket.getDataSets();
 
@@ -416,7 +426,7 @@ public class MotivationMessages extends Service {
      * Parse the datasets
      */
     private void parseHourlySteps(DataSet dataSet) {
-        Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+      //  Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getTimeInstance();
 
         int totalStepsFromDataPoints = 0;
@@ -429,15 +439,15 @@ public class MotivationMessages extends Service {
             startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
             stime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
             endTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-            Log.d(TAG, "Data point:");
-            Log.d(TAG, "\tType: " + dp.getDataType().getName());
-            Log.d(TAG, "\tStart: " + startTime);
-            Log.d(TAG, "\tEnd: " + endTime);
-            Log.d(TAG, "\tTime stamp: " + stime);
+//            Log.d(TAG, "Data point:");
+//            Log.d(TAG, "\tType: " + dp.getDataType().getName());
+//            Log.d(TAG, "\tStart: " + startTime);
+//            Log.d(TAG, "\tEnd: " + endTime);
+//            Log.d(TAG, "\tTime stamp: " + stime);
 
 
             for (Field field : dp.getDataType().getFields()) {
-                Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
+       //         Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
 
                 // increment the steps or distance
                 if (field.getName().equals("steps")) {
@@ -464,7 +474,7 @@ public class MotivationMessages extends Service {
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
-                                        Log.d(TAG,"==============================steps per hour fetched");
+                       //                 Log.d(TAG,"==============================steps per hour fetched");
 
                                     }
                                 })
@@ -508,39 +518,50 @@ public class MotivationMessages extends Service {
             if (itsWeekend){
                 //TODO : DELETE THIS LINE (FOR TESTING PURPOSE ONLY)
                 category = "category K";
-                fetchNearbyLocation("restaurant");
-
+                //fetchNearbyLocation("restaurant");
+                Log.d(TAG,"WEEEEEKEND");
             }
             else{
                 /**IS LUNCHBREAK SOON?**/
                 if(breaktimeDiff == 1){
 
+                    Log.d(TAG,"LUNCH BREAK SOON");
+                    checkWeather();
                    if(isWeatherGood){
+                       fetchNearbyLocation("restaurant");
                        if(restaurantlocationNames.size()>0) {
                            category = "category H";
-                           fetchNearbyLocation("restaurant");
+                           Log.d(TAG,"WALK TO RESTAURANT");
 
                        }
                        else{
                            category = "category I";
+                           Log.d(TAG,"CAT: I");
                        }
                    }
                    else{
                        category = "category I";
+                       Log.d(TAG,"CAT: I");
                    }
 
                 }
                 /**IS EOWD SOON?**/
                 else{
                     if(EODtimediff == 1){
+                        Log.d(TAG,"END OF DAY COMING SOOON");
+                        checkWeather();
                         if(isWeatherGood){
+                            fetchNearbyLocation("park");
                             /////////nearby parks available?
                             if(parklocationNames.size()>0) {
                                 category = "category A";
-                                fetchNearbyLocation("park");
+
+                                Log.d(TAG,"WALK TO PARK");
                             }
                             else{
                                ////walk in mall/gym/street
+                                category="category B";
+                                Log.d(TAG,"WALK IN MALL");
                             }
                         }
                         else{
@@ -550,15 +571,19 @@ public class MotivationMessages extends Service {
                             fetchNearbyLocation("gym");
                             if(gymlocationNames.size()>0){
                                 category = "category C";
+                                Log.d(TAG,"WORKOUT IN GYM");
                             }
                             else{
                                 ///no nearby gyms
+                                fetchNearbyLocation("mall");
                                 if(malllocationNames.size()>0){
                                     category = "category D";
+                                    Log.d(TAG,"CATEGORY D");
                                 }
                                 else{
                                     ///home exercise
                                     category = "category E";
+                                    Log.d(TAG,"WORKOUT IN HOME");
                                 }
                             }
                         }
@@ -566,9 +591,10 @@ public class MotivationMessages extends Service {
                     }
                     else{
                         category = "category J";
+                        Log.d(TAG,"CATEGORY J");
                     }
                 }
-                category="category A";
+
 
             }
 
@@ -581,17 +607,22 @@ public class MotivationMessages extends Service {
 
         /**IS EOD SOON?  9  pm **/
         if(currenthour == 21){
+            Log.d(TAG,"ITS 9 PM");
             if(totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000)){
                 category = "category L";
+                Log.d(TAG,"CATEOGRY L");
             }
             else{
+                checkWeather();
                 if(isWeatherGood){
                     fetchNearbyLocation("park");
                     if(parklocationNames.size()>0){
                         category="category F";
+                        Log.d(TAG,"CATEGORY F");
                     }
                 }else{
                     category = "category G";
+                    Log.d(TAG,"CATEGORY G");
                 }
             }
         }
@@ -619,7 +650,7 @@ public class MotivationMessages extends Service {
             String key = getText(R.string.google_maps_key).toString();
             String lat = String.valueOf(location.getLatitude());
             String lon = String.valueOf(location.getLongitude());
-            String currentLocation = lat + "," + lon;
+            final String currentLocation = lat + "," + lon;
             latitude = lat;
             longitude = lon;
             int radius = 500;
@@ -636,6 +667,8 @@ public class MotivationMessages extends Service {
                         int count = 0;
 
 
+                        Log.d(TAG,"FETCHING LOCATIONS NEARBY...");
+                        Log.d(TAG,currentLocation);
                         while(results.size()>count){
                             if(type =="restaurant") {
 
@@ -663,7 +696,10 @@ public class MotivationMessages extends Service {
                             }
                         }
 
-                            Log.d("====LOCATION NAMES====", String.valueOf(restaurantlocationNames));
+                            Log.d("====RESTAURANTS ====", String.valueOf(restaurantlocationNames));
+                        Log.d("====PARKS====", String.valueOf(parklocationNames));
+                        Log.d("====GYMS====", String.valueOf(gymlocationNames));
+                        Log.d("====MALLS====", String.valueOf(malllocationNames));
 
 
                     } else {
@@ -699,6 +735,7 @@ public class MotivationMessages extends Service {
     };
     private void checkWeather() {
 
+        new weatherTask().execute();
         if((temp > 18) &&(temp < 35)){
             if(humidity < 90){
                 isWeatherGood = true;
@@ -707,6 +744,7 @@ public class MotivationMessages extends Service {
         else{
             isWeatherGood = false;
         }
+        Log.d(TAG,"HOW IS WEATHER?"+isWeatherGood);
     }
 
     private void extraData() {
@@ -756,6 +794,17 @@ public class MotivationMessages extends Service {
                 if (restaurantlocationNames.size()>0) {
                     retrieveMessage(messagelist);
                 }
+                if (parklocationNames.size()>0) {
+                    retrieveMessage(messagelist);
+                }
+                if (malllocationNames.size()>0) {
+                    retrieveMessage(messagelist);
+                }
+                if (gymlocationNames.size()>0) {
+                    retrieveMessage(messagelist);
+                }
+                retrieveMessage(messagelist);
+
             }
         });
      }
@@ -764,23 +813,30 @@ public class MotivationMessages extends Service {
 
          int i = new Random().nextInt(messagelist.size());
          String randomMsg = messagelist.get(i);
-         DocumentReference docRef = db.collection(category).document("msg3");
+         DocumentReference docRef = db.collection(category).document(randomMsg);
          docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
              @Override
              public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                  if (task.isSuccessful()) {
                      DocumentSnapshot document = task.getResult();
                      if (document.exists()) {
-                     messageTitle = document.getString("title");
-                     messageType = document.getString("type");
-                     message = document.getString("text");
+                         messageTitle = document.getString("title");
+                         messageType = document.getString("type");
+                         message = document.getString("text");
 
                      }
-                     }
+                 }
 
 
-                replaceTokens();
+                 if (messageTitle.contains("<") || message.contains("<")) {
 
+                     Log.d(TAG,"REPLACE TOKEN");
+                     replaceTokens();
+                 }
+                 else{
+                     Log.d(TAG,"NO TOKEN");
+                     displayNotification();
+                 }
 
 
              }
@@ -790,43 +846,50 @@ public class MotivationMessages extends Service {
 
     private void replaceTokens() {
 
-        int i = new Random().nextInt(restaurantlocationNames.size());
-        String randomPlace = restaurantlocationNames.get(i);
-        //Replace <weather>
-        if(message.contains("<weather>")){
-            message = message.replaceAll("<weather>",temp+" °C");
-        }
-        if(messageTitle.contains("<weather>")){
-            messageTitle = messageTitle.replaceAll("<weather>",temp+" °C");
-        }
-        //Replace <restaurant>
-        if(message.contains("<restaurant>")){
-            message = message.replaceAll("<restaurant>",randomPlace);
-        }
-        if(messageTitle.contains("<restaurant>")){
-            messageTitle = messageTitle.replaceAll("<restaurant>", randomPlace);
-        }
-        //Replace <park>
-        if(message.contains("<park>")){
-            message = message.replaceAll("<park>",randomPlace);
-        }
-        if(messageTitle.contains("<park>")){
-            messageTitle = messageTitle.replaceAll("<park>", randomPlace);
-        }
-        //Replace <gym>
-        if(message.contains("<gym>")){
-            message = message.replaceAll("<gym>",randomPlace);
-        }
-        if(messageTitle.contains("<gym>")){
-            messageTitle = messageTitle.replaceAll("<gym>", randomPlace);
-        }
-        //Replace <mall>
-        if(message.contains("<mall>")){
-            message = message.replaceAll("<park>",randomPlace);
-        }
-        if(messageTitle.contains("<mall>")){
-            messageTitle = messageTitle.replaceAll("<mall>", randomPlace);
-        }
+//        int i = new Random().nextInt(restaurantlocationNames.size());
+//        String randomRestaurant = restaurantlocationNames.get(i);
+//        int j = new Random().nextInt(parklocationNames.size());
+//        String randomPark = parklocationNames.get(j);
+//        int k = new Random().nextInt(gymlocationNames.size());
+//        String randomGym = gymlocationNames.get(k);
+//        int l = new Random().nextInt(malllocationNames.size());
+//        String randomMall = malllocationNames.get(l);
+//        //Replace <weather>
+//        if(message.contains("<weather>")){
+//            message = message.replaceAll("<weather>",temp+" °C");
+//        }
+//        if(messageTitle.contains("<weather>")){
+//            messageTitle = messageTitle.replaceAll("<weather>",temp+" °C");
+//        }
+//        //Replace <restaurant>
+//        if(message.contains("<restaurant>")){
+//            message = message.replaceAll("<restaurant>",randomRestaurant);
+//        }
+//        if(messageTitle.contains("<restaurant>")){
+//            messageTitle = messageTitle.replaceAll("<restaurant>", randomRestaurant);
+//        }
+//        //Replace <park>
+//        if(message.contains("<park>")){
+//            message = message.replaceAll("<park>",randomPark);
+//        }
+//        if(messageTitle.contains("<park>")){
+//            messageTitle = messageTitle.replaceAll("<park>", randomPark);
+//        }
+//        //Replace <gym>
+//        if(message.contains("<gym>")){
+//            message = message.replaceAll("<gym>",randomGym);
+//        }
+//        if(messageTitle.contains("<gym>")){
+//            messageTitle = messageTitle.replaceAll("<gym>", randomGym);
+//        }
+//        //Replace <mall>
+//        if(message.contains("<mall>")){
+//            message = message.replaceAll("<park>",randomMall);
+//        }
+//        if(messageTitle.contains("<mall>")){
+//            messageTitle = messageTitle.replaceAll("<mall>", randomMall);
+//        }
+
         displayNotification();
 
     }
