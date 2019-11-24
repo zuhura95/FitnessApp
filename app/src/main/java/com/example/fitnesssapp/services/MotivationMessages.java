@@ -15,7 +15,6 @@ import android.app.Service;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -31,8 +30,10 @@ import com.example.fitnesssapp.AppController;
 import com.example.fitnesssapp.HomeActivity;
 import com.example.fitnesssapp.Locations.APIClient;
 import com.example.fitnesssapp.Locations.GoogleMapAPI;
-import com.example.fitnesssapp.Locations.LocationsActivity;
-import com.example.fitnesssapp.Locations.NearbyLocationResults;
+import com.example.fitnesssapp.Locations.NearbyGyms;
+import com.example.fitnesssapp.Locations.NearbyMalls;
+import com.example.fitnesssapp.Locations.NearbyParks;
+import com.example.fitnesssapp.Locations.NearbyRestaurants;
 import com.example.fitnesssapp.Locations.PlacesResult;
 import com.example.fitnesssapp.Locations.Result;
 import com.example.fitnesssapp.R;
@@ -72,7 +73,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
-import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 public class MotivationMessages extends Service {
@@ -85,7 +85,7 @@ public class MotivationMessages extends Service {
     SharedPreferences sharedPreferences;
     Context context;
     String category;
-    String  message, messageType, messageTitle, type, userID, weekend, lunchbreak, EOD,today,weatherDesc,latitude,longitude;
+    String  message, messageType, messageTitle, type, userID, weekend, lunchbreak, EOD,today,weatherDesc,latitude,longitude,username;
     int steps, currenthour, lunchHour, eodHour;
     double temp, humidity;
     float activemins;
@@ -119,12 +119,11 @@ public class MotivationMessages extends Service {
     @Override
     public void onCreate() {
 
-        latitude = appController.getLatitude();
-        longitude=appController.getLongitude();
         Log.d(TAG,"LATITUDE:"+latitude+"LONGITUDE"+longitude);
 
         sharedPreferences = this.getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         userID = auth.getCurrentUser().getUid();
+        username = sharedPreferences.getString("NickName",null);
     }
     private Runnable init = new Runnable() {
         @Override
@@ -132,10 +131,10 @@ public class MotivationMessages extends Service {
 
             accessHourlySteps();
             accessGoogleFit();
-            fetchNearbyLocation("restaurant");
-            fetchNearbyLocation("mall");
-            fetchNearbyLocation("gym");
-            fetchNearbyLocation("park");
+            fetchNearbyLocation("");
+//            fetchNearbyLocation("mall");
+//            fetchNearbyLocation("gym");
+//            fetchNearbyLocation("park");
             checkWeather();
             if(!isActive()){
 
@@ -248,8 +247,6 @@ public class MotivationMessages extends Service {
         long startTime = cal.getTimeInMillis();
 
         DateFormat dateFormat = DateFormat.getDateTimeInstance();
-      //  Log.d(TAG, "Range Start: " + dateFormat.format(startTime));
-       // Log.d(TAG, "Range End: " + dateFormat.format(endTime));
 
         DataSource ESTIMATED_STEP_DELTAS = new DataSource.Builder()
                 .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
@@ -318,10 +315,7 @@ public class MotivationMessages extends Service {
 
             startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
             endTime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
-//            Log.d(TAG, "Data point:");
-//            Log.d(TAG, "\tType: " + dp.getDataType().getName());
-//            Log.d(TAG, "\tStart: " + startTime);
-//            Log.d(TAG, "\tEnd: " + endTime);
+
 
 
 
@@ -575,7 +569,7 @@ public class MotivationMessages extends Service {
                             }
                             else{
                                 ///no nearby gyms
-                                fetchNearbyLocation("mall");
+                                fetchNearbyLocation("shopping_mall");
                                 if(malllocationNames.size()>0){
                                     category = "category D";
                                     Log.d(TAG,"CATEGORY D");
@@ -661,9 +655,10 @@ public class MotivationMessages extends Service {
                 public void onResponse(Call<PlacesResult> call, Response<PlacesResult> response) {
                     if (response.isSuccessful()) {
 
-                        String name = null;
+                        String restaurantName, parkName, gymName, mallName;
                         List<Result> results = response.body().getResults();
-                        NearbyLocationResults nearbyLocationResults = new NearbyLocationResults(getApplicationContext(), results);
+
+
                         int count = 0;
 
 
@@ -671,27 +666,29 @@ public class MotivationMessages extends Service {
                         Log.d(TAG,currentLocation);
                         while(results.size()>count){
                             if(type =="restaurant") {
-
-                                name = nearbyLocationResults.getLocationName(count);
-                                restaurantlocationNames.add(name);
+                                NearbyRestaurants nearbyRestaurants = new NearbyRestaurants(getApplicationContext(), results);
+                                restaurantName = nearbyRestaurants.getLocationName(count);
+                                restaurantlocationNames.add(restaurantName);
                                 count++;
                             }
                             else if(type =="park") {
 
-                                name = nearbyLocationResults.getLocationName(count);
-                                parklocationNames.add(name);
+                                NearbyParks nearbyParks = new NearbyParks(getApplicationContext(), results);
+                                parkName = nearbyParks.getLocationName(count);
+                                parklocationNames.add(parkName);
                                 count++;
                             }
                             else if(type =="gym") {
-
-                                name = nearbyLocationResults.getLocationName(count);
-                                gymlocationNames.add(name);
+                                NearbyGyms nearbyGyms = new NearbyGyms(getApplicationContext(),results);
+                                gymName = nearbyGyms.getLocationName(count);
+                                gymlocationNames.add(gymName);
                                 count++;
                             }
-                            else if(type =="mall") {
+                            else if(type =="shopping_mall") {
 
-                                name = nearbyLocationResults.getLocationName(count);
-                                malllocationNames.add(name);
+                                NearbyMalls nearbyMalls = new NearbyMalls(getApplicationContext(), results);
+                                mallName = nearbyMalls.getLocationName(count);
+                                malllocationNames.add(mallName);
                                 count++;
                             }
                         }
@@ -890,6 +887,18 @@ public class MotivationMessages extends Service {
 //            messageTitle = messageTitle.replaceAll("<mall>", randomMall);
 //        }
 
+        if(messageTitle.contains("<name>")){
+            messageTitle = messageTitle.replaceAll("<name>",username);
+        }
+        if(message.contains("<name>")){
+            messageTitle = messageTitle.replaceAll("<name>",username);
+        }
+        if(messageTitle.contains("<weather>")){
+            messageTitle = messageTitle.replaceAll("<weather>",temp+" °C");
+        }
+        if(message.contains("<weather>")){
+            message = message.replaceAll("<weather>", temp+" °C");
+        }
         displayNotification();
 
     }

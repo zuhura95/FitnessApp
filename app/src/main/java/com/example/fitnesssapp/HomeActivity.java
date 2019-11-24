@@ -810,7 +810,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 } else if (field.getName().equals("calories")) {
                     kcals += dp.getValue(field).asFloat();
                 }else if(field.getName().equals("duration")){
-                    movemins += dp.getValue(field).asInt();
+                    movemins = dp.getValue(field).asInt();
                 }
 
 
