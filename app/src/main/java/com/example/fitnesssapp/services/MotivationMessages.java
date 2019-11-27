@@ -103,6 +103,7 @@ public class MotivationMessages extends Service {
     List<String> malllocationNames = new ArrayList<>();
 
 
+
     public MotivationMessages() {
 
         appController = new AppController();
@@ -133,8 +134,8 @@ public class MotivationMessages extends Service {
             accessGoogleFit();
             fetchNearbyLocation("");
 //            fetchNearbyLocation("mall");
-//            fetchNearbyLocation("gym");
-//            fetchNearbyLocation("park");
+////            fetchNearbyLocation("gym");
+////            fetchNearbyLocation("park");
             checkWeather();
             if(!isActive()){
 
@@ -327,9 +328,9 @@ public class MotivationMessages extends Service {
                 if (field.getName().equals("steps")) {
 
                     totalStepsFromDataPoints = dp.getValue(field).asInt();
-                    if(currenthour <= 10){
-                        initialSteps = totalStepsFromDataPoints;
-                    }
+//                    if(currenthour <= 10){
+//                        initialSteps = totalStepsFromDataPoints;
+//                    }
 
 
 
@@ -522,7 +523,7 @@ public class MotivationMessages extends Service {
                     Log.d(TAG,"LUNCH BREAK SOON");
                     checkWeather();
                    if(isWeatherGood){
-                       fetchNearbyLocation("restaurant");
+//                       fetchNearbyLocation("restaurant");
                        if(restaurantlocationNames.size()>0) {
                            category = "category H";
                            Log.d(TAG,"WALK TO RESTAURANT");
@@ -545,7 +546,7 @@ public class MotivationMessages extends Service {
                         Log.d(TAG,"END OF DAY COMING SOOON");
                         checkWeather();
                         if(isWeatherGood){
-                            fetchNearbyLocation("park");
+//                            fetchNearbyLocation("park");
                             /////////nearby parks available?
                             if(parklocationNames.size()>0) {
                                 category = "category A";
@@ -562,14 +563,14 @@ public class MotivationMessages extends Service {
 
                             ///nearby gyms available
 
-                            fetchNearbyLocation("gym");
+//                            fetchNearbyLocation("gym");
                             if(gymlocationNames.size()>0){
                                 category = "category C";
                                 Log.d(TAG,"WORKOUT IN GYM");
                             }
                             else{
                                 ///no nearby gyms
-                                fetchNearbyLocation("shopping_mall");
+//                                fetchNearbyLocation("shopping_mall");
                                 if(malllocationNames.size()>0){
                                     category = "category D";
                                     Log.d(TAG,"CATEGORY D");
@@ -649,66 +650,66 @@ public class MotivationMessages extends Service {
             longitude = lon;
             int radius = 500;
 
-            GoogleMapAPI googleMapAPI = APIClient.getClient().create(GoogleMapAPI.class);
-            googleMapAPI.getNearBy(currentLocation, radius, type, key).enqueue(new Callback<PlacesResult>() {
-                @Override
-                public void onResponse(Call<PlacesResult> call, Response<PlacesResult> response) {
-                    if (response.isSuccessful()) {
-
-                        String restaurantName, parkName, gymName, mallName;
-                        List<Result> results = response.body().getResults();
-
-
-                        int count = 0;
-
-
-                        Log.d(TAG,"FETCHING LOCATIONS NEARBY...");
-                        Log.d(TAG,currentLocation);
-                        while(results.size()>count){
-                            if(type =="restaurant") {
-                                NearbyRestaurants nearbyRestaurants = new NearbyRestaurants(getApplicationContext(), results);
-                                restaurantName = nearbyRestaurants.getLocationName(count);
-                                restaurantlocationNames.add(restaurantName);
-                                count++;
-                            }
-                            else if(type =="park") {
-
-                                NearbyParks nearbyParks = new NearbyParks(getApplicationContext(), results);
-                                parkName = nearbyParks.getLocationName(count);
-                                parklocationNames.add(parkName);
-                                count++;
-                            }
-                            else if(type =="gym") {
-                                NearbyGyms nearbyGyms = new NearbyGyms(getApplicationContext(),results);
-                                gymName = nearbyGyms.getLocationName(count);
-                                gymlocationNames.add(gymName);
-                                count++;
-                            }
-                            else if(type =="shopping_mall") {
-
-                                NearbyMalls nearbyMalls = new NearbyMalls(getApplicationContext(), results);
-                                mallName = nearbyMalls.getLocationName(count);
-                                malllocationNames.add(mallName);
-                                count++;
-                            }
-                        }
-
-                            Log.d("====RESTAURANTS ====", String.valueOf(restaurantlocationNames));
-                        Log.d("====PARKS====", String.valueOf(parklocationNames));
-                        Log.d("====GYMS====", String.valueOf(gymlocationNames));
-                        Log.d("====MALLS====", String.valueOf(malllocationNames));
-
-
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_LONG).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<PlacesResult> call, Throwable t) {
-                    Toast.makeText(getApplicationContext(), "LOCATION FETCHER: "+t.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
+//            GoogleMapAPI googleMapAPI = APIClient.getClient().create(GoogleMapAPI.class);
+//            googleMapAPI.getNearBy(currentLocation, radius, type, key).enqueue(new Callback<PlacesResult>() {
+//                @Override
+//                public void onResponse(Call<PlacesResult> call, Response<PlacesResult> response) {
+//                    if (response.isSuccessful()) {
+//
+//                        String restaurantName, parkName, gymName, mallName;
+//                        List<Result> results = response.body().getResults();
+//
+//
+//                        int count = 0;
+//
+//
+//                        Log.d(TAG,"FETCHING LOCATIONS NEARBY...");
+//                        Log.d(TAG,currentLocation);
+//                        while(results.size()>count){
+//                            if(type =="restaurant") {
+//                                NearbyRestaurants nearbyRestaurants = new NearbyRestaurants(getApplicationContext(), results);
+//                                restaurantName = nearbyRestaurants.getLocationName(count);
+//                                restaurantlocationNames.add(restaurantName);
+//                                count++;
+//                            }
+//                            else if(type =="park") {
+//
+//                                NearbyParks nearbyParks = new NearbyParks(getApplicationContext(), results);
+//                                parkName = nearbyParks.getLocationName(count);
+//                                parklocationNames.add(parkName);
+//                                count++;
+//                            }
+//                            else if(type =="gym") {
+//                                NearbyGyms nearbyGyms = new NearbyGyms(getApplicationContext(),results);
+//                                gymName = nearbyGyms.getLocationName(count);
+//                                gymlocationNames.add(gymName);
+//                                count++;
+//                            }
+//                            else if(type =="shopping_mall") {
+//
+//                                NearbyMalls nearbyMalls = new NearbyMalls(getApplicationContext(), results);
+//                                mallName = nearbyMalls.getLocationName(count);
+//                                malllocationNames.add(mallName);
+//                                count++;
+//                            }
+//                        }
+//
+//                            Log.d("====RESTAURANTS ====", String.valueOf(restaurantlocationNames));
+//                        Log.d("====PARKS====", String.valueOf(parklocationNames));
+//                        Log.d("====GYMS====", String.valueOf(gymlocationNames));
+//                        Log.d("====MALLS====", String.valueOf(malllocationNames));
+//
+//
+//                    } else {
+//                        Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_LONG).show();
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(Call<PlacesResult> call, Throwable t) {
+//                    Toast.makeText(getApplicationContext(), "LOCATION FETCHER: "+t.getMessage(), Toast.LENGTH_LONG).show();
+//                }
+//            });
 
 
         }
@@ -741,17 +742,18 @@ public class MotivationMessages extends Service {
         else{
             isWeatherGood = false;
         }
+        Log.d(TAG,"TEMP"+temp+"HUMIDITY"+humidity);
         Log.d(TAG,"HOW IS WEATHER?"+isWeatherGood);
     }
 
     private void extraData() {
         weekend= sharedPreferences.getString("Weekend","");
-        lunchbreak = sharedPreferences.getString("LunchHour","00:00");
-        EOD = sharedPreferences.getString("ToHour","00:00");
+        lunchbreak = sharedPreferences.getString("LunchHour","00");
+        EOD = sharedPreferences.getString("ToHour","00");
 
 
         SimpleDateFormat hourFormat1 = new SimpleDateFormat("HH:mmaa");
-        SimpleDateFormat hourFormat2 = new SimpleDateFormat("kk");
+        SimpleDateFormat hourFormat2 = new SimpleDateFormat("HH");
         try {
             Date date = hourFormat1.parse(lunchbreak);
             lunchbreak = hourFormat2.format(date);
@@ -916,7 +918,7 @@ public class MotivationMessages extends Service {
 
 
         protected String doInBackground(String... args) {
-            String response = HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?lat=" + latitude + "&lon=" + longitude + "&units=metric&appid=" + weather_API_key);
+            String response = HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?q=Doha&units=metric&appid=" + weather_API_key);
             return response;
         }
 

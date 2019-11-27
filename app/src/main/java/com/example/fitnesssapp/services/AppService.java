@@ -75,7 +75,7 @@ public class AppService extends Service {
         @Override
         public void run() {
 
-           // Toast.makeText(context, "OK it works", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "OK it works", Toast.LENGTH_SHORT).show();
             //TODO : change the time  (FOR TESTING PURPOSE ONLY)
             mHandler.postDelayed(this, 300000 );
         }

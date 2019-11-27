@@ -83,9 +83,9 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputWeight.setText(String.valueOf( sharedPreferences.getFloat("Weight",0)));
         inputGender.setSelection(sharedPreferences.getInt("genderSelection",0));
         inputGoal.setText(String.valueOf(sharedPreferences.getInt("Goal",5000)));
-        inputFromHour.setText(sharedPreferences.getString("FromHour","00:00"));
-        inputToHour.setText(sharedPreferences.getString("ToHour","00:00"));
-        inputLunchHour.setText(sharedPreferences.getString("LunchHour","00:00"));
+        inputFromHour.setText(sharedPreferences.getString("FromHour","00"));
+        inputToHour.setText(sharedPreferences.getString("ToHour","00"));
+        inputLunchHour.setText(sharedPreferences.getString("LunchHour","00"));
         inputWeekends.setText(sharedPreferences.getString("Weekend",""));
 
 

@@ -149,6 +149,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -264,13 +265,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     GoogleSignIn.getLastSignedInAccount(this),
                     fitnessOptions);
         } else {
+            init.run();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(new Intent(this, MotivationMessages.class));
             }
             else{
                 startService(new Intent(this,MotivationMessages.class));
             }
-          init.run();
+
 
         }
 
@@ -279,9 +281,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         retrieveUserDetails();
         hourlyDataOnChart();
         weeklyDataChart();
-
-
-
         monthlyDataChart();
 
 
@@ -291,7 +290,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 weeklyDataChart();
                 parseDayArray(weekTreeMap, weekdayList, totalDayStepsList);
                 showWeekGraph();
-                //calculateWeeklySteps(uid);
+//                calculateWeeklySteps(uid);
                 Toast.makeText(HomeActivity.this, "Showing week graph", Toast.LENGTH_SHORT).show();
             }
         });
@@ -335,12 +334,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
      */
     private void displayNotification() {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(new Intent(this, AppService.class));
-        }
-        else{
-            startService(new Intent(this,AppService.class));
-        }
+
         NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
