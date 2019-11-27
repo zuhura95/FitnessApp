@@ -101,7 +101,7 @@ public class MotivationMessages extends Service {
     List<String> parklocationNames = new ArrayList<>();
     List<String> gymlocationNames = new ArrayList<>();
     List<String> malllocationNames = new ArrayList<>();
-
+    private int goal;
 
 
     public MotivationMessages() {
@@ -125,6 +125,7 @@ public class MotivationMessages extends Service {
         sharedPreferences = this.getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         userID = auth.getCurrentUser().getUid();
         username = sharedPreferences.getString("NickName",null);
+        goal = sharedPreferences.getInt("Goal",5000);
     }
     private Runnable init = new Runnable() {
         @Override
@@ -150,6 +151,7 @@ public class MotivationMessages extends Service {
 
         this.context = this;
        init.run();
+        Toast.makeText(this, "The app is now running in the background.", Toast.LENGTH_SHORT).show();
         return START_STICKY;
     }
 
@@ -969,6 +971,7 @@ public class MotivationMessages extends Service {
         manager.notify(0, builder.build());
 
 
+        logDataToFirestore();
 
     }
 
@@ -976,5 +979,37 @@ public class MotivationMessages extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    private void logDataToFirestore(){
+        String dismissTime;
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss aa");
+        String receiveTime = sdf.format(new Date());
+        Log.d("=====TIME=====", String.valueOf(receiveTime));
+
+        Map<String,Object>data_log = new HashMap<>();
+        data_log.put("Date",today);
+        data_log.put("Time",receiveTime);
+        data_log.put("Current Step Count",totalStepsFromDataPoints);
+        data_log.put("Step Goal",goal);
+        data_log.put("Message Category",category);
+        data_log.put("Message Type",messageType);
+        data_log.put("Message Text",message);
+
+        db.collection("users").document(userID).collection("Data Log").document(today).set(data_log)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG,"Logging data SUCCEEDED");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG,"Logging data FAILED");
+                    }
+                });
+
+
     }
 }
