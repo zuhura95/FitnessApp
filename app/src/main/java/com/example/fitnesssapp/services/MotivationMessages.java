@@ -58,6 +58,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -121,7 +122,6 @@ public class MotivationMessages extends Service {
     public void onCreate() {
 
         Log.d(TAG,"LATITUDE:"+latitude+"LONGITUDE"+longitude);
-
         sharedPreferences = this.getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         userID = auth.getCurrentUser().getUid();
         username = sharedPreferences.getString("NickName",null);
@@ -133,11 +133,8 @@ public class MotivationMessages extends Service {
 
             accessHourlySteps();
             accessGoogleFit();
-            fetchNearbyLocation("");
-//            fetchNearbyLocation("mall");
-////            fetchNearbyLocation("gym");
-////            fetchNearbyLocation("park");
-            checkWeather();
+           fetchNearbyLocation("");
+
             if(!isActive()){
 
                 startMotivating();
@@ -436,15 +433,8 @@ public class MotivationMessages extends Service {
             startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
             stime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
             endTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-//            Log.d(TAG, "Data point:");
-//            Log.d(TAG, "\tType: " + dp.getDataType().getName());
-//            Log.d(TAG, "\tStart: " + startTime);
-//            Log.d(TAG, "\tEnd: " + endTime);
-//            Log.d(TAG, "\tTime stamp: " + stime);
-
 
             for (Field field : dp.getDataType().getFields()) {
-       //         Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
 
                 // increment the steps or distance
                 if (field.getName().equals("steps")) {
@@ -506,6 +496,9 @@ public class MotivationMessages extends Service {
         String weekday = sdf.format(date);
 
         extraData();
+        type="restaurant";
+        checkWeather();
+        new nearbyLocs().execute();
 
 
         String[] days_array = weekend.split(" ");
@@ -525,6 +518,7 @@ public class MotivationMessages extends Service {
                     Log.d(TAG,"LUNCH BREAK SOON");
                     checkWeather();
                    if(isWeatherGood){
+
 //                       fetchNearbyLocation("restaurant");
                        if(restaurantlocationNames.size()>0) {
                            category = "category H";
@@ -647,71 +641,8 @@ public class MotivationMessages extends Service {
             String key = getText(R.string.google_maps_key).toString();
             String lat = String.valueOf(location.getLatitude());
             String lon = String.valueOf(location.getLongitude());
-            final String currentLocation = lat + "," + lon;
             latitude = lat;
             longitude = lon;
-            int radius = 500;
-
-//            GoogleMapAPI googleMapAPI = APIClient.getClient().create(GoogleMapAPI.class);
-//            googleMapAPI.getNearBy(currentLocation, radius, type, key).enqueue(new Callback<PlacesResult>() {
-//                @Override
-//                public void onResponse(Call<PlacesResult> call, Response<PlacesResult> response) {
-//                    if (response.isSuccessful()) {
-//
-//                        String restaurantName, parkName, gymName, mallName;
-//                        List<Result> results = response.body().getResults();
-//
-//
-//                        int count = 0;
-//
-//
-//                        Log.d(TAG,"FETCHING LOCATIONS NEARBY...");
-//                        Log.d(TAG,currentLocation);
-//                        while(results.size()>count){
-//                            if(type =="restaurant") {
-//                                NearbyRestaurants nearbyRestaurants = new NearbyRestaurants(getApplicationContext(), results);
-//                                restaurantName = nearbyRestaurants.getLocationName(count);
-//                                restaurantlocationNames.add(restaurantName);
-//                                count++;
-//                            }
-//                            else if(type =="park") {
-//
-//                                NearbyParks nearbyParks = new NearbyParks(getApplicationContext(), results);
-//                                parkName = nearbyParks.getLocationName(count);
-//                                parklocationNames.add(parkName);
-//                                count++;
-//                            }
-//                            else if(type =="gym") {
-//                                NearbyGyms nearbyGyms = new NearbyGyms(getApplicationContext(),results);
-//                                gymName = nearbyGyms.getLocationName(count);
-//                                gymlocationNames.add(gymName);
-//                                count++;
-//                            }
-//                            else if(type =="shopping_mall") {
-//
-//                                NearbyMalls nearbyMalls = new NearbyMalls(getApplicationContext(), results);
-//                                mallName = nearbyMalls.getLocationName(count);
-//                                malllocationNames.add(mallName);
-//                                count++;
-//                            }
-//                        }
-//
-//                            Log.d("====RESTAURANTS ====", String.valueOf(restaurantlocationNames));
-//                        Log.d("====PARKS====", String.valueOf(parklocationNames));
-//                        Log.d("====GYMS====", String.valueOf(gymlocationNames));
-//                        Log.d("====MALLS====", String.valueOf(malllocationNames));
-//
-//
-//                    } else {
-//                        Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_LONG).show();
-//                    }
-//                }
-//
-//                @Override
-//                public void onFailure(Call<PlacesResult> call, Throwable t) {
-//                    Toast.makeText(getApplicationContext(), "LOCATION FETCHER: "+t.getMessage(), Toast.LENGTH_LONG).show();
-//                }
-//            });
 
 
         }
@@ -954,6 +885,42 @@ public class MotivationMessages extends Service {
                 Log.d("=======WEATHER=========", e.getMessage());
             }
 
+        }
+    }
+
+    class nearbyLocs extends AsyncTask<String, Void, String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius=1000&type="+type+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+           //String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"cafe"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+           return response;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+
+            int count=0;
+            try{
+               JSONObject jsonObj = new JSONObject(response);
+                JSONArray jsonArray = jsonObj.getJSONArray("results");
+                int n = jsonArray.length();
+                while(n>count) {
+                    JSONObject results = jsonObj.getJSONArray("results").getJSONObject(count);
+                    String loc = results.getString("name");
+                    //Log.d(TAG, "=======LOCATIIOOOOON=======" + loc);
+
+                    count++;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
