@@ -3,6 +3,8 @@ package com.example.fitnesssapp.services;
 import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,22 +23,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 import com.androdocs.httprequest.HttpRequest;
 import com.example.fitnesssapp.AppController;
 import com.example.fitnesssapp.HomeActivity;
-import com.example.fitnesssapp.Locations.APIClient;
-import com.example.fitnesssapp.Locations.GoogleMapAPI;
-import com.example.fitnesssapp.Locations.NearbyGyms;
-import com.example.fitnesssapp.Locations.NearbyMalls;
-import com.example.fitnesssapp.Locations.NearbyParks;
-import com.example.fitnesssapp.Locations.NearbyRestaurants;
-import com.example.fitnesssapp.Locations.PlacesResult;
-import com.example.fitnesssapp.Locations.Result;
 import com.example.fitnesssapp.R;
+import com.example.fitnesssapp.RateNotification;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.data.Bucket;
@@ -57,6 +49,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -87,9 +80,10 @@ public class MotivationMessages extends Service {
     Context context;
     String category;
     String  message, messageType, messageTitle, type, userID, weekend, lunchbreak, EOD,today,weatherDesc,latitude,longitude,username;
-    int steps, currenthour, lunchHour, eodHour;
+    int steps, currenthour, lunchHour, eodHour, id;
     double temp, humidity;
     float activemins;
+    String receiveTime,dismissTime;
     boolean isWeatherGood;
     AppController appController;
     HomeActivity homeActivity;
@@ -102,7 +96,9 @@ public class MotivationMessages extends Service {
     List<String> parklocationNames = new ArrayList<>();
     List<String> gymlocationNames = new ArrayList<>();
     List<String> malllocationNames = new ArrayList<>();
-    private int goal;
+    private int goal,movemins,stepsRemaining;
+    private double percentFinished,remainingPercentage;
+
 
 
     public MotivationMessages() {
@@ -121,33 +117,65 @@ public class MotivationMessages extends Service {
     @Override
     public void onCreate() {
 
+        fetchLocation();
+//        NotificationDismissReceiver notificationDismissReceiver = new NotificationDismissReceiver();
         Log.d(TAG,"LATITUDE:"+latitude+"LONGITUDE"+longitude);
         sharedPreferences = this.getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         userID = auth.getCurrentUser().getUid();
         username = sharedPreferences.getString("NickName",null);
         goal = sharedPreferences.getInt("Goal",5000);
+        id = sharedPreferences.getInt("logID",0);
     }
     private Runnable init = new Runnable() {
+        @Override
+        public void run() {
+            fetchLocation();
+            checkWeather();
+            new nearbyGyms().execute();
+            new nearbyMalls().execute();
+            new nearbyParks().execute();
+            new nearbyRestaurants().execute();
+            mHandler.postDelayed(this, 5000);
+        }
+    };
+    private Runnable run_motivation = new Runnable() {
         @Override
         public void run() {
 
             accessHourlySteps();
             accessGoogleFit();
-           fetchNearbyLocation("");
 
             if(!isActive()){
 
                 startMotivating();
             }
             checkEOD();
-            mHandler.postDelayed(this, 300000);
+            mHandler.postDelayed(this, 60000);
+        }
+    };
+    private Runnable run_stepsCheck = new Runnable(){
+
+        @Override
+        public void run() {
+            fetchStepsafterThirty();
+            logDataToFirestore();
+            mHandler.postDelayed(this, 600000);
+        }
+    };
+    private Runnable log_data = new Runnable() {
+        @Override
+        public void run() {
+//            logDataToFirestore();
+            mHandler.postDelayed(this,900000);
         }
     };
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         this.context = this;
-       init.run();
+        init.run();
+        run_motivation.run();
+
         Toast.makeText(this, "The app is now running in the background.", Toast.LENGTH_SHORT).show();
         return START_STICKY;
     }
@@ -161,7 +189,7 @@ public class MotivationMessages extends Service {
     private boolean isActive(){
 
         if((totalStepsFromDataPoints-initialSteps)<5){
-           Log.d(TAG,"NOT ACTIVE - sTART MOTIVATING");
+            Log.d(TAG,"NOT ACTIVE - sTART MOTIVATING");
             return false;
         }
         else{
@@ -183,13 +211,13 @@ public class MotivationMessages extends Service {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                    //    Log.d(TAG, "Successfully subscribed");
+                        //    Log.d(TAG, "Successfully subscribed");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                     //   Log.d(TAG, "There was a problem subscribing...", e);
+                        //   Log.d(TAG, "There was a problem subscribing...", e);
                     }
                 });
 
@@ -199,13 +227,13 @@ public class MotivationMessages extends Service {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                      //  Log.d(TAG, "Successfully subscribed");
+                        //  Log.d(TAG, "Successfully subscribed");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                      //  Log.d(TAG, "There was a problem subscribing...", e);
+                        //  Log.d(TAG, "There was a problem subscribing...", e);
                     }
                 });
         Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
@@ -213,13 +241,13 @@ public class MotivationMessages extends Service {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                      //  Log.d(TAG, "Successfully subscribed");
+                        //  Log.d(TAG, "Successfully subscribed");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                      //  Log.d(TAG, "There was a problem subscribing...", e);
+                        //  Log.d(TAG, "There was a problem subscribing...", e);
                     }
                 });
 
@@ -234,7 +262,7 @@ public class MotivationMessages extends Service {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                       // Log.d(TAG, "There was a problem subscribing...", e);
+                        // Log.d(TAG, "There was a problem subscribing...", e);
                     }
                 });
 
@@ -270,14 +298,95 @@ public class MotivationMessages extends Service {
                 .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
                     @Override
                     public void onSuccess(DataReadResponse dataReadResponse) {
-                //        Log.d(TAG, "successfully got history");
+                        //        Log.d(TAG, "successfully got history");
                         getDataSetsFromBucket(dataReadResponse);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-              //          Log.e(TAG, "failed to get history", e);
+                        //          Log.e(TAG, "failed to get history", e);
+                    }
+                });
+
+
+    }
+    public void fetchStepsafterThirty() {
+
+
+
+        // Subscribe to recordings
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .subscribe(DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        //    Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        //   Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+
+        Calendar cal = Calendar.getInstance();
+        long endTime = cal.getTimeInMillis();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        long startTime = cal.getTimeInMillis();
+
+        DataSource ESTIMATED_STEP_DELTAS = new DataSource.Builder()
+                .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+                .setType(DataSource.TYPE_DERIVED)
+                .setStreamName("estimated_steps")
+                .setAppPackageName("com.google.android.gms")
+                .build();
+
+        DataReadRequest readRequest = new DataReadRequest.Builder()
+                .aggregate(ESTIMATED_STEP_DELTAS,DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .bucketByTime(1, TimeUnit.DAYS)
+                .build();
+
+        // get history
+        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .readData(readRequest)
+                .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                    @Override
+                    public void onSuccess(DataReadResponse dataReadResponse) {
+                        //        Log.d(TAG, "successfully got history");
+                        if (dataReadResponse.getBuckets().size() > 0) {
+
+                            for (Bucket bucket : dataReadResponse.getBuckets()) {
+                                List<DataSet> dataSets = bucket.getDataSets();
+                                for (DataSet dataSet : dataSets) {
+
+                                    for (DataPoint dp : dataSet.getDataPoints()) {
+
+                                        for (Field field : dp.getDataType().getFields()) {
+
+                                            // increment the steps or distance
+                                            if (field.getName().equals("steps")) {
+
+                                                currentSteps = dp.getValue(field).asInt();
+
+                                            }
+                                        }
+
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        //          Log.e(TAG, "failed to get history", e);
                     }
                 });
 
@@ -286,7 +395,7 @@ public class MotivationMessages extends Service {
     private void getDataSetsFromBucket(DataReadResponse dataReadResponse) {
 
         if (dataReadResponse.getBuckets().size() > 0) {
-         //   Log.d(TAG, "Number of returned buckets of DataSets is: " + dataReadResponse.getBuckets().size());
+            //   Log.d(TAG, "Number of returned buckets of DataSets is: " + dataReadResponse.getBuckets().size());
             for (Bucket bucket : dataReadResponse.getBuckets()) {
                 List<DataSet> dataSets = bucket.getDataSets();
                 for (DataSet dataSet : dataSets) {
@@ -300,49 +409,36 @@ public class MotivationMessages extends Service {
      * Parse Dataset and display step count on progress dialog, calories, active minutes and kilometers taken in a day
      */
     private void parseDataSet(DataSet dataSet) {
-      //  Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+        //  Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getTimeInstance();
-
-
-        float distanceTraveledFromDataPoints = 0;
-        float kcals = 0;
-        long mins = 0;
-        String startTime = "";
-        String endTime = "";
-
 
         for (DataPoint dp : dataSet.getDataPoints()) {
 
-            startTime = dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS));
-            endTime = dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS));
-
-
-
-
-
             for (Field field : dp.getDataType().getFields()) {
-              //  Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
+                //  Log.d(TAG, "\tField: " + field.getName() + " Value: " + dp.getValue(field));
 
                 // increment the steps or distance
                 if (field.getName().equals("steps")) {
 
                     totalStepsFromDataPoints = dp.getValue(field).asInt();
+                    double steps = Double.parseDouble(String.valueOf(totalStepsFromDataPoints));
+                    percentFinished = (steps / goal) * 100;
+                    remainingPercentage = 100-percentFinished;
+                    stepsRemaining = goal - totalStepsFromDataPoints;
+
 //                    if(currenthour <= 10){
 //                        initialSteps = totalStepsFromDataPoints;
 //                    }
 
 
 
-                } else if (field.getName().equals("distance")) {
-                    distanceTraveledFromDataPoints += dp.getValue(field).asFloat();
-                } else if (field.getName().equals("calories")) {
-                    kcals += dp.getValue(field).asFloat();
+                } else if(field.getName().equals("duration")){
+                    movemins = dp.getValue(field).asInt();
                 }
 
 
             }
 
-          //  homeActivity.checkForRewards();
         }
 
 
@@ -389,7 +485,7 @@ public class MotivationMessages extends Service {
                 }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-           //     Log.e(TAG, "failed to get history", e);
+                //     Log.e(TAG, "failed to get history", e);
             }
         });
 
@@ -400,7 +496,7 @@ public class MotivationMessages extends Service {
     private void getHourlyStepsFromBucket(DataReadResponse readResponse){
 
         if(readResponse.getBuckets().size()>0){
-      //      Log.d(TAG, "/////////Number of returned buckets of DataSets is: " + readResponse.getBuckets().size());
+            //      Log.d(TAG, "/////////Number of returned buckets of DataSets is: " + readResponse.getBuckets().size());
             for (Bucket bucket : readResponse.getBuckets()) {
                 List<DataSet> dataSets = bucket.getDataSets();
 
@@ -420,7 +516,7 @@ public class MotivationMessages extends Service {
      * Parse the datasets
      */
     private void parseHourlySteps(DataSet dataSet) {
-      //  Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+        //  Log.d(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
         DateFormat dateFormat = DateFormat.getTimeInstance();
 
         int totalStepsFromDataPoints = 0;
@@ -461,7 +557,6 @@ public class MotivationMessages extends Service {
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
-                       //                 Log.d(TAG,"==============================steps per hour fetched");
 
                                     }
                                 })
@@ -496,98 +591,90 @@ public class MotivationMessages extends Service {
         String weekday = sdf.format(date);
 
         extraData();
-        type="restaurant";
-        checkWeather();
-        new nearbyLocs().execute();
-
 
         String[] days_array = weekend.split(" ");
         boolean itsWeekend = Arrays.asList(days_array).contains(weekday);
 
         /**IS it WEEKEND SOON?**/
-            if (itsWeekend){
-                //TODO : DELETE THIS LINE (FOR TESTING PURPOSE ONLY)
-                category = "category K";
-                //fetchNearbyLocation("restaurant");
-                Log.d(TAG,"WEEEEEKEND");
-            }
-            else{
-                /**IS LUNCHBREAK SOON?**/
-                if(breaktimeDiff == 1){
+        if (itsWeekend){
+            //TODO : DELETE THIS LINE (FOR TESTING PURPOSE ONLY)
+            category = "category K";
+            Log.d(TAG,"WEEEEEKEND");
+        }
+        else{
+            /**IS LUNCHBREAK SOON?**/
+            if(breaktimeDiff == 1){
 
-                    Log.d(TAG,"LUNCH BREAK SOON");
-                    checkWeather();
-                   if(isWeatherGood){
+                Log.d(TAG,"LUNCH BREAK SOON");
+                //   checkWeather();
+                if(isWeatherGood){
 
-//                       fetchNearbyLocation("restaurant");
-                       if(restaurantlocationNames.size()>0) {
-                           category = "category H";
-                           Log.d(TAG,"WALK TO RESTAURANT");
-
-                       }
-                       else{
-                           category = "category I";
-                           Log.d(TAG,"CAT: I");
-                       }
-                   }
-                   else{
-                       category = "category I";
-                       Log.d(TAG,"CAT: I");
-                   }
-
-                }
-                /**IS EOWD SOON?**/
-                else{
-                    if(EODtimediff == 1){
-                        Log.d(TAG,"END OF DAY COMING SOOON");
-                        checkWeather();
-                        if(isWeatherGood){
-//                            fetchNearbyLocation("park");
-                            /////////nearby parks available?
-                            if(parklocationNames.size()>0) {
-                                category = "category A";
-
-                                Log.d(TAG,"WALK TO PARK");
-                            }
-                            else{
-                               ////walk in mall/gym/street
-                                category="category B";
-                                Log.d(TAG,"WALK IN MALL");
-                            }
-                        }
-                        else{
-
-                            ///nearby gyms available
-
-//                            fetchNearbyLocation("gym");
-                            if(gymlocationNames.size()>0){
-                                category = "category C";
-                                Log.d(TAG,"WORKOUT IN GYM");
-                            }
-                            else{
-                                ///no nearby gyms
-//                                fetchNearbyLocation("shopping_mall");
-                                if(malllocationNames.size()>0){
-                                    category = "category D";
-                                    Log.d(TAG,"CATEGORY D");
-                                }
-                                else{
-                                    ///home exercise
-                                    category = "category E";
-                                    Log.d(TAG,"WORKOUT IN HOME");
-                                }
-                            }
-                        }
+                    if(restaurantlocationNames.size()>0) {
+                        category = "category H";
+                        Log.d(TAG,"WALK TO RESTAURANT");
 
                     }
                     else{
-                        category = "category J";
-                        Log.d(TAG,"CATEGORY J");
+                        category = "category I";
+                        Log.d(TAG,"CAT: I");
                     }
                 }
-
+                else{
+                    category = "category I";
+                    Log.d(TAG,"CAT: I");
+                }
 
             }
+            /**IS EOWD SOON?**/
+            else{
+                if(EODtimediff == 1){
+                    Log.d(TAG,"END OF DAY COMING SOOON");
+                    //    checkWeather();
+                    if(isWeatherGood){
+                        /////////nearby parks available?
+                        if(parklocationNames.size()>0) {
+                            category = "category A";
+
+                            Log.d(TAG,"WALK TO PARK");
+                        }
+                        else{
+                            ////walk in mall/gym/street
+                            category="category B";
+                            Log.d(TAG,"WALK IN MALL");
+                        }
+                    }
+                    else{
+
+                        ///nearby gyms available
+
+                        if(gymlocationNames.size()>0){
+                            category = "category C";
+                            Log.d(TAG,"WORKOUT IN GYM");
+                        }
+                        else{
+                            ///no nearby gyms
+
+                            if(malllocationNames.size()>0){
+                                category = "category D";
+                                Log.d(TAG,"CATEGORY D");
+                            }
+                            else{
+                                ///home exercise
+                                category = "category E";
+                                Log.d(TAG,"WORKOUT IN HOME");
+                            }
+                        }
+                    }
+
+                }
+                else{
+                    category = "category J";
+                    Log.d(TAG,"CATEGORY J");
+                }
+            }
+
+
+        }
 
 
         retrieveCategoryMessages();
@@ -597,16 +684,15 @@ public class MotivationMessages extends Service {
     private void checkEOD(){
 
         /**IS EOD SOON?  9  pm **/
-        if(currenthour == 21){
+        if(currenthour == 18){
             Log.d(TAG,"ITS 9 PM");
             if(totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000)){
                 category = "category L";
                 Log.d(TAG,"CATEOGRY L");
             }
             else{
-                checkWeather();
+                //    checkWeather();
                 if(isWeatherGood){
-                    fetchNearbyLocation("park");
                     if(parklocationNames.size()>0){
                         category="category F";
                         Log.d(TAG,"CATEGORY F");
@@ -621,8 +707,8 @@ public class MotivationMessages extends Service {
 
 
     @SuppressLint("MissingPermission")
-    private void fetchNearbyLocation(String locationtype) {
-        this.type = locationtype;
+    private void fetchLocation() {
+
         if (locationmanager == null){
             locationmanager = (LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
             locationmanager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2 * 1000, 1, locationListener);
@@ -643,6 +729,11 @@ public class MotivationMessages extends Service {
             String lon = String.valueOf(location.getLongitude());
             latitude = lat;
             longitude = lon;
+
+            gymlocationNames.clear();
+            parklocationNames.clear();
+            restaurantlocationNames.clear();
+            malllocationNames.clear();
 
 
         }
@@ -699,8 +790,8 @@ public class MotivationMessages extends Service {
 
         lunchHour = Integer.parseInt(lunchbreak);
         eodHour = Integer.parseInt(EOD);
-         breaktimeDiff = lunchHour - currenthour;
-         EODtimediff = eodHour - currenthour;
+        breaktimeDiff = lunchHour - currenthour;
+        EODtimediff = eodHour - currenthour;
 
 
 
@@ -735,92 +826,92 @@ public class MotivationMessages extends Service {
                 if (gymlocationNames.size()>0) {
                     retrieveMessage(messagelist);
                 }
-                retrieveMessage(messagelist);
+                //  retrieveMessage(messagelist);
 
             }
         });
-     }
+    }
 
-     public void retrieveMessage(List<String> messagelist){
+    public void retrieveMessage(List<String> messagelist){
 
-         int i = new Random().nextInt(messagelist.size());
-         String randomMsg = messagelist.get(i);
-         DocumentReference docRef = db.collection(category).document(randomMsg);
-         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-             @Override
-             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                 if (task.isSuccessful()) {
-                     DocumentSnapshot document = task.getResult();
-                     if (document.exists()) {
-                         messageTitle = document.getString("title");
-                         messageType = document.getString("type");
-                         message = document.getString("text");
+        int i = new Random().nextInt(messagelist.size());
+        String randomMsg = messagelist.get(i);
+        DocumentReference docRef = db.collection(category).document(randomMsg);
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        messageTitle = document.getString("title");
+                        messageType = document.getString("type");
+                        message = document.getString("text");
 
-                     }
-                 }
-
-
-                 if (messageTitle.contains("<") || message.contains("<")) {
-
-                     Log.d(TAG,"REPLACE TOKEN");
-                     replaceTokens();
-                 }
-                 else{
-                     Log.d(TAG,"NO TOKEN");
-                     displayNotification();
-                 }
+                    }
+                }
 
 
-             }
-         });
+                if (messageTitle.contains("<") || message.contains("<")) {
 
-     }
+                    Log.d(TAG,"REPLACE TOKEN");
+                    replaceTokens();
+                }
+                else{
+                    Log.d(TAG,"NO TOKEN");
+                    displayNotification();
+                }
+
+
+            }
+        });
+
+    }
 
     private void replaceTokens() {
 
-//        int i = new Random().nextInt(restaurantlocationNames.size());
-//        String randomRestaurant = restaurantlocationNames.get(i);
-//        int j = new Random().nextInt(parklocationNames.size());
-//        String randomPark = parklocationNames.get(j);
-//        int k = new Random().nextInt(gymlocationNames.size());
-//        String randomGym = gymlocationNames.get(k);
-//        int l = new Random().nextInt(malllocationNames.size());
-//        String randomMall = malllocationNames.get(l);
-//        //Replace <weather>
-//        if(message.contains("<weather>")){
-//            message = message.replaceAll("<weather>",temp+" °C");
-//        }
-//        if(messageTitle.contains("<weather>")){
-//            messageTitle = messageTitle.replaceAll("<weather>",temp+" °C");
-//        }
-//        //Replace <restaurant>
-//        if(message.contains("<restaurant>")){
-//            message = message.replaceAll("<restaurant>",randomRestaurant);
-//        }
-//        if(messageTitle.contains("<restaurant>")){
-//            messageTitle = messageTitle.replaceAll("<restaurant>", randomRestaurant);
-//        }
-//        //Replace <park>
-//        if(message.contains("<park>")){
-//            message = message.replaceAll("<park>",randomPark);
-//        }
-//        if(messageTitle.contains("<park>")){
-//            messageTitle = messageTitle.replaceAll("<park>", randomPark);
-//        }
-//        //Replace <gym>
-//        if(message.contains("<gym>")){
-//            message = message.replaceAll("<gym>",randomGym);
-//        }
-//        if(messageTitle.contains("<gym>")){
-//            messageTitle = messageTitle.replaceAll("<gym>", randomGym);
-//        }
-//        //Replace <mall>
-//        if(message.contains("<mall>")){
-//            message = message.replaceAll("<park>",randomMall);
-//        }
-//        if(messageTitle.contains("<mall>")){
-//            messageTitle = messageTitle.replaceAll("<mall>", randomMall);
-//        }
+        int i = new Random().nextInt(restaurantlocationNames.size());
+        String randomRestaurant = restaurantlocationNames.get(i);
+        int j = new Random().nextInt(parklocationNames.size());
+        String randomPark = parklocationNames.get(j);
+        int k = new Random().nextInt(gymlocationNames.size());
+        String randomGym = gymlocationNames.get(k);
+        int l = new Random().nextInt(malllocationNames.size());
+        String randomMall = malllocationNames.get(l);
+        //Replace <weather>
+        if(message.contains("<weather>")){
+            message = message.replaceAll("<weather>",temp+" °C");
+        }
+        if(messageTitle.contains("<weather>")){
+            messageTitle = messageTitle.replaceAll("<weather>",temp+" °C");
+        }
+        //Replace <restaurant>
+        if(message.contains("<restaurant>")){
+            message = message.replaceAll("<restaurant>",randomRestaurant);
+        }
+        if(messageTitle.contains("<restaurant>")){
+            messageTitle = messageTitle.replaceAll("<restaurant>", randomRestaurant);
+        }
+        //Replace <park>
+        if(message.contains("<park>")){
+            message = message.replaceAll("<park>",randomPark);
+        }
+        if(messageTitle.contains("<park>")){
+            messageTitle = messageTitle.replaceAll("<park>", randomPark);
+        }
+        //Replace <gym>
+        if(message.contains("<gym>")){
+            message = message.replaceAll("<gym>",randomGym);
+        }
+        if(messageTitle.contains("<gym>")){
+            messageTitle = messageTitle.replaceAll("<gym>", randomGym);
+        }
+        //Replace <mall>
+        if(message.contains("<mall>")){
+            message = message.replaceAll("<park>",randomMall);
+        }
+        if(messageTitle.contains("<mall>")){
+            messageTitle = messageTitle.replaceAll("<mall>", randomMall);
+        }
 
         if(messageTitle.contains("<name>")){
             messageTitle = messageTitle.replaceAll("<name>",username);
@@ -834,6 +925,32 @@ public class MotivationMessages extends Service {
         if(message.contains("<weather>")){
             message = message.replaceAll("<weather>", temp+" °C");
         }
+        if(messageTitle.contains("<percentage-finished>")){
+            messageTitle = messageTitle.replaceAll("<percentage-finished>",String.format("%.2f", percentFinished)+" %");
+        }
+        if(message.contains("<percentage-finished>")){
+            message = message.replaceAll("<percentage-finished>", String.format("%.2f", percentFinished)+" %");
+        }
+
+        if(messageTitle.contains("<percentage-remaining>")){
+            messageTitle = messageTitle.replaceAll("<percentage-remaining>",String.format("%.2f", remainingPercentage)+" %");
+        }
+        if(message.contains("<percentage-remaining>")){
+            message = message.replaceAll("<percentage-remaining>", String.valueOf(stepsRemaining));
+        }
+        if(messageTitle.contains("<steps-remaining>")){
+            messageTitle = messageTitle.replaceAll("<steps-remaining>", String.valueOf(stepsRemaining));
+        }
+        if(message.contains("<steps-remaining>")){
+            message = message.replaceAll("<steps-remaining>", String.valueOf(stepsRemaining));
+        }
+        if(messageTitle.contains("<steps-goal>")){
+            messageTitle = messageTitle.replaceAll("<steps-goal>", String.valueOf(goal));
+        }
+        if(message.contains("<steps-goal>")){
+            message = message.replaceAll("<steps-goal>", String.valueOf(goal));
+        }
+
         displayNotification();
 
     }
@@ -874,7 +991,7 @@ public class MotivationMessages extends Service {
 
 
                 Log.d("=======WEATHER=========","wind: "+wind+", weather: "+weather+", temp:"+ temp);
-                checkWeather();
+                //    checkWeather();
 
 
 
@@ -888,7 +1005,7 @@ public class MotivationMessages extends Service {
         }
     }
 
-    class nearbyLocs extends AsyncTask<String, Void, String>{
+    class nearbyGyms extends AsyncTask<String, Void, String>{
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -898,9 +1015,9 @@ public class MotivationMessages extends Service {
 
         @Override
         protected String doInBackground(String... strings) {
-            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius=1000&type="+type+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
-           //String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"cafe"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
-           return response;
+            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius=1000&type=gym&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            return response;
         }
 
         @Override
@@ -908,38 +1025,197 @@ public class MotivationMessages extends Service {
 
             int count=0;
             try{
-               JSONObject jsonObj = new JSONObject(response);
+                JSONObject jsonObj = new JSONObject(response);
                 JSONArray jsonArray = jsonObj.getJSONArray("results");
                 int n = jsonArray.length();
                 while(n>count) {
                     JSONObject results = jsonObj.getJSONArray("results").getJSONObject(count);
                     String loc = results.getString("name");
-                    //Log.d(TAG, "=======LOCATIIOOOOON=======" + loc);
+
+                    if(!gymlocationNames.contains(loc)) {
+                        gymlocationNames.add(loc);
+                    }
+                    count++;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.d(TAG, "=======GYMS=======" + gymlocationNames);
+        }
+    }
+    class nearbyParks extends AsyncTask<String, Void, String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius=1000&type=park&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+
+            int count=0;
+            try{
+                JSONObject jsonObj = new JSONObject(response);
+                JSONArray jsonArray = jsonObj.getJSONArray("results");
+                int n = jsonArray.length();
+                while(n>count) {
+                    JSONObject results = jsonObj.getJSONArray("results").getJSONObject(count);
+                    String loc = results.getString("name");
+
+                    if(!parklocationNames.contains(loc)){
+                        parklocationNames.add(loc);
+                    }
+
 
                     count++;
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+            Log.d(TAG, "=======PARKS=======" + parklocationNames);
+        }
+    }
+    class nearbyRestaurants extends AsyncTask<String, Void, String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius=1000&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+
+            int count=0;
+            try{
+                JSONObject jsonObj = new JSONObject(response);
+                JSONArray jsonArray = jsonObj.getJSONArray("results");
+                int n = jsonArray.length();
+                while(n>count) {
+                    JSONObject results = jsonObj.getJSONArray("results").getJSONObject(count);
+                    String loc = results.getString("name");
+
+                    if(!restaurantlocationNames.contains(loc)){
+                        restaurantlocationNames.add(loc);
+                    }
+
+
+                    count++;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.d(TAG, "=======RESTAURANTS=======" + restaurantlocationNames);
+        }
+    }
+    class nearbyMalls extends AsyncTask<String, Void, String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius=1000&type=shopping_mall&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+
+            int count=0;
+            try{
+                JSONObject jsonObj = new JSONObject(response);
+                JSONArray jsonArray = jsonObj.getJSONArray("results");
+                int n = jsonArray.length();
+                while(n>count) {
+                    JSONObject results = jsonObj.getJSONArray("results").getJSONObject(count);
+                    String loc = results.getString("name");
+
+                    if(!malllocationNames.contains(loc)){
+                        malllocationNames.add(loc);
+                    }
+
+
+                    count++;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.d(TAG, "=======MALLS=======" + malllocationNames);
         }
     }
 
     public void displayNotification() {
+
+        String body = message;
+        String title = messageTitle;
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss aa");
+        receiveTime = sdf.format(new Date());
+        Log.d("=====TIME=====", String.valueOf(receiveTime));
+
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
             manager.createNotificationChannel(channel);
         }
 
+        Intent intent = new Intent(this, RateNotification.class);
+        intent.putExtra("messageTitle",title);
+        intent.putExtra("message",body);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        SharedPreferences.Editor e = sharedPreferences.edit();
+
+        e.apply();
+
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "fitnessapp")
-                .setContentTitle(messageTitle)
-                .setContentText(message)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+//                .setDeleteIntent(createOnDismissedIntent(context, notifid))
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
                 .setSmallIcon(R.drawable.ic_person_walk);
-        manager.notify(0, builder.build());
+        manager.notify(notifid, builder.build());
 
 
-        logDataToFirestore();
+        run_stepsCheck.run();
+        log_data.run();
 
+    }
+
+    private PendingIntent createOnDismissedIntent(Context context, int notifid) {
+        Intent intent = new Intent(this, NotifDismissReceiver.class);
+        // intent.putExtra("com.fitnessapp.notificationId",notifid);
+        Bundle extras = intent.getExtras();
+        extras.putString("receive_time", receiveTime);
+        //   intent.putExtra("receive_time",receiveTime);
+
+        PendingIntent pendingIntent =
+                PendingIntent.getBroadcast(context.getApplicationContext(),
+                        notifid, intent, 0);
+        return pendingIntent;
     }
 
     @Nullable
@@ -949,21 +1225,22 @@ public class MotivationMessages extends Service {
     }
 
     private void logDataToFirestore(){
-        String dismissTime;
-        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss aa");
-        String receiveTime = sdf.format(new Date());
-        Log.d("=====TIME=====", String.valueOf(receiveTime));
 
-        Map<String,Object>data_log = new HashMap<>();
-        data_log.put("Date",today);
-        data_log.put("Time",receiveTime);
-        data_log.put("Current Step Count",totalStepsFromDataPoints);
-        data_log.put("Step Goal",goal);
-        data_log.put("Message Category",category);
-        data_log.put("Message Type",messageType);
-        data_log.put("Message Text",message);
 
-        db.collection("users").document(userID).collection("Data Log").document(today).set(data_log)
+        Map<String,Object>today_log = new HashMap<>();
+        today_log.put("Date| Time | Current Step Count | Step Goal | Message Category | Message Type | Message Text | Step Count after 30 mins | Active Time",today + " | " +receiveTime + " | " +totalStepsFromDataPoints + " | " +goal + " | " +category + " | " +messageType + " | " +message + " | " +currentSteps + " | " +movemins);
+
+        Map<String,Object> data_log = new HashMap<>();
+        data_log.put(String.valueOf(id),today_log);
+
+//        data_log.put("Current Step Count",totalStepsFromDataPoints);
+//        data_log.put("Step Goal",goal);
+//        data_log.put("Message Category",category);
+//        data_log.put("Message Type",messageType);
+//        data_log.put("Message Text",message);
+//        data_log.put("Step Count after 30 mins",currentSteps);
+
+        db.collection("users").document(userID).collection("User Data Log").document("Data Log").set(data_log, SetOptions.merge())
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -977,6 +1254,11 @@ public class MotivationMessages extends Service {
                     }
                 });
 
+        SharedPreferences.Editor e = sharedPreferences.edit();
+        e.putInt("logID",id++);
+        e.apply();
 
     }
+
+
 }

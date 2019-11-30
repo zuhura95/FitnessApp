@@ -1,16 +1,13 @@
 package com.example.fitnesssapp.Locations;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 
-import com.example.fitnesssapp.AboutActivity;
 import com.example.fitnesssapp.AppController;
 import com.example.fitnesssapp.HomeActivity;
 
@@ -22,12 +19,10 @@ import androidx.core.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.fitnesssapp.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;

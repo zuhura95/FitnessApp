@@ -24,10 +24,7 @@ import com.anychart.APIlib;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
-import com.example.fitnesssapp.services.AppService;
 import com.example.fitnesssapp.services.MotivationMessages;
-import com.example.fitnesssapp.Locations.LocationsActivity;
-import com.example.fitnesssapp.services.AppWorker;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.anychart.AnyChart;
 import com.anychart.charts.Cartesian;
@@ -323,7 +320,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         @Override
         public void run() {
 
-            Toast.makeText(HomeActivity.this, "current steps fetched", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(HomeActivity.this, "current steps fetched", Toast.LENGTH_SHORT).show();
           accessGoogleFit();
             mHandler.postDelayed(this, 10000);
         }

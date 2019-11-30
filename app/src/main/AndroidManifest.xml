@@ -9,11 +9,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".RateNotification"></activity>
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
             android:theme="@style/AppTheme.NoActionBar" />
-
         <activity
             android:name=".AboutActivity"
             android:label="@string/title_activity_about"
@@ -34,7 +34,7 @@
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.fitnesssapp.HomeActivity" />
+                android:value=".HomeActivity" />
         </activity>
         <activity android:name=".Authentication.PermissionsActivity" />
         <activity
@@ -52,10 +52,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_launcher_background" />
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyCnQheiMTo9kuTyU-ACS9SmUMSlZH7UrBs" />
@@ -65,15 +65,14 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="Notification" />
-        <service
-            android:name=".services.AppService"
-            android:enabled="true"
-            android:exported="false"></service>
+
+        <receiver
+            android:name=".services.NotifDismissReceiver"
+            android:exported="false" /> <!-- <receiver -->
         <service
             android:name=".services.MotivationMessages"
             android:enabled="true"
-            android:exported="false"></service>
-
+            android:exported="false" />
         <service
             android:name=".services.MyFirebaseMessagingService"
             android:exported="false">
@@ -82,10 +81,10 @@
             </intent-filter>
         </service>
     </application>
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
 </manifest>
