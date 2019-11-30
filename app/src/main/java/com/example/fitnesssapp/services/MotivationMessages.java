@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.app.Service;
@@ -82,7 +83,7 @@ public class MotivationMessages extends Service {
     String  message, messageType, messageTitle, type, userID, weekend, lunchbreak, EOD,today,weatherDesc,latitude,longitude,username;
     int steps, currenthour, lunchHour, eodHour, id;
     double temp, humidity;
-    float activemins;
+    float activemins,rating;
     String receiveTime,dismissTime;
     boolean isWeatherGood;
     AppController appController;
@@ -125,6 +126,7 @@ public class MotivationMessages extends Service {
         username = sharedPreferences.getString("NickName",null);
         goal = sharedPreferences.getInt("Goal",5000);
         id = sharedPreferences.getInt("logID",0);
+        rating = sharedPreferences.getFloat("rating",0);
     }
     private Runnable init = new Runnable() {
         @Override
@@ -145,11 +147,13 @@ public class MotivationMessages extends Service {
             accessHourlySteps();
             accessGoogleFit();
 
-            if(!isActive()){
+            if(sharedPreferences.getBoolean("notifications",true)) {
+                if (!isActive()) {
 
-                startMotivating();
+                    startMotivating();
+                }
+                checkEOD();
             }
-            checkEOD();
             mHandler.postDelayed(this, 60000);
         }
     };
@@ -172,12 +176,26 @@ public class MotivationMessages extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        this.context = this;
-        init.run();
-        run_motivation.run();
 
-        Toast.makeText(this, "The app is now running in the background.", Toast.LENGTH_SHORT).show();
+            this.context = this;
+            if(isNetworkConnected()) {
+            init.run();
+            run_motivation.run();
+
+            Toast.makeText(this, "The app is now running in the background.", Toast.LENGTH_SHORT).show();
+
+        }
+        else{
+            Toast.makeText(this, "Please check your Internet Connection.", Toast.LENGTH_SHORT).show();
+
+        }
         return START_STICKY;
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
     }
 
     @Override
@@ -684,7 +702,7 @@ public class MotivationMessages extends Service {
     private void checkEOD(){
 
         /**IS EOD SOON?  9  pm **/
-        if(currenthour == 18){
+        if(currenthour == 21){
             Log.d(TAG,"ITS 9 PM");
             if(totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000)){
                 category = "category L";
@@ -851,11 +869,19 @@ public class MotivationMessages extends Service {
                 }
 
 
-                if (messageTitle.contains("<") || message.contains("<")) {
+                if(!gymlocationNames.isEmpty()){
+                    if(!parklocationNames.isEmpty()){
+                        if(!restaurantlocationNames.isEmpty()){
+                            if(!malllocationNames.isEmpty()){
+                                 if (messageTitle.contains("<") || message.contains("<")) {
 
-                    Log.d(TAG,"REPLACE TOKEN");
-                    replaceTokens();
-                }
+                                     Log.d(TAG, "REPLACE TOKEN");
+                                    replaceTokens();
+                                 }
+                               }
+                          }
+                     }
+                 }
                 else{
                     Log.d(TAG,"NO TOKEN");
                     displayNotification();
@@ -1166,8 +1192,7 @@ public class MotivationMessages extends Service {
 
     public void displayNotification() {
 
-        String body = message;
-        String title = messageTitle;
+
         SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss aa");
         receiveTime = sdf.format(new Date());
         Log.d("=====TIME=====", String.valueOf(receiveTime));
@@ -1179,20 +1204,21 @@ public class MotivationMessages extends Service {
         }
 
         Intent intent = new Intent(this, RateNotification.class);
-        intent.putExtra("messageTitle",title);
-        intent.putExtra("message",body);
+        intent.putExtra("messageTitle",messageTitle);
+        intent.putExtra("message",message);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
         SharedPreferences.Editor e = sharedPreferences.edit();
-
+        e.putString("message",message);
+        e.putString("title",messageTitle);
         e.apply();
 
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "fitnessapp")
-                .setContentTitle(title)
-                .setContentText(body)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                .setContentTitle(messageTitle)
+                .setContentText(message)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
 //                .setDeleteIntent(createOnDismissedIntent(context, notifid))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
@@ -1208,10 +1234,13 @@ public class MotivationMessages extends Service {
     private PendingIntent createOnDismissedIntent(Context context, int notifid) {
         Intent intent = new Intent(this, NotifDismissReceiver.class);
         // intent.putExtra("com.fitnessapp.notificationId",notifid);
-        Bundle extras = intent.getExtras();
-        extras.putString("receive_time", receiveTime);
+//        Bundle extras = intent.getExtras();
+//        extras.putString("receive_time", receiveTime);
         //   intent.putExtra("receive_time",receiveTime);
 
+        SharedPreferences.Editor e = sharedPreferences.edit();
+        e.putString("receivetime",receiveTime);
+        e.apply();
         PendingIntent pendingIntent =
                 PendingIntent.getBroadcast(context.getApplicationContext(),
                         notifid, intent, 0);
@@ -1228,7 +1257,7 @@ public class MotivationMessages extends Service {
 
 
         Map<String,Object>today_log = new HashMap<>();
-        today_log.put("Date| Time | Current Step Count | Step Goal | Message Category | Message Type | Message Text | Step Count after 30 mins | Active Time",today + " | " +receiveTime + " | " +totalStepsFromDataPoints + " | " +goal + " | " +category + " | " +messageType + " | " +message + " | " +currentSteps + " | " +movemins);
+        today_log.put("Date| Time | Current Step Count | Step Goal | Message Category | Message Rating by user | Message Type | Message Text | Step Count after 30 mins | Active Time",today + " | " +receiveTime + " | " +totalStepsFromDataPoints + " | " +goal + " | " +category + " | " + " | " +rating + " | " +messageType + " | " +message + " | " +currentSteps + " | " +movemins);
 
         Map<String,Object> data_log = new HashMap<>();
         data_log.put(String.valueOf(id),today_log);

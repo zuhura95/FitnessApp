@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -281,6 +282,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         monthlyDataChart();
 
 
+
         weekbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -315,6 +317,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
 
     private Runnable init = new Runnable() {
         @Override
@@ -620,13 +627,18 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
                 Log.d(TAG, "accessing...");
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    startForegroundService(new Intent(this, MotivationMessages.class));
+
+                if(isNetworkConnected()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(new Intent(this, MotivationMessages.class));
+                    } else {
+                        startService(new Intent(this, MotivationMessages.class));
+                    }
+                    init.run();
                 }
                 else{
-                    startService(new Intent(this,MotivationMessages.class));
+                    Toast.makeText(this, "Please check your Internet Connection", Toast.LENGTH_SHORT).show();
                 }
-                init.run();
 
 
             }

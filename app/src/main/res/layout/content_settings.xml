@@ -27,6 +27,8 @@
             android:layout_width="wrap_content"
             android:textOn="ON"
             android:textOff="OFF"
+            android:checked="true"
+            android:id="@+id/Notifswitch"
             android:buttonTint="@color/colorPrimary"
             android:foregroundTint="@color/colorPrimary"
             android:layout_height="wrap_content"

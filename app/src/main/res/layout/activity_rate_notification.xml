@@ -22,8 +22,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20dp"
-        android:id="@+id/NotifTitle"
+        android:textSize="15dp"
+        android:text="How helpful was this reminder?"
         android:gravity="center"
         android:textColor="#FFF"
         android:layout_gravity="start"
@@ -41,6 +41,13 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/NotifTitle"
+            android:textColor="#000"
+            android:layout_gravity="center_horizontal"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:id="@+id/Notifmsg"
             android:text="HI HIHIIHIHIHIIHIHIHIHIHIHIIHIHIIHIHIHIIHIIHIHIIH"
             android:textColor="#000"
@@ -50,7 +57,9 @@
         <RatingBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/ratingBar"/>
+            android:id="@+id/ratingBar"
+
+            android:saveEnabled="true"/>
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
