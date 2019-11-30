@@ -1,12 +1,19 @@
 package com.example.fitnesssapp.services;
 
-import android.content.BroadcastReceiver;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RatingBar;
+import android.widget.TextView;
 
+import com.example.fitnesssapp.HomeActivity;
+import com.example.fitnesssapp.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.analytics.FirebaseAnalytics;
@@ -21,20 +28,22 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import androidx.annotation.NonNull;
+public class RatingNotification extends AppCompatActivity {
 
-public class NotifDismissReceiver extends BroadcastReceiver {
-    SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss aa");
-    String dismissTime,receiveTime, readingDuration;
-    Date receive_time,dismiss_time;
+    TextView messageTitle,messageText;
+   RatingBar ratingBar;
+    Button submitRating;
+    private String message="";
+    private String title="";
     SharedPreferences sharedPreferences;
-    
+
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseAnalytics mFirebaseAnalytics;
 
     private int id;
     private String today;
+    private String receiveTime;
     private int currentSteps;
     private int goal;
     private String type;
@@ -43,47 +52,71 @@ public class NotifDismissReceiver extends BroadcastReceiver {
     private int currentSteps30;
     private int movemins;
     private String userID;
-    private String message;
+    SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss aa");
+    String dismissTime, readingDuration;
+    Date receive_time,dismiss_time;
 
     @Override
-    public void onReceive(Context context, Intent intent) {
-        dismissTime = sdf.format(new Date());
-         sharedPreferences = context.getSharedPreferences("UserInfo",Context.MODE_PRIVATE);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_rate_notification);
         today = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+        sharedPreferences =getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         db = FirebaseFirestore.getInstance();
+
         auth = FirebaseAuth.getInstance();
         userID = auth.getCurrentUser().getUid();
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(context);
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
-        receiveTime = sharedPreferences.getString("receivetime",null);
+        messageTitle = findViewById(R.id.NotifTitle);
+        messageText = findViewById(R.id.Notifmsg);
+        ratingBar = findViewById(R.id.ratingBar);
+        submitRating = findViewById(R.id.submitBtn);
+        message = sharedPreferences.getString("message","");
+        title = sharedPreferences.getString("title","");
+        messageText.setText(message);
+        messageTitle.setText(title);
+
         id = sharedPreferences.getInt("logID",0);
+        receiveTime = sharedPreferences.getString("receivetime",null);
         currentSteps = sharedPreferences.getInt("currentSteps",0);
         goal = sharedPreferences.getInt("Goal",5000);
         type = sharedPreferences.getString("type",null);
         category = sharedPreferences.getString("category",null);
         currentSteps30 = sharedPreferences.getInt("currentSteps30",0);
         movemins = sharedPreferences.getInt("movemins",0);
-        message = sharedPreferences.getString("message","");
 
+
+        dismissTime = sdf.format(new Date());
         try {
             dismiss_time = sdf.parse(dismissTime);
-          receive_time  = sdf.parse(receiveTime);
+            receive_time  = sdf.parse(receiveTime);
         } catch (ParseException e) {
             e.printStackTrace();
         }
+
         long readingduration = Math.abs(dismiss_time.getTime() - receive_time.getTime());
         readingDuration =  (readingduration % 3600000) / 60000 + " minutes" +" "+ (readingduration)/1000 % 60 + " seconds";
-        Log.d("=====RECEIVE TIME=====", String.valueOf(receiveTime));
-        Log.d("=====DISMISS TIME=====", String.valueOf(dismissTime));
-        Log.d("=====TOTAL TIME=====",readingDuration);
-        logDataToFirestore();
-        
-    }
-    private void logDataToFirestore(){
+        submitRating.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rating = ratingBar.getRating();
+                SharedPreferences.Editor e = sharedPreferences.edit();
+                e.putFloat("rating",rating);
+                e.apply();
+                logDataToFirestore();
+                startActivity(new Intent(RatingNotification.this, HomeActivity.class));
+                finish();
+            }
+        });
 
+    }
+
+    private void logDataToFirestore(){
+        
         Map<String,Object> today_log = new HashMap<>();
         today_log.put("Date| Time | Current Step Count | Step Goal  |  Step Count after 30 mins | Message Rating by user | Duration Reading the message | Dismissed(Y/N) |  Message Text | Message Type  | Active Time",
-                today + " | " +receiveTime + " | " +currentSteps + " | " + goal  + " | " +currentSteps30 + " | " +rating + " | "+readingDuration + " | " +"Y" + " | " +message + " | " +category+" | "+type+" | "+movemins);
+                today + " | " +receiveTime + " | " +currentSteps + " | " + goal  + " | " +currentSteps30 + " | " +rating + " | "+readingDuration + " | " +"N" + " | " +message + " | " +category+" | "+type+" | "+movemins);
 
         Map<String,Object> data_log = new HashMap<>();
         data_log.put(String.valueOf(id),today_log);
@@ -99,26 +132,25 @@ public class NotifDismissReceiver extends BroadcastReceiver {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        //  Log.d(TAG,"Logging data SUCCEEDED");
+                      //  Log.d(TAG,"Logging data SUCCEEDED");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        // Log.d(TAG,"Logging data FAILED");
+                       // Log.d(TAG,"Logging data FAILED");
                     }
                 });
 
         SharedPreferences.Editor e = sharedPreferences.edit();
         e.putInt("logID",id++);
         e.apply();
-        recordDismiss();
+        reccordNotifOpen();
     }
-
-    private void recordDismiss(){
+    private void reccordNotifOpen(){
 
         Bundle bundle = new Bundle();
-        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "notification_dismiss");
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "notification_open");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
     }
 }

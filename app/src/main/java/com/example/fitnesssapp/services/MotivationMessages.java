@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -29,7 +28,6 @@ import com.androdocs.httprequest.HttpRequest;
 import com.example.fitnesssapp.AppController;
 import com.example.fitnesssapp.HomeActivity;
 import com.example.fitnesssapp.R;
-import com.example.fitnesssapp.RateNotification;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.data.Bucket;
@@ -50,7 +48,6 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.firestore.SetOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -154,7 +151,7 @@ public class MotivationMessages extends Service {
                 }
                 checkEOD();
             }
-            mHandler.postDelayed(this, 60000);
+            mHandler.postDelayed(this, 2700000);
         }
     };
     private Runnable run_stepsCheck = new Runnable(){
@@ -162,17 +159,10 @@ public class MotivationMessages extends Service {
         @Override
         public void run() {
             fetchStepsafterThirty();
-            logDataToFirestore();
             mHandler.postDelayed(this, 600000);
         }
     };
-    private Runnable log_data = new Runnable() {
-        @Override
-        public void run() {
-//            logDataToFirestore();
-            mHandler.postDelayed(this,900000);
-        }
-    };
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -444,9 +434,9 @@ public class MotivationMessages extends Service {
                     remainingPercentage = 100-percentFinished;
                     stepsRemaining = goal - totalStepsFromDataPoints;
 
-//                    if(currenthour <= 10){
-//                        initialSteps = totalStepsFromDataPoints;
-//                    }
+                    if(currenthour == 10){
+                        initialSteps = totalStepsFromDataPoints;
+                    }
 
 
 
@@ -615,9 +605,15 @@ public class MotivationMessages extends Service {
 
         /**IS it WEEKEND SOON?**/
         if (itsWeekend){
-            //TODO : DELETE THIS LINE (FOR TESTING PURPOSE ONLY)
-            category = "category K";
             Log.d(TAG,"WEEEEEKEND");
+            if(isWeatherGood){
+                category="category K";
+                Log.d(TAG,"Outdoor ");
+            }else{
+                category="category O";
+                Log.d(TAG,"Indoor ");
+            }
+
         }
         else{
             /**IS LUNCHBREAK SOON?**/
@@ -638,8 +634,8 @@ public class MotivationMessages extends Service {
                     }
                 }
                 else{
-                    category = "category I";
-                    Log.d(TAG,"CAT: I");
+                    category = "category N";
+                    Log.d(TAG,"Drive/eat at work");
                 }
 
             }
@@ -1203,7 +1199,7 @@ public class MotivationMessages extends Service {
             manager.createNotificationChannel(channel);
         }
 
-        Intent intent = new Intent(this, RateNotification.class);
+        Intent intent = new Intent(this, RatingNotification.class);
         intent.putExtra("messageTitle",messageTitle);
         intent.putExtra("message",message);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -1212,6 +1208,11 @@ public class MotivationMessages extends Service {
         SharedPreferences.Editor e = sharedPreferences.edit();
         e.putString("message",message);
         e.putString("title",messageTitle);
+        e.putString("messageType",messageType);
+        e.putInt("currentSteps",totalStepsFromDataPoints);
+        e.putString("category",category);
+        e.putString("type",messageType);
+        e.putInt("movemins",movemins);
         e.apply();
 
 
@@ -1219,7 +1220,7 @@ public class MotivationMessages extends Service {
                 .setContentTitle(messageTitle)
                 .setContentText(message)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
-//                .setDeleteIntent(createOnDismissedIntent(context, notifid))
+               .setDeleteIntent(createOnDismissedIntent(context, notifid))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .setSmallIcon(R.drawable.ic_person_walk);
@@ -1227,17 +1228,12 @@ public class MotivationMessages extends Service {
 
 
         run_stepsCheck.run();
-        log_data.run();
+
 
     }
 
     private PendingIntent createOnDismissedIntent(Context context, int notifid) {
         Intent intent = new Intent(this, NotifDismissReceiver.class);
-        // intent.putExtra("com.fitnessapp.notificationId",notifid);
-//        Bundle extras = intent.getExtras();
-//        extras.putString("receive_time", receiveTime);
-        //   intent.putExtra("receive_time",receiveTime);
-
         SharedPreferences.Editor e = sharedPreferences.edit();
         e.putString("receivetime",receiveTime);
         e.apply();
@@ -1253,41 +1249,7 @@ public class MotivationMessages extends Service {
         return null;
     }
 
-    private void logDataToFirestore(){
 
-
-        Map<String,Object>today_log = new HashMap<>();
-        today_log.put("Date| Time | Current Step Count | Step Goal | Message Category | Message Rating by user | Message Type | Message Text | Step Count after 30 mins | Active Time",today + " | " +receiveTime + " | " +totalStepsFromDataPoints + " | " +goal + " | " +category + " | " + " | " +rating + " | " +messageType + " | " +message + " | " +currentSteps + " | " +movemins);
-
-        Map<String,Object> data_log = new HashMap<>();
-        data_log.put(String.valueOf(id),today_log);
-
-//        data_log.put("Current Step Count",totalStepsFromDataPoints);
-//        data_log.put("Step Goal",goal);
-//        data_log.put("Message Category",category);
-//        data_log.put("Message Type",messageType);
-//        data_log.put("Message Text",message);
-//        data_log.put("Step Count after 30 mins",currentSteps);
-
-        db.collection("users").document(userID).collection("User Data Log").document("Data Log").set(data_log, SetOptions.merge())
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG,"Logging data SUCCEEDED");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG,"Logging data FAILED");
-                    }
-                });
-
-        SharedPreferences.Editor e = sharedPreferences.edit();
-        e.putInt("logID",id++);
-        e.apply();
-
-    }
 
 
 }
