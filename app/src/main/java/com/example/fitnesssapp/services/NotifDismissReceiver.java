@@ -76,49 +76,54 @@ public class NotifDismissReceiver extends BroadcastReceiver {
         Log.d("=====RECEIVE TIME=====", String.valueOf(receiveTime));
         Log.d("=====DISMISS TIME=====", String.valueOf(dismissTime));
         Log.d("=====TOTAL TIME=====",readingDuration);
-        logDataToFirestore();
-        
-    }
-    private void logDataToFirestore(){
-
-        Map<String,Object> today_log = new HashMap<>();
-        today_log.put("Date| Time | Current Step Count | Step Goal  |  Step Count after 30 mins | Message Rating by user | Duration Reading the message | Dismissed(Y/N) |  Message Text | Message Type  | Active Time",
-                today + " | " +receiveTime + " | " +currentSteps + " | " + goal  + " | " +currentSteps30 + " | " +rating + " | "+readingDuration + " | " +"Y" + " | " +message + " | " +category+" | "+type+" | "+movemins);
-
-        Map<String,Object> data_log = new HashMap<>();
-        data_log.put(String.valueOf(id),today_log);
-
-//        data_log.put("Current Step Count",totalStepsFromDataPoints);
-//        data_log.put("Step Goal",goal);
-//        data_log.put("Message Category",category);
-//        data_log.put("Message Type",messageType);
-//        data_log.put("Message Text",message);
-//        data_log.put("Step Count after 30 mins",currentSteps);
-
-        db.collection("users").document(userID).collection("User Data Log").document("Data Log").set(data_log, SetOptions.merge())
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        //  Log.d(TAG,"Logging data SUCCEEDED");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        // Log.d(TAG,"Logging data FAILED");
-                    }
-                });
 
         SharedPreferences.Editor e = sharedPreferences.edit();
-        e.putInt("logID",id++);
+       e.putString("isDismissed","Y");
         e.apply();
         recordDismiss();
+        
     }
+//    private void logDataToFirestore(){
+//
+//        Map<String,Object> today_log = new HashMap<>();
+//        today_log.put("Date| Time | Current Step Count | Step Goal  |  Step Count after 30 mins | Message Rating by user | Duration Reading the message | Dismissed(Y/N) |  Message Text | Message Type  | Active Time",
+//                today + " | " +receiveTime + " | " +currentSteps + " | " + goal  + " | " +currentSteps30 + " | " +rating + " | "+readingDuration + " | " +"Y" + " | " +message + " | " +category+" | "+type+" | "+movemins);
+//
+//        Map<String,Object> data_log = new HashMap<>();
+//        data_log.put(String.valueOf(id),today_log);
+//
+////        data_log.put("Current Step Count",totalStepsFromDataPoints);
+////        data_log.put("Step Goal",goal);
+////        data_log.put("Message Category",category);
+////        data_log.put("Message Type",messageType);
+////        data_log.put("Message Text",message);
+////        data_log.put("Step Count after 30 mins",currentSteps);
+//
+//        db.collection("users").document(userID).collection("User Data Log").document("Data Log").set(data_log, SetOptions.merge())
+//                .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                    @Override
+//                    public void onSuccess(Void aVoid) {
+//                        //  Log.d(TAG,"Logging data SUCCEEDED");
+//                    }
+//                })
+//                .addOnFailureListener(new OnFailureListener() {
+//                    @Override
+//                    public void onFailure(@NonNull Exception e) {
+//                        // Log.d(TAG,"Logging data FAILED");
+//                    }
+//                });
+//
+//        SharedPreferences.Editor e = sharedPreferences.edit();
+//        e.putInt("logID",id++);
+//        e.putString("isDismissed","Y");
+//        e.apply();
+//        recordDismiss();
+//    }
 
     private void recordDismiss(){
 
         Bundle bundle = new Bundle();
-        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "notification_dismiss");
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "App_notification_dismiss");
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
     }
 }

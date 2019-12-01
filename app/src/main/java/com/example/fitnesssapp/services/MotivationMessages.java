@@ -96,7 +96,7 @@ public class MotivationMessages extends Service {
     List<String> malllocationNames = new ArrayList<>();
     private int goal,movemins,stepsRemaining;
     private double percentFinished,remainingPercentage;
-
+    private int radius=500;
 
 
     public MotivationMessages() {
@@ -125,18 +125,25 @@ public class MotivationMessages extends Service {
         id = sharedPreferences.getInt("logID",0);
         rating = sharedPreferences.getFloat("rating",0);
     }
+
+    //Initial run- fetch lat and long and weather continuously
     private Runnable init = new Runnable() {
         @Override
         public void run() {
-            fetchLocation();
-            checkWeather();
-            new nearbyGyms().execute();
-            new nearbyMalls().execute();
-            new nearbyParks().execute();
-            new nearbyRestaurants().execute();
-            mHandler.postDelayed(this, 5000);
+
+            if(isNetworkConnected()) {
+                fetchLocation();
+                checkWeather();
+                new nearbyGyms().execute();
+                new nearbyMalls().execute();
+                new nearbyParks().execute();
+                new nearbyRestaurants().execute();
+            }
+            mHandler.postDelayed(this, 5000); //5 secs
         }
     };
+
+    //Start motivation after 50 mins
     private Runnable run_motivation = new Runnable() {
         @Override
         public void run() {
@@ -151,15 +158,25 @@ public class MotivationMessages extends Service {
                 }
                 checkEOD();
             }
-            mHandler.postDelayed(this, 2700000);
+            mHandler.postDelayed(this, 300000); //5 mins
         }
     };
+
+    //Check steps after 30 mins and log data
     private Runnable run_stepsCheck = new Runnable(){
 
         @Override
         public void run() {
             fetchStepsafterThirty();
-            mHandler.postDelayed(this, 600000);
+            mHandler.postDelayed(this, 900000); //15 mins
+        }
+    };
+
+    //Save active mins at the EOD
+    private Runnable run_activeTimeCheck = new Runnable() {
+        @Override
+        public void run() {
+            fetchEODActivemins();
         }
     };
 
@@ -168,17 +185,12 @@ public class MotivationMessages extends Service {
 
 
             this.context = this;
-            if(isNetworkConnected()) {
+
             init.run();
             run_motivation.run();
 
             Toast.makeText(this, "The app is now running in the background.", Toast.LENGTH_SHORT).show();
 
-        }
-        else{
-            Toast.makeText(this, "Please check your Internet Connection.", Toast.LENGTH_SHORT).show();
-
-        }
         return START_STICKY;
     }
 
@@ -197,6 +209,7 @@ public class MotivationMessages extends Service {
     private boolean isActive(){
 
         if((totalStepsFromDataPoints-initialSteps)<5){
+            initialSteps = totalStepsFromDataPoints;
             Log.d(TAG,"NOT ACTIVE - sTART MOTIVATING");
             return false;
         }
@@ -380,7 +393,11 @@ public class MotivationMessages extends Service {
                                             if (field.getName().equals("steps")) {
 
                                                 currentSteps = dp.getValue(field).asInt();
+                                                SharedPreferences.Editor e = sharedPreferences.edit();
+                                                e.putInt("currentSteps30",currentSteps);
+                                                e.apply();
 
+                                                //TODO Start intent of LogUserDAta
                                             }
                                         }
 
@@ -400,6 +417,95 @@ public class MotivationMessages extends Service {
 
 
     }
+    public void fetchEODActivemins() {
+
+
+
+        // Subscribe to recordings
+        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .subscribe(DataType.TYPE_MOVE_MINUTES)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        //Log.d(TAG, "Successfully subscribed");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Log.d(TAG, "There was a problem subscribing...", e);
+                    }
+                });
+
+        Calendar cal = Calendar.getInstance();
+        long endTime = cal.getTimeInMillis();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        long startTime = cal.getTimeInMillis();
+
+        DataReadRequest readRequest = new DataReadRequest.Builder()
+                .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .bucketByTime(1, TimeUnit.DAYS)
+                .build();
+
+        // get history
+        Fitness.getHistoryClient(this, GoogleSignIn.getLastSignedInAccount(this))
+                .readData(readRequest)
+                .addOnSuccessListener(new OnSuccessListener<DataReadResponse>() {
+                    @Override
+                    public void onSuccess(DataReadResponse dataReadResponse) {
+                        //        Log.d(TAG, "successfully got history");
+                        if (dataReadResponse.getBuckets().size() > 0) {
+
+                            for (Bucket bucket : dataReadResponse.getBuckets()) {
+                                List<DataSet> dataSets = bucket.getDataSets();
+                                for (DataSet dataSet : dataSets) {
+
+                                    for (DataPoint dp : dataSet.getDataPoints()) {
+
+                                        for (Field field : dp.getDataType().getFields()) {
+
+                                            if(field.getName().equals("duration")){
+                                                movemins = dp.getValue(field).asInt();
+                                                saveMinsToFirestore();
+                                            }
+                                        }
+
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        //          Log.e(TAG, "failed to get history", e);
+                    }
+                });
+
+
+    }
+
+    private void saveMinsToFirestore() {
+
+        db.collection("users").document(userID)
+                .collection(today).document("Active Mins").set(movemins)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
+    }
+
     private void getDataSetsFromBucket(DataReadResponse dataReadResponse) {
 
         if (dataReadResponse.getBuckets().size() > 0) {
@@ -434,7 +540,7 @@ public class MotivationMessages extends Service {
                     remainingPercentage = 100-percentFinished;
                     stepsRemaining = goal - totalStepsFromDataPoints;
 
-                    if(currenthour == 10){
+                    if(currenthour <= 12){
                         initialSteps = totalStepsFromDataPoints;
                     }
 
@@ -607,9 +713,11 @@ public class MotivationMessages extends Service {
         if (itsWeekend){
             Log.d(TAG,"WEEEEEKEND");
             if(isWeatherGood){
+                radius = 3000;
                 category="category K";
                 Log.d(TAG,"Outdoor ");
             }else{
+                radius = 3000;
                 category="category O";
                 Log.d(TAG,"Indoor ");
             }
@@ -624,16 +732,19 @@ public class MotivationMessages extends Service {
                 if(isWeatherGood){
 
                     if(restaurantlocationNames.size()>0) {
+
                         category = "category H";
                         Log.d(TAG,"WALK TO RESTAURANT");
 
                     }
                     else{
+                        radius = 1500;
                         category = "category I";
                         Log.d(TAG,"CAT: I");
                     }
                 }
                 else{
+                    radius = 1500;
                     category = "category N";
                     Log.d(TAG,"Drive/eat at work");
                 }
@@ -652,6 +763,7 @@ public class MotivationMessages extends Service {
                             Log.d(TAG,"WALK TO PARK");
                         }
                         else{
+                            radius = 3000;
                             ////walk in mall/gym/street
                             category="category B";
                             Log.d(TAG,"WALK IN MALL");
@@ -669,6 +781,7 @@ public class MotivationMessages extends Service {
                             ///no nearby gyms
 
                             if(malllocationNames.size()>0){
+                                radius = 3000;
                                 category = "category D";
                                 Log.d(TAG,"CATEGORY D");
                             }
@@ -690,6 +803,20 @@ public class MotivationMessages extends Service {
 
         }
 
+//        if((category == "J")||(category == "H")||(category == "F")||(category == "M")){
+//            radius = 500;
+//        }
+//        else if((category=="I")||(category=="N")){
+//            radius = 1500;
+//        }else if((category=="A")||(category=="B")||(category=="C")||(category=="D")||(category=="K")||(category=="O")){
+//            radius = 3000;
+//        }
+
+            new nearbyGyms().execute();
+            new nearbyMalls().execute();
+            new nearbyParks().execute();
+            new nearbyRestaurants().execute();
+            Log.d("=====RADIUS====", String.valueOf(radius));
 
         retrieveCategoryMessages();
 
@@ -717,6 +844,9 @@ public class MotivationMessages extends Service {
                 }
             }
         }
+        if(currenthour == 23){
+            run_activeTimeCheck.run();
+        }
     }
 
 
@@ -743,11 +873,11 @@ public class MotivationMessages extends Service {
             String lon = String.valueOf(location.getLongitude());
             latitude = lat;
             longitude = lon;
-
-            gymlocationNames.clear();
-            parklocationNames.clear();
-            restaurantlocationNames.clear();
-            malllocationNames.clear();
+//
+//            gymlocationNames.clear();
+//            parklocationNames.clear();
+//            restaurantlocationNames.clear();
+//            malllocationNames.clear();
 
 
         }
@@ -831,13 +961,13 @@ public class MotivationMessages extends Service {
                 if (restaurantlocationNames.size()>0) {
                     retrieveMessage(messagelist);
                 }
-                if (parklocationNames.size()>0) {
+                else if (parklocationNames.size()>0) {
                     retrieveMessage(messagelist);
                 }
-                if (malllocationNames.size()>0) {
+                else if (malllocationNames.size()>0) {
                     retrieveMessage(messagelist);
                 }
-                if (gymlocationNames.size()>0) {
+                else  if (gymlocationNames.size()>0) {
                     retrieveMessage(messagelist);
                 }
                 //  retrieveMessage(messagelist);
@@ -865,10 +995,11 @@ public class MotivationMessages extends Service {
                 }
 
 
-                if(!gymlocationNames.isEmpty()){
-                    if(!parklocationNames.isEmpty()){
-                        if(!restaurantlocationNames.isEmpty()){
-                            if(!malllocationNames.isEmpty()){
+
+                if(gymlocationNames != null){
+                    if(parklocationNames!= null){
+                        if(restaurantlocationNames!= null){
+                            if(malllocationNames!= null){
                                  if (messageTitle.contains("<") || message.contains("<")) {
 
                                      Log.d(TAG, "REPLACE TOKEN");
@@ -929,7 +1060,7 @@ public class MotivationMessages extends Service {
         }
         //Replace <mall>
         if(message.contains("<mall>")){
-            message = message.replaceAll("<park>",randomMall);
+            message = message.replaceAll("<mall>",randomMall);
         }
         if(messageTitle.contains("<mall>")){
             messageTitle = messageTitle.replaceAll("<mall>", randomMall);
@@ -1037,7 +1168,7 @@ public class MotivationMessages extends Service {
 
         @Override
         protected String doInBackground(String... strings) {
-            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius=1000&type=gym&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=gym&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
             // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
             return response;
         }
@@ -1075,7 +1206,7 @@ public class MotivationMessages extends Service {
 
         @Override
         protected String doInBackground(String... strings) {
-            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius=1000&type=park&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=park&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
             // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
             return response;
         }
@@ -1115,7 +1246,7 @@ public class MotivationMessages extends Service {
 
         @Override
         protected String doInBackground(String... strings) {
-            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius=1000&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
             // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
             return response;
         }
@@ -1155,7 +1286,7 @@ public class MotivationMessages extends Service {
 
         @Override
         protected String doInBackground(String... strings) {
-            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius=1000&type=shopping_mall&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=shopping_mall&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
             // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
             return response;
         }
