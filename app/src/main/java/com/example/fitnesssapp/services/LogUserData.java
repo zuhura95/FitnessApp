@@ -42,7 +42,7 @@ public class LogUserData {
     String dismissTime, readingDuration;
     Date receive_time,dismiss_time;
     private String message;
-    private String isDismissed;
+    private String isDismissed, fullData;
 
     public LogUserData(Context context) {
         this.context = context;
@@ -87,9 +87,11 @@ public class LogUserData {
     }
     private void logDataToFirestore(){
 
+        fullData =  today + " | " +receiveTime + " | " +currentSteps + " | " + goal  + " | " +currentSteps30 + " | " +rating + " | "+readingDuration + " | " +isDismissed + " | " +message + " | " +category+" | "+type;
         Map<String,Object> today_log = new HashMap<>();
         today_log.put("Date| Time | Current Step Count | Step Goal  |  Step Count after 30 mins | Message Rating by user | Duration Reading the message | Dismissed(Y/N) |  Message Text | Message Type",
-                today + " | " +receiveTime + " | " +currentSteps + " | " + goal  + " | " +currentSteps30 + " | " +rating + " | "+readingDuration + " | " +isDismissed + " | " +message + " | " +category+" | "+type);
+              fullData );
+
 
         Map<String,Object> data_log = new HashMap<>();
         data_log.put(String.valueOf(id),today_log);

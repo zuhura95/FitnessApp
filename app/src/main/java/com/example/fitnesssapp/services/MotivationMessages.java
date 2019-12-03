@@ -7,10 +7,13 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.app.Service;
@@ -130,16 +133,20 @@ public class MotivationMessages extends Service {
     private Runnable init = new Runnable() {
         @Override
         public void run() {
-
-            if(isNetworkConnected()) {
                 fetchLocation();
                 checkWeather();
                 new nearbyGyms().execute();
                 new nearbyMalls().execute();
-                new nearbyParks().execute();
+               new nearbyParks().execute();
                 new nearbyRestaurants().execute();
+
+            int delayMs;
+            if (latitude == null && longitude == null){
+                delayMs = 5000;
+            }else{
+                delayMs = 300000;
             }
-            mHandler.postDelayed(this, 5000); //5 secs
+            mHandler.postDelayed(this, delayMs); //5 secs
         }
     };
 
@@ -158,7 +165,7 @@ public class MotivationMessages extends Service {
                 }
                 checkEOD();
             }
-            mHandler.postDelayed(this, 300000); //5 mins
+            mHandler.postDelayed(this, 120000); //2 mins
         }
     };
 
@@ -168,7 +175,7 @@ public class MotivationMessages extends Service {
         @Override
         public void run() {
             fetchStepsafterThirty();
-            mHandler.postDelayed(this, 900000); //15 mins
+            mHandler.postDelayed(this, 1200000 ); //15 mins
         }
     };
 
@@ -185,7 +192,6 @@ public class MotivationMessages extends Service {
 
 
             this.context = this;
-
             init.run();
             run_motivation.run();
 
@@ -398,6 +404,7 @@ public class MotivationMessages extends Service {
                                                 e.apply();
 
                                                 //TODO Start intent of LogUserDAta
+
                                             }
                                         }
 
@@ -803,14 +810,7 @@ public class MotivationMessages extends Service {
 
         }
 
-//        if((category == "J")||(category == "H")||(category == "F")||(category == "M")){
-//            radius = 500;
-//        }
-//        else if((category=="I")||(category=="N")){
-//            radius = 1500;
-//        }else if((category=="A")||(category=="B")||(category=="C")||(category=="D")||(category=="K")||(category=="O")){
-//            radius = 3000;
-//        }
+
 
             new nearbyGyms().execute();
             new nearbyMalls().execute();
@@ -873,12 +873,6 @@ public class MotivationMessages extends Service {
             String lon = String.valueOf(location.getLongitude());
             latitude = lat;
             longitude = lon;
-//
-//            gymlocationNames.clear();
-//            parklocationNames.clear();
-//            restaurantlocationNames.clear();
-//            malllocationNames.clear();
-
 
         }
 
@@ -1168,7 +1162,10 @@ public class MotivationMessages extends Service {
 
         @Override
         protected String doInBackground(String... strings) {
-            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=gym&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
+            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=sports-facility-venue";
+            String response= HttpRequest.excuteGet(targetURL);
+            Log.d(TAG,targetURL);
+          //  String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=gym&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
             // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
             return response;
         }
@@ -1179,11 +1176,12 @@ public class MotivationMessages extends Service {
             int count=0;
             try{
                 JSONObject jsonObj = new JSONObject(response);
-                JSONArray jsonArray = jsonObj.getJSONArray("results");
+                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                JSONArray jsonArray = jsonObj2.getJSONArray("items");
                 int n = jsonArray.length();
                 while(n>count) {
-                    JSONObject results = jsonObj.getJSONArray("results").getJSONObject(count);
-                    String loc = results.getString("name");
+                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                    String loc = items.getString("title");
 
                     if(!gymlocationNames.contains(loc)) {
                         gymlocationNames.add(loc);
@@ -1206,7 +1204,11 @@ public class MotivationMessages extends Service {
 
         @Override
         protected String doInBackground(String... strings) {
-            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=park&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
+
+            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=leisure-outdoor";
+            String response= HttpRequest.excuteGet(targetURL);
+            Log.d(TAG,targetURL);
+          //  String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=park&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
             // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
             return response;
         }
@@ -1217,11 +1219,12 @@ public class MotivationMessages extends Service {
             int count=0;
             try{
                 JSONObject jsonObj = new JSONObject(response);
-                JSONArray jsonArray = jsonObj.getJSONArray("results");
+                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                JSONArray jsonArray = jsonObj2.getJSONArray("items");
                 int n = jsonArray.length();
                 while(n>count) {
-                    JSONObject results = jsonObj.getJSONArray("results").getJSONObject(count);
-                    String loc = results.getString("name");
+                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                    String loc = items.getString("title");
 
                     if(!parklocationNames.contains(loc)){
                         parklocationNames.add(loc);
@@ -1246,7 +1249,10 @@ public class MotivationMessages extends Service {
 
         @Override
         protected String doInBackground(String... strings) {
-            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
+            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=eat-drink";
+            String response= HttpRequest.excuteGet(targetURL);
+            Log.d(TAG,targetURL);
+         //   String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
             // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
             return response;
         }
@@ -1257,11 +1263,12 @@ public class MotivationMessages extends Service {
             int count=0;
             try{
                 JSONObject jsonObj = new JSONObject(response);
-                JSONArray jsonArray = jsonObj.getJSONArray("results");
+                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                JSONArray jsonArray = jsonObj2.getJSONArray("items");
                 int n = jsonArray.length();
                 while(n>count) {
-                    JSONObject results = jsonObj.getJSONArray("results").getJSONObject(count);
-                    String loc = results.getString("name");
+                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                    String loc = items.getString("title");
 
                     if(!restaurantlocationNames.contains(loc)){
                         restaurantlocationNames.add(loc);
@@ -1286,7 +1293,10 @@ public class MotivationMessages extends Service {
 
         @Override
         protected String doInBackground(String... strings) {
-            String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=shopping_mall&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
+            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=shopping";
+            String response= HttpRequest.excuteGet(targetURL);
+            Log.d(TAG,targetURL);
+          //  String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=shopping_mall&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
             // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
             return response;
         }
@@ -1297,11 +1307,12 @@ public class MotivationMessages extends Service {
             int count=0;
             try{
                 JSONObject jsonObj = new JSONObject(response);
-                JSONArray jsonArray = jsonObj.getJSONArray("results");
+                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                JSONArray jsonArray = jsonObj2.getJSONArray("items");
                 int n = jsonArray.length();
                 while(n>count) {
-                    JSONObject results = jsonObj.getJSONArray("results").getJSONObject(count);
-                    String loc = results.getString("name");
+                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                    String loc = items.getString("title");
 
                     if(!malllocationNames.contains(loc)){
                         malllocationNames.add(loc);
@@ -1346,15 +1357,18 @@ public class MotivationMessages extends Service {
         e.putInt("movemins",movemins);
         e.apply();
 
-
+        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "fitnessapp")
                 .setContentTitle(messageTitle)
                 .setContentText(message)
+                .setVibrate(new long[] { 1000, 1000, 1000 })
+                .setLights(Color.WHITE, 3000, 3000)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                .setDeleteIntent(createOnDismissedIntent(context, notifid))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-                .setSmallIcon(R.drawable.ic_person_walk);
+                .setSmallIcon(R.drawable.ic_person_walk)
+                .setSound(alarmSound);
         manager.notify(notifid, builder.build());
 
 
