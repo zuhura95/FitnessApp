@@ -14,6 +14,11 @@
         android:orientation="vertical"
         android:padding="@dimen/activity_horizontal_margin">
 
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@mipmap/ic_launcher"/>
+
         <EditText
             android:id="@+id/email"
             android:layout_width="match_parent"

@@ -51,6 +51,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -83,7 +84,7 @@ public class MotivationMessages extends Service {
     String  message, messageType, messageTitle, type, userID, weekend, lunchbreak, EOD,today,weatherDesc,latitude,longitude,username;
     int steps, currenthour, lunchHour, eodHour, id;
     double temp, humidity;
-    float activemins,rating;
+    float activemins;
     String receiveTime,dismissTime;
     boolean isWeatherGood;
     AppController appController;
@@ -126,7 +127,6 @@ public class MotivationMessages extends Service {
         username = sharedPreferences.getString("NickName",null);
         goal = sharedPreferences.getInt("Goal",5000);
         id = sharedPreferences.getInt("logID",0);
-        rating = sharedPreferences.getFloat("rating",0);
     }
 
     //Initial run- fetch lat and long and weather continuously
@@ -165,7 +165,7 @@ public class MotivationMessages extends Service {
                 }
                 checkEOD();
             }
-            mHandler.postDelayed(this, 120000); //2 mins
+            mHandler.postDelayed(this, 3000000); //2 mins
         }
     };
 
@@ -175,7 +175,7 @@ public class MotivationMessages extends Service {
         @Override
         public void run() {
             fetchStepsafterThirty();
-            mHandler.postDelayed(this, 1200000 ); //15 mins
+            mHandler.postDelayed(this, 3600000 ); //15 mins
         }
     };
 
@@ -190,7 +190,8 @@ public class MotivationMessages extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-
+        accessHourlySteps();
+        accessGoogleFit();
             this.context = this;
             init.run();
             run_motivation.run();
@@ -404,7 +405,7 @@ public class MotivationMessages extends Service {
                                                 e.apply();
 
                                                 //TODO Start intent of LogUserDAta
-
+                                                getLogData();
                                             }
                                         }
 
@@ -972,46 +973,45 @@ public class MotivationMessages extends Service {
 
     public void retrieveMessage(List<String> messagelist){
 
-        int i = new Random().nextInt(messagelist.size());
-        String randomMsg = messagelist.get(i);
-        DocumentReference docRef = db.collection(category).document(randomMsg);
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document.exists()) {
-                        messageTitle = document.getString("title");
-                        messageType = document.getString("type");
-                        message = document.getString("text");
+        if (messagelist.size() > 0) {
+            int i = new Random().nextInt(messagelist.size());
+            String randomMsg = messagelist.get(i);
+            DocumentReference docRef = db.collection(category).document(randomMsg);
+            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            messageTitle = document.getString("title");
+                            messageType = document.getString("type");
+                            message = document.getString("text");
 
+                        }
                     }
+
+
+                    if (gymlocationNames != null) {
+                        if (parklocationNames != null) {
+                            if (restaurantlocationNames != null) {
+                                if (malllocationNames != null) {
+                                    if (messageTitle.contains("<") || message.contains("<")) {
+
+                                        Log.d(TAG, "REPLACE TOKEN");
+                                        replaceTokens();
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Log.d(TAG, "NO TOKEN");
+                        displayNotification();
+                    }
+
+
                 }
-
-
-
-                if(gymlocationNames != null){
-                    if(parklocationNames!= null){
-                        if(restaurantlocationNames!= null){
-                            if(malllocationNames!= null){
-                                 if (messageTitle.contains("<") || message.contains("<")) {
-
-                                     Log.d(TAG, "REPLACE TOKEN");
-                                    replaceTokens();
-                                 }
-                               }
-                          }
-                     }
-                 }
-                else{
-                    Log.d(TAG,"NO TOKEN");
-                    displayNotification();
-                }
-
-
-            }
-        });
-
+            });
+        }
     }
 
     private void replaceTokens() {
@@ -1395,6 +1395,69 @@ public class MotivationMessages extends Service {
     }
 
 
+    private void getLogData() {
+       String logmessage = sharedPreferences.getString("message","");
+       String logreceiveTime = sharedPreferences.getString("receivetime",null);
+       int logcurrentSteps = sharedPreferences.getInt("currentSteps",0);
+       String logtype = sharedPreferences.getString("type",null);
+     String   logcategory = sharedPreferences.getString("category",null);
+       int  logcurrentSteps30 = sharedPreferences.getInt("currentSteps30",0);
+       String lograting = sharedPreferences.getString("rating","null");
+        String logisDismissed = sharedPreferences.getString("isDismissed",null);
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss aa");
+        Date logreceive_time=null;
+        Date logdismiss_time=null;
+        dismissTime = sdf.format(new Date());
+        try {
+            logdismiss_time = sdf.parse(dismissTime);
+            logreceive_time  = sdf.parse(receiveTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        long readingduration = Math.abs(logdismiss_time.getTime() - logreceive_time.getTime());
+       String readingDuration =  (readingduration % 3600000) / 60000 + " minutes" +" "+ (readingduration)/1000 % 60 + " seconds";
+
+        logDataToFirestore(logmessage,logcategory,logcurrentSteps,logcurrentSteps30,readingDuration,logisDismissed,lograting,logtype,logreceiveTime);
+
+    }
+
+    private void logDataToFirestore(String logmessage, String logcategory, int logcurrentSteps, int logcurrentSteps30, String readingDuration, String logisDismissed, String lograting, String logtype, String logreceiveTime) {
+
+        String fullData =  today + " | " +logreceiveTime + " | " +logcurrentSteps + " | " + goal  + " | " +logcurrentSteps30 + " | " +lograting + " | "+readingDuration + " | " +logisDismissed + " | " +logmessage + " | " +logcategory+" | "+logtype;
+        Map<String,Object> today_log = new HashMap<>();
+        today_log.put("Date| Time | Current Step Count | Step Goal  |  Step Count after 30 mins | Message Rating by user | Duration Reading the message | Dismissed(Y/N) |  Message Text | Message Type",
+                fullData );
+
+
+        Map<String,Object> data_log = new HashMap<>();
+        data_log.put(String.valueOf(id),today_log);
+
+//        data_log.put("Current Step Count",totalStepsFromDataPoints);
+//        data_log.put("Step Goal",goal);
+//        data_log.put("Message Category",category);
+//        data_log.put("Message Type",messageType);
+//        data_log.put("Message Text",message);
+//        data_log.put("Step Count after 30 mins",currentSteps);
+
+        db.collection("users").document(userID).collection("User Data Log").document("Data Log").set(data_log, SetOptions.merge())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        //  Log.d(TAG,"Logging data SUCCEEDED");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Log.d(TAG,"Logging data FAILED");
+                    }
+                });
+
+        SharedPreferences.Editor e = sharedPreferences.edit();
+        e.putInt("logID",id++);
+        e.apply();
+    }
 
 
 }
