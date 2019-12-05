@@ -97,6 +97,7 @@ public class RatingNotification extends AppCompatActivity {
                 SharedPreferences.Editor e = sharedPreferences.edit();
                 e.putString("rating",rating);
                 e.putString("isDismissed","N");
+                e.putString("readingTime",readingDuration);
                 e.apply();
                 recordNotifOpen();
                 startActivity(new Intent(RatingNotification.this, HomeActivity.class));

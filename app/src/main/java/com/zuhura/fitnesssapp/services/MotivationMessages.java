@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+
 import com.androdocs.httprequest.HttpRequest;
 import com.zuhura.fitnesssapp.AppController;
 import com.zuhura.fitnesssapp.HomeActivity;
@@ -58,6 +59,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -96,10 +98,10 @@ public class MotivationMessages extends Service {
     private int breaktimeDiff;
     private int EODtimediff;
     private LocationManager locationmanager = null;
-    List<String> restaurantlocationNames = new ArrayList<>();
-    List<String> parklocationNames = new ArrayList<>();
-    List<String> gymlocationNames = new ArrayList<>();
-    List<String> malllocationNames = new ArrayList<>();
+    List<String> restaurantlocationNames = new ArrayList<>(Arrays.asList("Zaatar w zeit", "Qatar National Library restaurant", "Chef’s Garden", "LAS cafeteria", "Starbucks Cafe","papa johns", "elevation burger", "students center cafeteria"));
+    List<String> parklocationNames = new ArrayList<>(Arrays.asList("oxygen park"));
+    List<String> gymlocationNames = new ArrayList<>(Arrays.asList("wellness Gharrafa", "Pro fitness gym", "Qatar gymnastic center", "Qatar foundation clubhouse", "f45 training education city", "curves"));
+    List<String> malllocationNames = new ArrayList<>(Arrays.asList("Ezdan mall", "Landmark", "Gulf mall", "Q Mall", "Twar mall"));
     private int goal,movemins,stepsRemaining;
     private double percentFinished,remainingPercentage;
     private int radius=500;
@@ -124,10 +126,7 @@ public class MotivationMessages extends Service {
         latitude = "25.319483500000004";
         longitude = "51.4226842";
 
-        restaurantlocationNames.add("Starbucks");
-        restaurantlocationNames.add("Chef's Garden");
-        gymlocationNames.add("Marwan Club");
-        parklocationNames.add("Oxygen Park");
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             notification =
                     new Notification.Builder(this, CHANNEL_DEFAULT_IMPORTANCE)
@@ -159,6 +158,8 @@ public class MotivationMessages extends Service {
     private Runnable init = new Runnable() {
         @Override
         public void run() {
+
+            if (isNetworkConnected()) {
 //                fetchLocation();
                 checkWeather();
 //                new nearbyGyms().execute();
@@ -166,13 +167,17 @@ public class MotivationMessages extends Service {
 //               new nearbyParks().execute();
 //                new nearbyRestaurants().execute();
 
-            int delayMs;
-            if (latitude == null && longitude == null){
-                delayMs = 5000;
-            }else{
-                delayMs = 300000;
+                int delayMs;
+                if (latitude == null && longitude == null) {
+                    delayMs = 5000;
+                } else {
+                    delayMs = 300000;
+                }
+                mHandler.postDelayed(this, delayMs); //5 secs
             }
-            mHandler.postDelayed(this, delayMs); //5 secs
+            else{
+                Toast.makeText(context, "Please check your Internet Connection.", Toast.LENGTH_SHORT).show();
+            }
         }
     };
 
@@ -184,6 +189,7 @@ public class MotivationMessages extends Service {
             accessHourlySteps();
             accessGoogleFit();
 
+
             if(sharedPreferences.getBoolean("notifications",true)) {
                 if (!isActive()) {
 
@@ -191,7 +197,7 @@ public class MotivationMessages extends Service {
                 }
                 checkEOD();
             }
-            mHandler.postDelayed(this, 120000); //2 mins
+            mHandler.postDelayed(this, 300000); //2 mins
         }
     };
 
@@ -201,7 +207,7 @@ public class MotivationMessages extends Service {
         @Override
         public void run() {
             fetchStepsafterThirty();
-            mHandler.postDelayed(this, 300000 ); //15 mins
+            mHandler.postDelayed(this, 120000 ); //5 mins
         }
     };
 
@@ -219,16 +225,21 @@ public class MotivationMessages extends Service {
         accessHourlySteps();
         accessGoogleFit();
             this.context = this;
-            init.run();
-            run_motivation.run();
+            if (isNetworkConnected()) {
+                init.run();
+                run_motivation.run();
+                Toast.makeText(this, "The app is now running in the background.", Toast.LENGTH_SHORT).show();
+            }
+            else{
+                Toast.makeText(this, "Please check your Internet Connection.", Toast.LENGTH_SHORT).show();
+            }
 
-            Toast.makeText(this, "The app is now running in the background.", Toast.LENGTH_SHORT).show();
 
         return START_STICKY;
     }
 
     private boolean isNetworkConnected() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(context.CONNECTIVITY_SERVICE);
 
         return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
     }
@@ -430,7 +441,7 @@ public class MotivationMessages extends Service {
                                                 e.putInt("currentSteps30",currentSteps);
                                                 e.apply();
 
-                                                //TODO Start intent of LogUserDAta
+
                                                 getLogData();
                                             }
                                         }
@@ -1015,20 +1026,21 @@ public class MotivationMessages extends Service {
                         }
                     }
 
+                    Log.d(TAG, "=======MALLS=======" + malllocationNames);
+                    Log.d(TAG, "=======GYM=======" + gymlocationNames);
+                    Log.d(TAG, "=======RESTAURANT=======" + restaurantlocationNames);
+                    Log.d(TAG, "=======PARK=======" + parklocationNames);
 
-                    if (gymlocationNames != null) {
-                        if (parklocationNames != null) {
-                            if (restaurantlocationNames != null) {
-                                if (malllocationNames != null) {
+
                                     if (messageTitle.contains("<") || message.contains("<")) {
 
                                         Log.d(TAG, "REPLACE TOKEN");
                                         replaceTokens();
                                     }
-                                }
-                            }
-                        }
-                    } else {
+
+
+
+                    else {
                         Log.d(TAG, "NO TOKEN");
                         displayNotification();
                     }
@@ -1429,21 +1441,8 @@ public class MotivationMessages extends Service {
        int  logcurrentSteps30 = sharedPreferences.getInt("currentSteps30",0);
        String lograting = sharedPreferences.getString("rating","null");
         String logisDismissed = sharedPreferences.getString("isDismissed",null);
-        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss aa");
-        Date logreceive_time=null;
-        Date logdismiss_time=null;
-        dismissTime = sdf.format(new Date());
-        try {
-            logdismiss_time = sdf.parse(dismissTime);
-            logreceive_time  = sdf.parse(receiveTime);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
-        long readingduration = Math.abs(logdismiss_time.getTime() - logreceive_time.getTime());
-       String readingDuration =  (readingduration % 3600000) / 60000 + " minutes" +" "+ (readingduration)/1000 % 60 + " seconds";
-
-        logDataToFirestore(logmessage,logcategory,logcurrentSteps,logcurrentSteps30,readingDuration,logisDismissed,lograting,logtype,logreceiveTime);
+      String logreadingDuration = sharedPreferences.getString("readingTime","0 minutes 0 seconds");
+        logDataToFirestore(logmessage,logcategory,logcurrentSteps,logcurrentSteps30,logreadingDuration,logisDismissed,lograting,logtype,logreceiveTime);
 
     }
 
@@ -1469,13 +1468,13 @@ public class MotivationMessages extends Service {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        //  Log.d(TAG,"Logging data SUCCEEDED");
+                          Log.d(TAG,"Logging data SUCCEEDED");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        // Log.d(TAG,"Logging data FAILED");
+                         Log.d(TAG,"Logging data FAILED");
                     }
                 });
 

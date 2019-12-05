@@ -72,6 +72,7 @@ public class NotifDismissReceiver extends BroadcastReceiver {
 
         SharedPreferences.Editor e = sharedPreferences.edit();
        e.putString("isDismissed","Y");
+       e.putString("readingTime",readingDuration);
         e.apply();
         recordDismiss();
         
