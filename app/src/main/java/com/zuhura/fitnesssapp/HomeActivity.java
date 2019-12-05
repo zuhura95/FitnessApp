@@ -3,6 +3,7 @@ package com.zuhura.fitnesssapp;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -101,6 +102,7 @@ import java.util.concurrent.TimeUnit;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+
     private Handler mHandler = new Handler();
 
 
@@ -142,7 +144,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     List<Integer> totalMonthStepsList = new ArrayList<>();
     List<Integer> weekData = new ArrayList<>();
     List<String> week_graph_data = new ArrayList<>();
-
+    public Notification notification;
 
 
     @Override
@@ -269,13 +271,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }
             else{
                 startService(new Intent(this,MotivationMessages.class));
+                displayNotification();
             }
 
 
         }
 
 
-        displayNotification();
+
         retrieveUserDetails();
         hourlyDataOnChart();
         weeklyDataChart();
@@ -317,22 +320,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private boolean isNetworkConnected() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
-    }
-
-    private Runnable init = new Runnable() {
-        @Override
-        public void run() {
-
-           // Toast.makeText(HomeActivity.this, "current steps fetched", Toast.LENGTH_SHORT).show();
-          accessGoogleFit();
-            mHandler.postDelayed(this, 10000);
-        }
-    };
-
     /**
      * Display ongoing Notification
      */
@@ -353,6 +340,23 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 .setSmallIcon(R.drawable.ic_person_walk);
         manager.notify(1, builder.build());
     }
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
+
+    private Runnable init = new Runnable() {
+        @Override
+        public void run() {
+
+           // Toast.makeText(HomeActivity.this, "current steps fetched", Toast.LENGTH_SHORT).show();
+          accessGoogleFit();
+            mHandler.postDelayed(this, 10000);
+        }
+    };
+
+
 
     /**
      * Retrieve user's details from Firestore
@@ -624,6 +628,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+
+
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
                 Log.d(TAG, "accessing...");

@@ -58,7 +58,7 @@
             android:resource="@drawable/ic_launcher_background" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCnQheiMTo9kuTyU-ACS9SmUMSlZH7UrBs" />
+            android:value="AIzaSyDQD6Kkbxh2p8fHOJpFnhGRyRt_2pvVlco" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/colorAccent" />
