@@ -99,10 +99,16 @@ public class MotivationMessages extends Service {
     private int breaktimeDiff;
     private int EODtimediff;
     private LocationManager locationmanager = null;
-    List<String> restaurantlocationNames = new ArrayList<>(Arrays.asList("Zaatar w zeit", "Qatar National Library restaurant", "Chef’s Garden", "LAS cafeteria", "Starbucks Cafe","papa johns", "elevation burger", "students center cafeteria"));
-    List<String> parklocationNames = new ArrayList<>(Arrays.asList("oxygen park"));
-    List<String> gymlocationNames = new ArrayList<>(Arrays.asList("wellness Gharrafa", "Pro fitness gym", "Qatar gymnastic center", "Qatar foundation clubhouse", "f45 training education city", "curves"));
-    List<String> malllocationNames = new ArrayList<>(Arrays.asList("Ezdan mall", "Landmark", "Gulf mall", "Q Mall", "Twar mall"));
+
+    List<String> restaurantlocationNames = new ArrayList<>();
+    List<String> parklocationNames = new ArrayList<>();
+    List<String> gymlocationNames = new ArrayList<>();
+    List<String> malllocationNames = new ArrayList<>();
+
+    //    List<String> restaurantlocationNames = new ArrayList<>(Arrays.asList("Zaatar w zeit", "Qatar National Library restaurant", "Chef’s Garden", "LAS cafeteria", "Starbucks Cafe","papa johns", "elevation burger", "students center cafeteria"));
+//    List<String> parklocationNames = new ArrayList<>(Arrays.asList("oxygen park"));
+//    List<String> gymlocationNames = new ArrayList<>(Arrays.asList("wellness Gharrafa", "Pro fitness gym", "Qatar gymnastic center", "Qatar foundation clubhouse", "f45 training education city", "curves"));
+//    List<String> malllocationNames = new ArrayList<>(Arrays.asList("Ezdan mall", "Landmark", "Gulf mall", "Q Mall", "Twar mall"));
     private int goal,movemins,stepsRemaining;
     private double percentFinished,remainingPercentage;
     private int radius=500;
@@ -129,8 +135,6 @@ public class MotivationMessages extends Service {
 
     @Override
     public void onCreate() {
-        latitude = "25.319483500000004";
-        longitude = "51.4226842";
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
         builder.setContentTitle("Keep Staying Fit");
         builder.setContentText("Fetching Steps");
@@ -180,9 +184,9 @@ public class MotivationMessages extends Service {
 //        }
 
 
-//        fetchLocation();
+       fetchLocation();
 //        NotificationDismissReceiver notificationDismissReceiver = new NotificationDismissReceiver();
-        Log.d(TAG,"LATITUDE:"+latitude+"LONGITUDE"+longitude);
+
         sharedPreferences = this.getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
         userID = auth.getCurrentUser().getUid();
         username = sharedPreferences.getString("NickName",null);
@@ -204,13 +208,17 @@ public class MotivationMessages extends Service {
         public void run() {
 
             if (isNetworkConnected()) {
-//                fetchLocation();
-                checkWeather();
-//                new nearbyGyms().execute();
-//                new nearbyMalls().execute();
-//               new nearbyParks().execute();
-//                new nearbyRestaurants().execute();
+                fetchLocation();
 
+                if(longitude != null && latitude !=null) {
+                    checkWeather();
+
+                new nearbyGyms().execute();
+                new nearbyMalls().execute();
+               new nearbyParks().execute();
+                new nearbyRestaurants().execute();
+                }
+                Log.d(TAG,"LATITUDE:"+latitude+"LONGITUDE"+longitude);
                 int delayMs;
                 if (latitude == null && longitude == null) {
                     delayMs = 5000;
@@ -236,8 +244,11 @@ public class MotivationMessages extends Service {
 
             if(sharedPreferences.getBoolean("notifications",true)) {
                 if (!isActive()) {
+                    if(longitude != null && latitude !=null) {
 
-                    startMotivating();
+                        startMotivating();
+                    }
+
                 }
                 checkEOD();
                 if(currenthour == 23){
@@ -963,6 +974,8 @@ public class MotivationMessages extends Service {
             String key = "AIzaSyDQD6Kkbxh2p8fHOJpFnhGRyRt_2pvVlco";
             String lat = String.valueOf(location.getLatitude());
             String lon = String.valueOf(location.getLongitude());
+            latitude = lat;
+            longitude = lon;
 
 
         }
@@ -1243,181 +1256,181 @@ public class MotivationMessages extends Service {
         }
     }
 
-//    class nearbyGyms extends AsyncTask<String, Void, String>{
-//        @Override
-//        protected void onPreExecute() {
-//            super.onPreExecute();
-//
-//        }
-//
-//
-//        @Override
-//        protected String doInBackground(String... strings) {
-//            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=sports-facility-venue";
-//            String response= HttpRequest.excuteGet(targetURL);
-//            Log.d(TAG,targetURL);
-//          //  String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=gym&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
-//            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
-//            return response;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(String response) {
-//
-//            int count=0;
-//            try{
-//                JSONObject jsonObj = new JSONObject(response);
-//                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
-//                JSONArray jsonArray = jsonObj2.getJSONArray("items");
-//                int n = jsonArray.length();
-//                while(n>count) {
-//                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
-//                    String loc = items.getString("title");
-//
-//                    if(!gymlocationNames.contains(loc)) {
-//                        gymlocationNames.add(loc);
-//                    }
-//                    count++;
-//                }
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//            Log.d(TAG, "=======GYMS=======" + gymlocationNames);
-//        }
-//    }
-//    class nearbyParks extends AsyncTask<String, Void, String>{
-//        @Override
-//        protected void onPreExecute() {
-//            super.onPreExecute();
-//
-//        }
-//
-//
-//        @Override
-//        protected String doInBackground(String... strings) {
-//
-//            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=leisure-outdoor";
-//            String response= HttpRequest.excuteGet(targetURL);
-//            Log.d(TAG,targetURL);
-//          //  String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=park&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
-//            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
-//            return response;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(String response) {
-//
-//            int count=0;
-//            try{
-//                JSONObject jsonObj = new JSONObject(response);
-//                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
-//                JSONArray jsonArray = jsonObj2.getJSONArray("items");
-//                int n = jsonArray.length();
-//                while(n>count) {
-//                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
-//                    String loc = items.getString("title");
-//
-//                    if(!parklocationNames.contains(loc)){
-//                        parklocationNames.add(loc);
-//                    }
-//
-//
-//                    count++;
-//                }
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//            Log.d(TAG, "=======PARKS=======" + parklocationNames);
-//        }
-//    }
-//    class nearbyRestaurants extends AsyncTask<String, Void, String>{
-//        @Override
-//        protected void onPreExecute() {
-//            super.onPreExecute();
-//
-//        }
-//
-//
-//        @Override
-//        protected String doInBackground(String... strings) {
-//            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=eat-drink";
-//            String response= HttpRequest.excuteGet(targetURL);
-//            Log.d(TAG,targetURL);
-//         //   String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
-//            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
-//            return response;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(String response) {
-//
-//            int count=0;
-//            try{
-//                JSONObject jsonObj = new JSONObject(response);
-//                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
-//                JSONArray jsonArray = jsonObj2.getJSONArray("items");
-//                int n = jsonArray.length();
-//                while(n>count) {
-//                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
-//                    String loc = items.getString("title");
-//
-//                    if(!restaurantlocationNames.contains(loc)){
-//                        restaurantlocationNames.add(loc);
-//                    }
-//
-//
-//                    count++;
-//                }
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//            Log.d(TAG, "=======RESTAURANTS=======" + restaurantlocationNames);
-//        }
-//    }
-//    class nearbyMalls extends AsyncTask<String, Void, String>{
-//        @Override
-//        protected void onPreExecute() {
-//            super.onPreExecute();
-//
-//        }
-//
-//
-//        @Override
-//        protected String doInBackground(String... strings) {
-//            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=shopping";
-//            String response= HttpRequest.excuteGet(targetURL);
-//            Log.d(TAG,targetURL);
-//          //  String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=shopping_mall&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
-//            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
-//            return response;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(String response) {
-//
-//            int count=0;
-//            try{
-//                JSONObject jsonObj = new JSONObject(response);
-//                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
-//                JSONArray jsonArray = jsonObj2.getJSONArray("items");
-//                int n = jsonArray.length();
-//                while(n>count) {
-//                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
-//                    String loc = items.getString("title");
-//
-//                    if(!malllocationNames.contains(loc)){
-//                        malllocationNames.add(loc);
-//                    }
-//
-//
-//                    count++;
-//                }
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//            Log.d(TAG, "=======MALLS=======" + malllocationNames);
-//        }
-//    }
+    class nearbyGyms extends AsyncTask<String, Void, String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=sports-facility-venue";
+            String response= HttpRequest.excuteGet(targetURL);
+            Log.d(TAG,targetURL);
+          //  String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=gym&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
+            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+
+            int count=0;
+            try{
+                JSONObject jsonObj = new JSONObject(response);
+                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                JSONArray jsonArray = jsonObj2.getJSONArray("items");
+                int n = jsonArray.length();
+                while(n>count) {
+                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                    String loc = items.getString("title");
+
+                    if(!gymlocationNames.contains(loc)) {
+                        gymlocationNames.add(loc);
+                    }
+                    count++;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.d(TAG, "=======GYMS=======" + gymlocationNames);
+        }
+    }
+    class nearbyParks extends AsyncTask<String, Void, String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+
+        @Override
+        protected String doInBackground(String... strings) {
+
+            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=leisure-outdoor";
+            String response= HttpRequest.excuteGet(targetURL);
+            Log.d(TAG,targetURL);
+          //  String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=park&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
+            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+
+            int count=0;
+            try{
+                JSONObject jsonObj = new JSONObject(response);
+                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                JSONArray jsonArray = jsonObj2.getJSONArray("items");
+                int n = jsonArray.length();
+                while(n>count) {
+                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                    String loc = items.getString("title");
+
+                    if(!parklocationNames.contains(loc)){
+                        parklocationNames.add(loc);
+                    }
+
+
+                    count++;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.d(TAG, "=======PARKS=======" + parklocationNames);
+        }
+    }
+    class nearbyRestaurants extends AsyncTask<String, Void, String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=eat-drink";
+            String response= HttpRequest.excuteGet(targetURL);
+            Log.d(TAG,targetURL);
+         //   String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
+            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type=restaurant&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+
+            int count=0;
+            try{
+                JSONObject jsonObj = new JSONObject(response);
+                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                JSONArray jsonArray = jsonObj2.getJSONArray("items");
+                int n = jsonArray.length();
+                while(n>count) {
+                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                    String loc = items.getString("title");
+
+                    if(!restaurantlocationNames.contains(loc)){
+                        restaurantlocationNames.add(loc);
+                    }
+
+
+                    count++;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.d(TAG, "=======RESTAURANTS=======" + restaurantlocationNames);
+        }
+    }
+    class nearbyMalls extends AsyncTask<String, Void, String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String targetURL = "https://places.cit.api.here.com/places/v1/browse?app_id=rN8Lww7j0n8vhpWI46R6&app_code=2QvPBHZjstQyTFCa_UI6Pw&in="+latitude+","+longitude+";r="+radius+"&pretty&cat=shopping";
+            String response= HttpRequest.excuteGet(targetURL);
+            Log.d(TAG,targetURL);
+          //  String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+latitude+","+longitude+"&radius="+radius+"&type=shopping_mall&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs&language=en");
+            // String response= HttpRequest.excuteGet("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=25.334018380342,51.47405207536987&radius=1000&type="+"restaurant"+"&key=AIzaSyA6_HxNGgmNWJlN1cjW5Ugng0FaQFC-Fhs");
+            return response;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+
+            int count=0;
+            try{
+                JSONObject jsonObj = new JSONObject(response);
+                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                JSONArray jsonArray = jsonObj2.getJSONArray("items");
+                int n = jsonArray.length();
+                while(n>count) {
+                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                    String loc = items.getString("title");
+
+                    if(!malllocationNames.contains(loc)){
+                        malllocationNames.add(loc);
+                    }
+
+
+                    count++;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.d(TAG, "=======MALLS=======" + malllocationNames);
+        }
+    }
 
     public void displayNotification() {
 
