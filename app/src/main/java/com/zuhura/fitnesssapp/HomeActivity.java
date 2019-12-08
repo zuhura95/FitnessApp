@@ -200,10 +200,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Calendar calendar = Calendar.getInstance();
         int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
         int lastDay = sharedPreferences.getInt("day", 0);
-
+        int read = sharedPreferences.getInt("tipsRead",0);
         if (lastDay != currentDay) {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putInt("day", currentDay);
+            editor.putInt("tipsRead",read++);
             editor.apply();
 
             //run code that will be displayed once a day
@@ -271,7 +272,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }
             else{
                 startService(new Intent(this,MotivationMessages.class));
-                displayNotification();
+
             }
 
 
@@ -320,26 +321,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    /**
-     * Display ongoing Notification
-     */
-    private void displayNotification() {
 
-
-        NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-//            NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
-//            manager.createNotificationChannel(channel);
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "fitnessapp")
-                    .setContentTitle("Keep Staying Fit")
-                    .setContentText("Fetching Steps")
-                    .setAutoCancel(false)
-                    .setOngoing(true)
-                    .setSmallIcon(R.drawable.ic_person_walk);
-            manager.notify(1, builder.build());
-        }
-
-    }
 
 
     private boolean isNetworkConnected() {
@@ -427,6 +409,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private void alternatePopUp() {
 
         int i = sharedPreferences.getInt("key", 0);
+
 
         if (i % 2 == 0) {
             showHealthTip();
@@ -1343,140 +1326,178 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    /**
-     * Check if the user has achieved any reward
-     */
-    public void checkForRewards() {
-
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+    private void displayReward(String awardMsg,Drawable awardImg){
         TextView txtclose, awardMessage;
         ImageView awardImage;
-
-        boolean gotReward = sharedPreferences.getBoolean("trophy1", false);
         awardPopup.setContentView(R.layout.custompopup);
         txtclose = awardPopup.findViewById(R.id.txtclose);
         awardImage = awardPopup.findViewById(R.id.award_image);
         awardMessage = awardPopup.findViewById(R.id.awardmsg);
+        awardImage.setImageDrawable(awardImg);
+        awardMessage.setText(awardMsg);
+        awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        awardPopup.show();
 
-        float distanceInKm = distanceInMeters / 1000;
-
-        Log.d(TAG, "-------REWARDS-------");
-        Log.d(TAG, String.valueOf(gotReward));
-
-
-        if ((totalStepsFromDataPoints == sharedPreferences.getInt("Goal", 5000))) {
-
-            editor.putBoolean("trophy1", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.complete1));
-            awardMessage.setText(R.string.award_1_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-
-        }
-
-
-        //daily steps = steps goal) for 7 days
-//        if(stepsCounter.getProgress() == sharedPreferences.getInt("Goal",5000)){
-//
-//            awardMessage.setText("Achieved daily steps goal for 1 week!");
-//            awardPopup.show();
-//        }
-
-
-        //daily steps >= 10000
-        if ((totalStepsFromDataPoints >= 10000)) {
-            editor.putBoolean("trophy2", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.monkey));
-            awardMessage.setText(R.string.award_2_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-
-        //daily steps >= 20000
-        if ((totalStepsFromDataPoints >= 20000)) {
-            editor.putBoolean("trophy3", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.bee));
-            awardMessage.setText(R.string.award_3_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-
-
-        //distance higher than 1.5 km
-        if ((distanceInKm >= 1.5)) {
-            editor.putBoolean("medal1", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.torch));
-            awardMessage.setText(R.string.award_5_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-
-        //distance higher than 7 km
-        if ((distanceInKm >= 7)) {
-            editor.putBoolean("medal2", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.cornish));
-            awardMessage.setText(R.string.award_6_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-
-        //distance higher than 10 km
-        if ((distanceInKm >= 10)) {
-            editor.putBoolean("medal3", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.janoub));
-            awardMessage.setText(R.string.award_7_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-        //distance higher than 33 km
-        if ((distanceInKm >= 33)) {
-            editor.putBoolean("medal4", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.alkhor));
-            awardMessage.setText(R.string.award_8_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-        //distance higher than 97 km
-        if ((distanceInKm >= 97)) {
-            editor.putBoolean("medal5", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.halul));
-            awardMessage.setText(R.string.award_9_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-        //distance higher than 160 km
-        if ((distanceInKm >= 160)) {
-            editor.putBoolean("medal6", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.length));
-            awardMessage.setText(R.string.award_10_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-        //distance higher than 190 km
-        if ((distanceInKm >= 190)) {
-            editor.putBoolean("medal7", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.shamal));
-            awardMessage.setText(R.string.award_11_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-        //distance higher than 571 km
-        if ((distanceInKm >= 571)) {
-            editor.putBoolean("medal8", true);
-            awardImage.setImageDrawable(getResources().getDrawable(R.drawable.kuwait));
-            awardMessage.setText(R.string.award_12_message);
-            awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-
-
-        editor.apply();
         txtclose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 awardPopup.dismiss();
             }
         });
+
+
+    }
+    /**
+     * Check if the user has achieved any reward
+     */
+    public void checkForRewards() {
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        String awardMsg;
+        Drawable awardImg;
+
+        boolean gotReward1 = sharedPreferences.getBoolean("trophy1", false);
+        boolean gotReward2 = sharedPreferences.getBoolean("trophy2", false);
+        boolean gotReward3 = sharedPreferences.getBoolean("trophy3", false);
+        boolean gotReward4 = sharedPreferences.getBoolean("medal1", false);
+        boolean gotReward5 = sharedPreferences.getBoolean("medal2", false);
+        boolean gotReward6 = sharedPreferences.getBoolean("medal3", false);
+        boolean gotReward7 = sharedPreferences.getBoolean("medal4", false);
+        boolean gotReward8 = sharedPreferences.getBoolean("medal5", false);
+        boolean gotReward9 = sharedPreferences.getBoolean("medal6", false);
+        boolean gotReward10 = sharedPreferences.getBoolean("medal7", false);
+        boolean gotReward11 = sharedPreferences.getBoolean("medal8", false);
+
+
+        float distanceInKm = distanceInMeters / 1000;
+
+        Log.d(TAG, "-------REWARDS-------");
+        Log.d(TAG, String.valueOf(gotReward1));
+
+
+
+        if ((totalStepsFromDataPoints >= sharedPreferences.getInt("Goal", 5000)) ) {
+                editor.putBoolean("trophy1", true);
+                editor.apply();
+                awardMsg = getResources().getString(R.string.award_1_message);
+                 awardImg = getResources().getDrawable(R.drawable.complete1);
+                 if(!gotReward1) {
+                     displayReward(awardMsg, awardImg);
+                 }
+
+        }
+
+
+        //daily steps >= 10000
+        if ((totalStepsFromDataPoints >= 10000)) {
+            editor.putBoolean("trophy2", true);
+            editor.apply();
+            awardMsg = getResources().getString(R.string.award_2_message);
+            awardImg = getResources().getDrawable(R.drawable.monkey);
+            if(!gotReward2){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+
+        //daily steps >= 20000
+        if ((totalStepsFromDataPoints >= 20000)) {
+            editor.putBoolean("trophy3", true);
+            editor.apply();
+            awardMsg=getResources().getString(R.string.award_3_message);
+            awardImg=getResources().getDrawable(R.drawable.bee);
+            if(!gotReward3){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+
+
+
+
+        //distance higher than 1.5 km
+        if ((distanceInKm >= 1.5)) {
+            editor.putBoolean("medal1", true);
+            editor.apply();
+            awardImg=getResources().getDrawable(R.drawable.torch);
+            awardMsg=getResources().getString(R.string.award_5_message);
+            if(!gotReward4){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+
+        //distance higher than 7 km
+        if ((distanceInKm >= 7)) {
+            editor.putBoolean("medal2", true);
+            editor.apply();
+            awardMsg = getResources().getString(R.string.award_6_message);
+            awardImg = getResources().getDrawable(R.drawable.cornish);
+            if(!gotReward5){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+
+        //distance higher than 10 km
+        if ((distanceInKm >= 10)) {
+            editor.putBoolean("medal3", true);
+            editor.apply();
+            awardImg = getResources().getDrawable(R.drawable.janoub);
+            awardMsg = getResources().getString(R.string.award_7_message);
+            if(!gotReward6){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+        //distance higher than 33 km
+        if ((distanceInKm >= 33)) {
+            editor.putBoolean("medal4", true);
+            editor.apply();
+            awardImg = getResources().getDrawable(R.drawable.alkhor);
+            awardMsg = getResources().getString(R.string.award_8_message);
+            if(!gotReward7){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+        //distance higher than 97 km
+        if ((distanceInKm >= 97)) {
+            editor.putBoolean("medal5", true);
+            editor.apply();
+            awardImg = getResources().getDrawable(R.drawable.halul);
+            awardMsg = getResources().getString(R.string.award_9_message);
+            if(!gotReward8){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+        //distance higher than 160 km
+        if ((distanceInKm >= 160)) {
+            editor.putBoolean("medal6", true);
+            editor.apply();
+            awardImg = getResources().getDrawable(R.drawable.length);
+            awardMsg = getResources().getString(R.string.award_10_message);
+            if(!gotReward9){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+        //distance higher than 190 km
+        if ((distanceInKm >= 190)) {
+            editor.putBoolean("medal7", true);
+            editor.apply();
+            awardImg = getResources().getDrawable(R.drawable.shamal);
+            awardMsg = getResources().getString(R.string.award_11_message);
+            if(!gotReward10){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+        //distance higher than 571 km
+        if ((distanceInKm >= 571)) {
+            editor.putBoolean("medal8", true);
+            editor.apply();
+            awardImg = getResources().getDrawable(R.drawable.kuwait);
+            awardMsg = getResources().getString(R.string.award_12_message);
+            if(!gotReward11){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+
+
+
 
 
     }

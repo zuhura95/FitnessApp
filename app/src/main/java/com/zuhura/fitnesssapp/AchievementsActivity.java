@@ -36,7 +36,7 @@ public class AchievementsActivity extends AppCompatActivity {
         trophy1 = findViewById(R.id.trophy_1);
         trophy2 = findViewById(R.id.trophy_2);
         trophy3 = findViewById(R.id.trophy_3);
-        trophy4 = findViewById(R.id.trophy_4);
+       trophy4 = findViewById(R.id.trophy_4);
         medal1 = findViewById(R.id.medal_1);
         medal2 = findViewById(R.id.medal_2);
         medal3 = findViewById(R.id.medal_3);
