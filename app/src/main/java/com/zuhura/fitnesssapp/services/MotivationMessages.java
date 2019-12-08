@@ -240,6 +240,13 @@ public class MotivationMessages extends Service {
                     startMotivating();
                 }
                 checkEOD();
+                if(currenthour == 23){
+                    Log.d(TAG,"TIME TO LOG ACTIVE MINS");
+                    run_activeTimeCheck.run();
+                }
+                else{
+                    Log.d(TAG,"NOT TIME TO LOG ACTIVE MINS");
+                }
             }
             mHandler.postDelayed(this, 300000); //2 mins
         }
@@ -581,8 +588,11 @@ public class MotivationMessages extends Service {
 
     private void saveMinsToFirestore() {
 
+        Map<String, Integer> activemins = new HashMap<>();
+        activemins.put("total", movemins);
+
         db.collection("users").document(userID)
-                .collection(today).document("Active Mins").set(movemins)
+                .collection(today).document("Active Mins").set(activemins)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -925,10 +935,10 @@ public class MotivationMessages extends Service {
                     Log.d(TAG,"CATEGORY G");
                 }
             }
+        }else{
+            Log.d(TAG,"ITS STILL EARLYYYY");
         }
-        if(currenthour == 23){
-            run_activeTimeCheck.run();
-        }
+
     }
 
 
