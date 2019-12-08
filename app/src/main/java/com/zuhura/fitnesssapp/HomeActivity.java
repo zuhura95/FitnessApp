@@ -2,6 +2,7 @@ package com.zuhura.fitnesssapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -267,14 +268,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     fitnessOptions);
         } else {
             init.run();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(new Intent(this, MotivationMessages.class));
-            }
-            else{
-                startService(new Intent(this,MotivationMessages.class));
+            if(!isServiceRunning(MotivationMessages.class)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(new Intent(this, MotivationMessages.class));
+                } else {
+                    startService(new Intent(this, MotivationMessages.class));
 
+                }
             }
-
 
         }
 
@@ -322,7 +323,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
+    private boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -621,10 +630,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 Log.d(TAG, "accessing...");
 
                 if(isNetworkConnected()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        startForegroundService(new Intent(this, MotivationMessages.class));
-                    } else {
-                        startService(new Intent(this, MotivationMessages.class));
+                    if(!isServiceRunning(MotivationMessages.class)) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            startForegroundService(new Intent(this, MotivationMessages.class));
+                        } else {
+                            startService(new Intent(this, MotivationMessages.class));
+                        }
                     }
                     init.run();
                 }
