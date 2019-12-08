@@ -128,7 +128,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     Dialog awardPopup, healthtip;
 
     private float distanceInMeters;
-    private float kCals;
+    private float Cals;
     private float movemins;
     private int totalStepsFromDataPoints = 0;
     String today, uid;
@@ -327,19 +327,21 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
-            manager.createNotificationChannel(channel);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+//            NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
+//            manager.createNotificationChannel(channel);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "fitnessapp")
+                    .setContentTitle("Keep Staying Fit")
+                    .setContentText("Fetching Steps")
+                    .setAutoCancel(false)
+                    .setOngoing(true)
+                    .setSmallIcon(R.drawable.ic_person_walk);
+            manager.notify(1, builder.build());
         }
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "fitnessapp")
-                .setContentTitle("Keep Staying Fit")
-                .setContentText("Fetching Steps")
-                .setAutoCancel(false)
-                .setOngoing(true)
-                .setSmallIcon(R.drawable.ic_person_walk);
-        manager.notify(1, builder.build());
     }
+
+
     private boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -841,8 +843,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             distance.setText(String.format("%.2f", distanceTraveledFromDataPoints / 1000.00));
             distanceInMeters = distanceTraveledFromDataPoints;
         } else if (dataSet.getDataType().getName().equals("com.google.calories.expended")) {
-            calories.setText(String.format("%.2f", kcals / 1000.00));
-            kCals = kcals;
+            calories.setText(String.format("%.2f", kcals));
+            Cals = kcals;
         }else if(dataSet.getDataType().getName().equals("com.google.active_minutes")){
             activeTime.setText(String.valueOf(movemins));
         }

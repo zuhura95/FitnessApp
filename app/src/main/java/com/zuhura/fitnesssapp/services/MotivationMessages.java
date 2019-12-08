@@ -21,12 +21,14 @@ import android.app.Service;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 
 import com.androdocs.httprequest.HttpRequest;
@@ -78,7 +80,6 @@ public class MotivationMessages extends Service {
 
     private String TAG = "================MOTIVATION MESSAGES================";
     private String weather_API_key = "7a7f09f95d97e3e22d688438853d05f2";
-    private static final String CHANNEL_DEFAULT_IMPORTANCE ="HIGH" ;
     private int totalStepsFromDataPoints, currentSteps,initialSteps ;
     private FirebaseAuth auth;
     private FirebaseFirestore db;
@@ -106,6 +107,11 @@ public class MotivationMessages extends Service {
     private double percentFinished,remainingPercentage;
     private int radius=500;
     private Notification notification;
+    public static final String NOTIFICATION_CHANNEL_ID = "channel_id";
+    public static final String CHANNEL_NAME = "Notification Channel";
+    int importance = NotificationManager.IMPORTANCE_DEFAULT;
+    public static final int NOTIFICATION_ID = 101;
+    NotificationChannel notificationChannel;
 
 
     public MotivationMessages() {
@@ -125,22 +131,55 @@ public class MotivationMessages extends Service {
     public void onCreate() {
         latitude = "25.319483500000004";
         longitude = "51.4226842";
-
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            notification =
-                    new Notification.Builder(this, CHANNEL_DEFAULT_IMPORTANCE)
-                            .setContentTitle("Keep Staying Fit")
-                            .setContentText("Fetching Steps")
-                            .setAutoCancel(false)
-                            .setOngoing(true)
-                            .setSmallIcon(R.drawable.ic_person_walk)
-                            .build();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
+        builder.setContentTitle("Keep Staying Fit");
+        builder.setContentText("Fetching Steps");
+        builder.setAutoCancel(false);
+        builder.setPriority(NotificationCompat.PRIORITY_HIGH);
+        builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+        builder.setOngoing(true);
+        builder.setSmallIcon(R.drawable.ic_person_walk);
+        notification = builder.build();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, CHANNEL_NAME, importance);
+            notificationChannel.enableLights(true);
+            notificationChannel.enableVibration(true);
+            notificationChannel.setLightColor(Color.GREEN);
+            notificationChannel.setVibrationPattern(new long[] {
+                    500,
+                    500,
+                    500,
+                    500,
+                    500
+            });
+            //Sets whether notifications from these Channel should be visible on Lockscreen or not
+            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+        }
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationManager.createNotificationChannel(notificationChannel);
         }
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            startForeground(1, notification);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForeground(NOTIFICATION_ID, notification);
+        }else{
+            NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
+            notificationManagerCompat.notify(NOTIFICATION_ID, notification);
         }
+
+//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+//            notification =
+//                    new Notification.Builder(this, CHANNEL_DEFAULT_IMPORTANCE)
+//                            .setContentTitle("Keep Staying Fit")
+//                            .setContentText("Fetching Steps")
+//                            .setAutoCancel(false)
+//                            .setOngoing(true)
+//                            .setSmallIcon(R.drawable.ic_person_walk)
+//                            .build();
+//        }
+
+
 //        fetchLocation();
 //        NotificationDismissReceiver notificationDismissReceiver = new NotificationDismissReceiver();
         Log.d(TAG,"LATITUDE:"+latitude+"LONGITUDE"+longitude);
@@ -149,6 +188,11 @@ public class MotivationMessages extends Service {
         username = sharedPreferences.getString("NickName",null);
         goal = sharedPreferences.getInt("Goal",5000);
         id = sharedPreferences.getInt("logID",0);
+        String tag = "com.my_app:LOCK";
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M && Build.MANUFACTURER.equals("Huawei")) {
+            tag = "LocationManagerService";
+        }
+        PowerManager.WakeLock wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE)).newWakeLock(1, tag); wakeLock.acquire();
     }
     /**
      * Display ongoing Notification
@@ -207,7 +251,7 @@ public class MotivationMessages extends Service {
         @Override
         public void run() {
             fetchStepsafterThirty();
-            mHandler.postDelayed(this, 120000 ); //5 mins
+            mHandler.postDelayed(this, 900000); //5 mins
         }
     };
 
@@ -228,7 +272,7 @@ public class MotivationMessages extends Service {
             if (isNetworkConnected()) {
                 init.run();
                 run_motivation.run();
-                Toast.makeText(this, "The app is now running in the background.", Toast.LENGTH_SHORT).show();
+
             }
             else{
                 Toast.makeText(this, "Please check your Internet Connection.", Toast.LENGTH_SHORT).show();
@@ -889,47 +933,47 @@ public class MotivationMessages extends Service {
 
 
     @SuppressLint("MissingPermission")
-//    private void fetchLocation() {
-//
-//        if (locationmanager == null){
-//            locationmanager = (LocationManager) getSystemService(context.LOCATION_SERVICE);
-//            locationmanager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2 * 1000, 1, locationListener);
-//
-//        }
-//    }
+    private void fetchLocation() {
+
+        if (locationmanager == null){
+            locationmanager = (LocationManager) getSystemService(context.LOCATION_SERVICE);
+            locationmanager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2 * 1000, 1, locationListener);
+
+        }
+    }
 
 
-//    private LocationListener locationListener = new LocationListener() {
-//
-//
-//
-//        @Override
-//        public void onLocationChanged(Location location) {
-//
-//            String key = "AIzaSyDQD6Kkbxh2p8fHOJpFnhGRyRt_2pvVlco";
-//            String lat = String.valueOf(location.getLatitude());
-//            String lon = String.valueOf(location.getLongitude());
-//
-//
-//        }
-//
-//        @Override
-//        public void onStatusChanged(String s, int i, Bundle bundle) {
-//
-//        }
-//
-//        @Override
-//        public void onProviderEnabled(String s) {
-//
-//        }
-//
-//        @Override
-//        public void onProviderDisabled(String s) {
-//
-//        }
-//
-//
-//    };
+    private LocationListener locationListener = new LocationListener() {
+
+
+
+        @Override
+        public void onLocationChanged(Location location) {
+
+            String key = "AIzaSyDQD6Kkbxh2p8fHOJpFnhGRyRt_2pvVlco";
+            String lat = String.valueOf(location.getLatitude());
+            String lon = String.valueOf(location.getLongitude());
+
+
+        }
+
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String s) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String s) {
+
+        }
+
+
+    };
     private void checkWeather() {
 
         new weatherTask().execute();
@@ -1394,6 +1438,7 @@ public class MotivationMessages extends Service {
         e.putInt("movemins",movemins);
         e.apply();
 
+
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "fitnessapp")
                 .setContentTitle(messageTitle)
@@ -1408,6 +1453,12 @@ public class MotivationMessages extends Service {
                 .setSound(alarmSound);
         manager.notify(notifid, builder.build());
 
+        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        boolean isScreenOn = Build.VERSION.SDK_INT >= 20 ? pm.isInteractive() : pm.isScreenOn(); // check if screen is on
+        if (!isScreenOn) {
+            PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "myApp:notificationLock");
+            wl.acquire(3000);
+        }
 
         run_stepsCheck.run();
 

@@ -4,7 +4,7 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
 
     <dimen name="logo_w_h">100dp</dimen>
-    <string name="app_name">Fitness App</string>
+    <string name="app_name">MotiFit</string>
     <string name="minimum_password">Password too short, enter minimum 6 characters!</string>
     <string name="auth_failed">Authentication failed, check your email and password or sign up</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
