@@ -1,6 +1,6 @@
 package com.zuhura.fitnesssapp.services;
 
-import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
@@ -18,7 +17,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.app.Service;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -29,9 +27,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 
 import com.androdocs.httprequest.HttpRequest;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.zuhura.fitnesssapp.AppController;
 import com.zuhura.fitnesssapp.HomeActivity;
 import com.zuhura.fitnesssapp.R;
@@ -61,7 +66,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -74,6 +78,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 public class MotivationMessages extends Service {
@@ -98,7 +103,15 @@ public class MotivationMessages extends Service {
     private int notifid=0;
     private int breaktimeDiff;
     private int EODtimediff;
+
     private LocationManager locationmanager = null;
+    private FusedLocationProviderClient mFusedLocationClient;
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
+            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+    private LocationCallback mLocationCallback;
+    private LocationRequest mLocationRequest;
+    private Location mLocation;
 
     List<String> restaurantlocationNames = new ArrayList<>();
     List<String> parklocationNames = new ArrayList<>();
@@ -120,6 +133,7 @@ public class MotivationMessages extends Service {
     NotificationChannel notificationChannel;
 
 
+
     public MotivationMessages() {
 
         appController = new AppController();
@@ -135,6 +149,30 @@ public class MotivationMessages extends Service {
 
     @Override
     public void onCreate() {
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+//        init and set LocationCallBack
+        mLocationCallback = new LocationCallback()
+        {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                mLocation = locationResult.getLastLocation();
+
+            }
+
+            @Override
+            public void onLocationAvailability(LocationAvailability locationAvailability) {
+                super.onLocationAvailability(locationAvailability);
+//                locationAvailability.isLocationAvailable();
+            }
+        };
+
+
+//        create a request for location
+        createLocationRequest();
+        getLastLocation();
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
         builder.setContentTitle("Keep Staying Fit");
         builder.setContentText("Fetching Steps");
@@ -259,7 +297,7 @@ public class MotivationMessages extends Service {
                     Log.d(TAG,"NOT TIME TO LOG ACTIVE MINS");
                 }
             }
-            mHandler.postDelayed(this, 300000); //2 mins
+            mHandler.postDelayed(this, 3000000); //2 mins
         }
     };
 
@@ -269,7 +307,7 @@ public class MotivationMessages extends Service {
         @Override
         public void run() {
             fetchStepsafterThirty();
-            mHandler.postDelayed(this, 900000); //5 mins
+            mHandler.postDelayed(this, 1800000); //5 mins
         }
     };
 
@@ -298,6 +336,33 @@ public class MotivationMessages extends Service {
 
 
         return START_STICKY;
+    }
+
+    private void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    private void getLastLocation() {
+        try {
+            mFusedLocationClient.getLastLocation()
+                    .addOnCompleteListener(new OnCompleteListener<Location>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Location> task) {
+                            if (task.isSuccessful() && task.getResult() != null) {
+                                mLocation = task.getResult();
+                                latitude = String.valueOf(mLocation.getLatitude());
+                                longitude = String.valueOf(mLocation.getLongitude());
+                            } else {
+                                Log.e("Error", "Failed to get location.");
+                            }
+                        }
+                    });
+        } catch (SecurityException e) {
+            Log.e("Exception", "Last location permission." + e);
+        }
     }
 
     private boolean isNetworkConnected() {
@@ -952,51 +1017,55 @@ public class MotivationMessages extends Service {
 
     }
 
+    private void fetchLocation(){
 
-    @SuppressLint("MissingPermission")
-    private void fetchLocation() {
 
-        if (locationmanager == null){
-            locationmanager = (LocationManager) getSystemService(context.LOCATION_SERVICE);
-            locationmanager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2 * 1000, 1, locationListener);
-
-        }
     }
 
-
-    private LocationListener locationListener = new LocationListener() {
-
-
-
-        @Override
-        public void onLocationChanged(Location location) {
-
-            String key = "AIzaSyDQD6Kkbxh2p8fHOJpFnhGRyRt_2pvVlco";
-            String lat = String.valueOf(location.getLatitude());
-            String lon = String.valueOf(location.getLongitude());
-            latitude = lat;
-            longitude = lon;
+//    @SuppressLint("MissingPermission")
+//    private void fetchLocation() {
+//
+//        if (locationmanager == null){
+//            locationmanager = (LocationManager) getSystemService(context.LOCATION_SERVICE);
+//            locationmanager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2 * 1000, 1, locationListener);
+//
+//        }
+//    }
 
 
-        }
-
-        @Override
-        public void onStatusChanged(String s, int i, Bundle bundle) {
-
-        }
-
-        @Override
-        public void onProviderEnabled(String s) {
-
-        }
-
-        @Override
-        public void onProviderDisabled(String s) {
-
-        }
-
-
-    };
+//    private LocationListener locationListener = new LocationListener() {
+//
+//
+//
+//        @Override
+//        public void onLocationChanged(Location location) {
+//
+//            String key = "AIzaSyDQD6Kkbxh2p8fHOJpFnhGRyRt_2pvVlco";
+//            String lat = String.valueOf(location.getLatitude());
+//            String lon = String.valueOf(location.getLongitude());
+//            latitude = lat;
+//            longitude = lon;
+//
+//
+//        }
+//
+//        @Override
+//        public void onStatusChanged(String s, int i, Bundle bundle) {
+//
+//        }
+//
+//        @Override
+//        public void onProviderEnabled(String s) {
+//
+//        }
+//
+//        @Override
+//        public void onProviderDisabled(String s) {
+//
+//        }
+//
+//
+//    };
     private void checkWeather() {
 
         new weatherTask().execute();
