@@ -1,0 +1,56 @@
+{
+  "project_info": {
+    "project_number": "1061263728122",
+    "firebase_url": "https://fitnesssapp-97713.firebaseio.com",
+    "project_id": "fitnesssapp-97713",
+    "storage_bucket": "fitnesssapp-97713.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1061263728122:android:e3a86cdccbb35a6c785843",
+        "android_client_info": {
+          "package_name": "com.zuhura.fitnesssapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1061263728122-882tqvcq7d5dubuu8si857v3fa34j442.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zuhura.fitnesssapp",
+            "certificate_hash": "adcf5b33ba7cd07b6d7e17b4a71428d0e35f1fdb"
+          }
+        },
+        {
+          "client_id": "1061263728122-v23to1ch8bara0dcpiab33ou7j27qner.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zuhura.fitnesssapp",
+            "certificate_hash": "0821fdc2ac6898de321ddabc8214404a67c9522c"
+          }
+        },
+        {
+          "client_id": "1061263728122-tt3g4e8912uhuqiojmt1hc7142afif3e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1alpSF-dG8XfpQSCxZYJr18tZEyyVEiM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1061263728122-tt3g4e8912uhuqiojmt1hc7142afif3e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
