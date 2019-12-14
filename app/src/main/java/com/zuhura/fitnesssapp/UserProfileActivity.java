@@ -34,7 +34,7 @@ import java.util.Map;
 public class UserProfileActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener {
 
     private EditText inputNickName, inputWeight
-            ,inputGoal,inputHeight, inputAge, inputFromHour, inputToHour, inputLunchHour, inputWeekends;
+            ,inputGoal,inputHeight, inputAge, inputFromHour, inputToHour, inputLunchHour, inputWeekends, inputFromSleep, inputToSleep;
     private Spinner  inputGender;
     private String  gender, amPm;
     SharedPreferences sharedPreferences;
@@ -73,6 +73,8 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputToHour = findViewById(R.id.toHourPicker);
         inputLunchHour = findViewById(R.id.lunchHourPicker);
         inputWeekends = findViewById(R.id.weekendsPicker);
+        inputFromSleep = findViewById(R.id.sleepFromHourPicker);
+        inputToSleep = findViewById(R.id.sleepToHourPicker);
 
         //Set the saved user details as values in the textfields for Profile page
         inputNickName.setText(sharedPreferences.getString("NickName",null));
@@ -85,6 +87,8 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         inputToHour.setText(sharedPreferences.getString("ToHour","00"));
         inputLunchHour.setText(sharedPreferences.getString("LunchHour","00"));
         inputWeekends.setText(sharedPreferences.getString("Weekend",""));
+        inputFromSleep.setText(sharedPreferences.getString("SleepFromHour","00"));
+        inputToSleep.setText(sharedPreferences.getString("SleepToHour","00"));
 
 
         inputGender.setOnItemSelectedListener(this);
@@ -148,6 +152,46 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
 
             }
         });
+        inputFromSleep.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TimePickerDialog timePickerDialog = new TimePickerDialog(UserProfileActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int hourOfDay, int minutes) {
+
+                        if (hourOfDay >= 12) {
+                            amPm = "PM";
+                        } else {
+                            amPm = "AM";
+                        }
+                        inputFromSleep.setText(String.format("%02d:%02d", hourOfDay, minutes) + amPm);
+                    }
+                }, 0, 0, false);
+
+                timePickerDialog.show();
+
+            }
+        });
+        inputToSleep.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TimePickerDialog timePickerDialog = new TimePickerDialog(UserProfileActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int hourOfDay, int minutes) {
+
+                        if (hourOfDay >= 12) {
+                            amPm = "PM";
+                        } else {
+                            amPm = "AM";
+                        }
+                        inputToSleep.setText(String.format("%02d:%02d", hourOfDay, minutes) + amPm);
+                    }
+                }, 0, 0, false);
+
+                timePickerDialog.show();
+
+            }
+        });
         inputWeekends.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -198,7 +242,7 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
      */
     private void saveInfo(View view) {
 
-        final String nickName, fromHour, toHour,lunchHour,weekend;
+        final String nickName, fromHour, toHour, lunchHour, weekend, sleepFromHour, sleepToHour;
         final float weight;
         final  float height;
         final  int  selectedGender, goal ;
@@ -215,6 +259,8 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         lunchHour = inputLunchHour.getText().toString();
         weekend = inputWeekends.getText().toString();
         selectedGender = inputGender.getSelectedItemPosition();
+        sleepFromHour = inputFromSleep.getText().toString();
+        sleepToHour = inputToSleep.getText().toString();
 
 
         //Save the info to local storage
@@ -229,6 +275,8 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         editor.putString("ToHour",toHour);
         editor.putString("LunchHour",lunchHour);
         editor.putString("Weekend",weekend);
+        editor.putString("SleepFromHour",sleepFromHour);
+        editor.putString("SleepToHour",sleepToHour);
         editor.commit();
 
         //Save the info to Firestore
@@ -244,6 +292,8 @@ public class UserProfileActivity extends AppCompatActivity implements AdapterVie
         user.put("ToHour",toHour);
         user.put("LunchHour",lunchHour);
         user.put("Weekend",weekend);
+        user.put("SleepFromHour",sleepFromHour);
+        user.put("SleepToHour",sleepToHour);
 
         String uid = auth.getCurrentUser().getUid();
 

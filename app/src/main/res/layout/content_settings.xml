@@ -16,23 +16,41 @@
         android:layout_marginRight="16dp"
         android:layout_marginLeft="16dp">
 
-    <TextView
+    <!--TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Notifications"
         android:textColor="#000"
-        android:textSize="20dp"/>
+        android:textSize="20dp"
+        android:padding="10dp"/>
 
         <Switch
-            android:layout_width="wrap_content"
-            android:textOn="ON"
-            android:textOff="OFF"
-            android:checked="true"
             android:id="@+id/Notifswitch"
-            android:buttonTint="@color/colorPrimary"
-            android:foregroundTint="@color/colorPrimary"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-          />
+            android:buttonTint="@color/colorPrimary"
+            android:checked="true"
+            android:foregroundTint="@color/colorPrimary"
+            android:textOff="OFF"
+            android:textOn="ON" /-->
+
+        <Switch
+            android:id="@+id/Notifswitch"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:buttonTint="@color/colorPrimary"
+            android:checked="true"
+            android:foregroundTint="@color/colorPrimary"
+            android:gravity="left"
+            android:padding="10dp"
+            android:switchMinWidth="60dp"
+            android:text="Notifications"
+            android:textColor="#000"
+            android:textOff="Off"
+            android:textOn="On"
+            android:textSize="20dp"
+            android:theme="@style/SwitchCompatTheme" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

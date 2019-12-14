@@ -204,11 +204,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:background="@color/colorPrimaryDark"
             android:padding="10dp"
-            android:text="Working Hours"
+            android:text="Daily Routine Information"
             android:textColor="@android:color/white"
-            android:textSize="20dp"
-            android:background="@color/colorPrimaryDark"/>
+            android:textSize="20dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -221,7 +221,7 @@
             android:layout_gravity="center"
             android:textSize="15dp"
             android:textColor="@color/colorPrimaryDark"
-            android:text="From"/>
+            android:text="Work From"/>
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -235,7 +235,7 @@
             android:layout_gravity="center"
             android:textSize="15dp"
             android:textColor="@color/colorPrimaryDark"
-            android:text="To"/>
+            android:text="Work To"/>
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -257,20 +257,48 @@
             android:layout_marginTop="10dp"
             android:focusableInTouchMode="false"
             android:id="@+id/lunchHourPicker"/>
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:textSize="15dp"
-                android:textColor="@color/colorPrimaryDark"
-                android:text="Weekends"/>
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:layout_marginTop="10dp"
-                android:focusableInTouchMode="false"
-                android:id="@+id/weekendsPicker"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textSize="15dp"
+            android:textColor="@color/colorPrimaryDark"
+            android:text="Weekends"/>
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:focusableInTouchMode="false"
+            android:id="@+id/weekendsPicker"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textSize="15dp"
+            android:textColor="@color/colorPrimaryDark"
+            android:text="Sleep From"/>
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:focusableInTouchMode="false"
+            android:id="@+id/sleepFromHourPicker"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textSize="15dp"
+            android:textColor="@color/colorPrimaryDark"
+            android:text="Sleep To"/>
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:focusableInTouchMode="false"
+            android:id="@+id/sleepToHourPicker"/>
         </LinearLayout>
 
     </LinearLayout>

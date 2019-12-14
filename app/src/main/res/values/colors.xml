@@ -2,13 +2,15 @@
 <resources>
     <color name="colorPrimary">#34B4E5</color>
     <color name="colorPrimaryDark">#4B82B0</color>
+    <color name="colorSecondary">#fec013</color>
+    <color name="greenSecondary">#43CDCB</color>
     <color name="colorAccent">#272636</color>
     <color name="bg_login">#6684A0</color>
     <color name="bg_register">#2e3237</color>
     <color name="bg_main">#428bca</color>
     <color name="white">#ffffff</color>
     <color name="input_login">#222222</color>
-    <color name="input_hint">#999999</color>
+    <color name="input_hint">#606060</color>
     <color name="input_register">#888888</color>
     <color name="input_register_bg">#3b4148</color>
     <color name="input_register_hint">#5e6266</color>

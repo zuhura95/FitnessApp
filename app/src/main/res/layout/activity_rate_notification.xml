@@ -22,12 +22,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="15dp"
+        android:textSize="16dp"
         android:text="How helpful was this reminder?"
         android:gravity="center"
         android:textColor="#FFF"
         android:layout_gravity="start"
-        />
+        android:padding="5dp"/>
 
 
     <LinearLayout
@@ -42,29 +42,38 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/NotifTitle"
-            android:textColor="#000"
+            android:text="Sample title"
+            android:paddingBottom="10dp"
+            android:textColor="@color/colorAccent"
             android:layout_gravity="center_horizontal"
-            />
+            android:textSize="16dp"/>
+
         <TextView
+            android:id="@+id/Notifmsg"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/Notifmsg"
-            android:text="HI HIHIIHIHIHIIHIHIHIHIHIHIIHIHIIHIHIHIIHIIHIHIIH"
-            android:textColor="#000"
             android:layout_gravity="center_horizontal"
-            />
+            android:text="Sample text Sample text Sample text Sample text Sample text"
+            android:paddingBottom="5dp"
+            android:textColor="@color/colorAccent"
+            android:textSize="15dp" />
 
         <RatingBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/ratingBar"
-
-            android:saveEnabled="true"/>
+            android:saveEnabled="true"
+            android:scaleX=".75"
+            android:scaleY=".75"
+            />
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/submitBtn"
-android:text="SUBMIT"/>
+            android:background="@color/colorPrimary"
+            android:textColor="@color/colorAccent"
+            android:textAllCaps="false"
+            android:text="Submit"/>
     </LinearLayout>
 </LinearLayout>
 </LinearLayout>

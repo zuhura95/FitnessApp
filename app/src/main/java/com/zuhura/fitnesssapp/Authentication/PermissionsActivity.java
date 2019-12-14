@@ -14,6 +14,8 @@ import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+import android.widget.TextView;
+import android.text.util.Linkify;
 
 import com.zuhura.fitnesssapp.*;
 import com.karumi.dexter.Dexter;
@@ -32,6 +34,9 @@ public class PermissionsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_permissions);
+
+        TextView permissionText = (TextView) findViewById(R.id.txt_permission);
+        Linkify.addLinks(permissionText, Linkify.ALL);
 
 
     //Are permissions granted? If yes then dismiss

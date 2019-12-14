@@ -18,7 +18,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingTop="50dp">
 
             <ImageView
                 android:layout_width="match_parent"
@@ -29,7 +30,7 @@
                 android:layout_width="300dp"
                 android:layout_height="100dp"
                 android:layout_gravity="center"
-                android:src="@drawable/trophy" />
+                android:src="@drawable/trophy"/>
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -46,7 +47,8 @@
                         android:id="@+id/trophy_1"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardcup2" />
+                        android:src="@drawable/rewardcup2"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:id="@+id/trophy1text"
@@ -68,7 +70,8 @@
                         android:id="@+id/trophy_2"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardcup2" />
+                        android:src="@drawable/rewardcup2"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -89,7 +92,8 @@
                         android:id="@+id/trophy_3"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardcup2" />
+                        android:src="@drawable/rewardcup2"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -110,7 +114,8 @@
                         android:id="@+id/trophy_4"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardcup2" />
+                        android:src="@drawable/rewardcup2"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -131,7 +136,8 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingBottom="20dp">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -143,7 +149,8 @@
                         android:id="@+id/medal_1"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardmedal" />
+                        android:src="@drawable/rewardmedal"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -151,7 +158,8 @@
                         android:layout_gravity="center"
                         android:text="Walked 5 times the height of the Torch tower, the highest tower in Qatar."
                         android:textAlignment="center"
-                        android:textSize="10dp" />
+                        android:textSize="10dp"
+                        />
                 </LinearLayout>
 
                 <LinearLayout
@@ -164,7 +172,8 @@
                         android:id="@+id/medal_2"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardmedal" />
+                        android:src="@drawable/rewardmedal"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -185,7 +194,8 @@
                         android:id="@+id/medal_3"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardmedal" />
+                        android:src="@drawable/rewardmedal"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -206,7 +216,8 @@
                         android:id="@+id/medal_4"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardmedal" />
+                        android:src="@drawable/rewardmedal"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -221,7 +232,8 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingBottom="25dp">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -233,7 +245,8 @@
                         android:id="@+id/medal_5"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardmedal" />
+                        android:src="@drawable/rewardmedal"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -254,7 +267,8 @@
                         android:id="@+id/medal_6"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardmedal" />
+                        android:src="@drawable/rewardmedal"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -275,7 +289,8 @@
                         android:id="@+id/medal_7"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardmedal" />
+                        android:src="@drawable/rewardmedal"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"
@@ -296,7 +311,8 @@
                         android:id="@+id/medal_8"
                         android:layout_width="match_parent"
                         android:layout_height="100dp"
-                        android:src="@drawable/rewardmedal" />
+                        android:src="@drawable/rewardmedal"
+                        android:paddingBottom="5dp"/>
 
                     <TextView
                         android:layout_width="match_parent"

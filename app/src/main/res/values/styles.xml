@@ -24,4 +24,12 @@
         <item name="windowActionBarOverlay">true</item>
     </style>
 
+    <style name="switchTextAppearance">
+        <item name="android:textColor">#fff</item>
+    </style>
+
+    <style name="SwitchCompatTheme" >
+        <item name="colorControlActivated">@color/greenSecondary</item>
+    </style>
+
 </resources>

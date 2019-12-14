@@ -133,6 +133,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private float movemins;
     private int totalStepsFromDataPoints = 0;
     String today, uid;
+    int read;
 
     TreeMap<String, Integer> dayTreeMap = new TreeMap<>();
     TreeMap<String, Integer> weekTreeMap = new TreeMap<>();
@@ -201,7 +202,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         Calendar calendar = Calendar.getInstance();
         int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
         int lastDay = sharedPreferences.getInt("day", 0);
-        int read = sharedPreferences.getInt("tipsRead",0);
+        read = sharedPreferences.getInt("tipsRead",0);
         if (lastDay != currentDay) {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putInt("day", currentDay);
@@ -210,7 +211,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
             //run code that will be displayed once a day
             alternatePopUp();
-
         }
 
 
@@ -438,7 +438,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
      */
     private void showHealthTip() {
 
-        TextView healthMessage, title;
+        TextView healthMessage, title, closePopup;
         ImageView healthImage;
 
         String[] array = this.getResources().getStringArray(R.array.health_tips);
@@ -448,6 +448,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         healthtip.setContentView(R.layout.dailypopup);
         healthImage = healthtip.findViewById(R.id.message_image);
         healthMessage = healthtip.findViewById(R.id.dailymsg);
+        closePopup = healthtip.findViewById(R.id.closePopup);
         title = healthtip.findViewById(R.id.popuptitle);
         Drawable pic = getImageForHealthTip(i);
         healthMessage.setText(randomStr);
@@ -456,6 +457,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         healthtip.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         healthtip.show();
 
+        closePopup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                healthtip.hide();
+            }
+        });
     }
 
     private Drawable getImageForHealthTip(int position) {
@@ -503,7 +510,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
      */
     private void showDYK() {
 
-        TextView dykMessage, title;
+        TextView dykMessage, title, closePopup;
         ImageView dykImage;
 
         String[] array = this.getResources().getStringArray(R.array.DYK);
@@ -513,6 +520,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         healthtip.setContentView(R.layout.dailypopup);
         dykImage = healthtip.findViewById(R.id.message_image);
         dykMessage = healthtip.findViewById(R.id.dailymsg);
+        closePopup = healthtip.findViewById(R.id.closePopup);
         title = healthtip.findViewById(R.id.popuptitle);
         Drawable pic = getImageForDYK(i);
         dykMessage.setText(randomStr);
@@ -521,6 +529,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         healthtip.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         healthtip.show();
 
+        closePopup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                healthtip.hide();
+            }
+        });
     }
 
     private Drawable getImageForDYK(int position) {
@@ -827,10 +841,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
 
 
-            stepsCounter.setProgress(totalStepsFromDataPoints);
+
             double steps = Double.parseDouble(String.valueOf(totalStepsFromDataPoints));
             double value = (steps / sharedPreferences.getInt("Goal", 5000)) * 100;
-            stepsPercentage.setText(String.format("%.2f", value) + "% OF GOAL " + (sharedPreferences.getInt("Goal", 5000)));
+//          stepsPercentage.setText(String.format("%.2f", value) + "% OF GOAL " + (sharedPreferences.getInt("Goal", 5000)));
+            stepsPercentage.setText(String.format("%.2f", value) + "Steps ");
+            int intValue = (int) value;
+            stepsCounter.setProgress(intValue);
 
 
         } else if (dataSet.getDataType().getName().equals("com.google.distance.delta")) {
@@ -1416,6 +1433,17 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             editor.apply();
             awardMsg=getResources().getString(R.string.award_3_message);
             awardImg=getResources().getDrawable(R.drawable.bee);
+            if(!gotReward3){
+                displayReward(awardMsg, awardImg);
+            }
+        }
+
+        //read 10 health tips
+        if ((read >= 10)) {
+            editor.putBoolean("trophy4", true);
+            editor.apply();
+            awardMsg=getResources().getString(R.string.award_4_message);
+            awardImg=getResources().getDrawable(R.drawable.worm);
             if(!gotReward3){
                 displayReward(awardMsg, awardImg);
             }

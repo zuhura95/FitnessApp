@@ -20,6 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:padding="10dp"
+            android:layout_marginBottom="20dp"
             android:text="Register for an account"
             android:textColor="@android:color/white"
             android:textSize="20dp" />
@@ -33,7 +34,8 @@
                 android:inputType="textEmailAddress"
                 android:maxLines="1"
                 android:singleLine="true"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/white"
+                android:textColorHint="@android:color/white"/>
         <EditText
             android:id="@+id/password"
             android:layout_width="match_parent"
@@ -44,7 +46,8 @@
             android:inputType="textPassword"
             android:maxLines="1"
             android:singleLine="true"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textColorHint="@android:color/white"/>
 
         <Button
             android:id="@+id/sign_up_button"
@@ -53,7 +56,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:background="@color/colorAccent"
-            android:text="SIGN UP"
+            android:text="Sign Up"
+            android:textAllCaps="false"
             android:textColor="@color/white"
             android:textStyle="bold" />
         <Button

@@ -25,7 +25,7 @@ import java.util.Locale;
 public class RatingNotification extends AppCompatActivity {
 
     TextView messageTitle,messageText;
-   RatingBar ratingBar;
+    RatingBar ratingBar;
     Button submitRating;
     private String message="";
     private String title="";

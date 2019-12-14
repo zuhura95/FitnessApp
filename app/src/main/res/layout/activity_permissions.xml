@@ -4,43 +4,45 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary"
+    android:background="#FFF"
     tools:context=".Authentication.PermissionsActivity">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal">
-
-
-
+        android:gravity="center_horizontal"
+        android:padding="@dimen/activity_horizontal_margin">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Permission Request"
             android:textSize="24sp"
-            android:textColor="#FFF"
+            android:textColor="@color/colorAccent"
             android:layout_marginTop="12dp"
             android:fontFamily="sans-serif-condensed"
             android:textStyle="bold"/>
 
         <TextView
+            android:id="@+id/txt_permission"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFF"
+            android:textColor="@color/colorAccent"
             android:gravity="center_horizontal"
             android:layout_marginTop="36dp"
-            android:text="Fitness App needs permission to access device location to provide required services. Please grant the permission by clicking Allow."/>
+            android:text="MotiFit needs permission to access the device location.\nMotiFit will use your location to provide location-based recommendations to walk to restaurants or in parks and gyms.\n\nPlease allow location tracking by clicking on Grant Permission.\n\nYou can learn more about the study by clicking on this link: https://docs.google.com/document/d/1jBh5JRmIM7_mYqUPPu9AnbFVPK8DbTmFjj0onkqOnJc"/>
+
+        <Button
+            android:id="@+id/btn_grant"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="50dp"
+            android:background="@color/colorPrimary"
+            android:text="Grant Permission"
+            android:textAllCaps="false"
+            android:textColor="@color/colorAccent" />
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btn_grant"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="@color/colorAccent"
-        android:textColor="#FFF"
-        android:text="Grant Permission"
-        android:textAllCaps="false" />
+
 </RelativeLayout>

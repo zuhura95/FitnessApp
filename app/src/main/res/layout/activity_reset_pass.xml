@@ -32,7 +32,7 @@
             android:layout_marginBottom="10dp"
             android:gravity="center_horizontal"
             android:padding="@dimen/activity_horizontal_margin"
-            android:text="We just need your registered Email and we'll help you to reset your password!"
+            android:text="We just need your registered Email and we will help you to reset your password!"
             android:textColor="@android:color/white"
             android:textSize="14dp" />
         <EditText
@@ -51,7 +51,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dip"
             android:background="@color/colorAccent"
-            android:text="RESET PASSWORD"
+            android:text="Reset Password"
+            android:textAllCaps="false"
             android:textColor="@android:color/white" />
 
         <Button
@@ -60,7 +61,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:background="@null"
-            android:text="I'm all good."
+            android:text="I'm all good"
+            android:textAllCaps="false"
             android:textColor="@color/colorAccent" />
 
     </LinearLayout>
