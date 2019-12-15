@@ -91,7 +91,7 @@ public class MotivationMessages extends Service {
     SharedPreferences sharedPreferences;
     Context context;
     String category;
-    String  message, messageType, messageTitle, type, userID, weekend, lunchbreak, EOD,today,weatherDesc,latitude,longitude,username;
+    String  message, messageType, messageTitle, type, userID, weekend, lunchbreak, EOD,today,weatherDesc,latitude,longitude,username, sleepFrom, sleepTo;
     int steps, currenthour, lunchHour, eodHour, id;
     double temp, humidity;
     float activemins;
@@ -117,11 +117,10 @@ public class MotivationMessages extends Service {
     List<String> parklocationNames = new ArrayList<>();
     List<String> gymlocationNames = new ArrayList<>();
     List<String> malllocationNames = new ArrayList<>();
-
-    //    List<String> restaurantlocationNames = new ArrayList<>(Arrays.asList("Zaatar w zeit", "Qatar National Library restaurant", "Chef’s Garden", "LAS cafeteria", "Starbucks Cafe","papa johns", "elevation burger", "students center cafeteria"));
-//    List<String> parklocationNames = new ArrayList<>(Arrays.asList("oxygen park"));
-//    List<String> gymlocationNames = new ArrayList<>(Arrays.asList("wellness Gharrafa", "Pro fitness gym", "Qatar gymnastic center", "Qatar foundation clubhouse", "f45 training education city", "curves"));
-//    List<String> malllocationNames = new ArrayList<>(Arrays.asList("Ezdan mall", "Landmark", "Gulf mall", "Q Mall", "Twar mall"));
+//  List<String> restaurantlocationNames = new ArrayList<>(Arrays.asList("Zaatar w zeit", "Qatar National Library restaurant", "Chef’s Garden", "LAS cafeteria", "Starbucks Cafe","papa johns", "elevation burger", "students center cafeteria"));
+//  List<String> parklocationNames = new ArrayList<>(Arrays.asList("oxygen park"));
+//  List<String> gymlocationNames = new ArrayList<>(Arrays.asList("wellness Gharrafa", "Pro fitness gym", "Qatar gymnastic center", "Qatar foundation clubhouse", "f45 training education city", "curves"));
+//  List<String> malllocationNames = new ArrayList<>(Arrays.asList("Ezdan mall", "Landmark", "Gulf mall", "Q Mall", "Twar mall"));
     private int goal,movemins,stepsRemaining;
     private double percentFinished,remainingPercentage;
     private int radius=500;
@@ -271,7 +270,7 @@ public class MotivationMessages extends Service {
         }
     };
 
-    //Start motivation after 50 mins
+    //Start motivation after 40 mins
     private Runnable run_motivation = new Runnable() {
         @Override
         public void run() {
@@ -281,9 +280,9 @@ public class MotivationMessages extends Service {
 
 
             if(sharedPreferences.getBoolean("notifications",true)) {
+                //for testing if(true) {
                 if (!isActive()) {
                     if(longitude != null && latitude !=null) {
-
                         startMotivating();
                     }
 
@@ -297,7 +296,7 @@ public class MotivationMessages extends Service {
                     Log.d(TAG,"NOT TIME TO LOG ACTIVE MINS");
                 }
             }
-            mHandler.postDelayed(this, 3000000); //2 mins
+            mHandler.postDelayed(this, 2400000); //40 mins
         }
     };
 
@@ -307,7 +306,7 @@ public class MotivationMessages extends Service {
         @Override
         public void run() {
             fetchStepsafterThirty();
-            mHandler.postDelayed(this, 1800000); //5 mins
+            mHandler.postDelayed(this, 1800000); //30 mins
         }
     };
 
@@ -863,10 +862,12 @@ public class MotivationMessages extends Service {
         }
     }
 
-    public void startMotivating(){
+    public void startMotivating() {
 
         Calendar currentTime = Calendar.getInstance();
         currenthour = currentTime.get(Calendar.HOUR_OF_DAY);
+
+        Log.d("Value:", getString(currenthour));
 
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
@@ -880,104 +881,98 @@ public class MotivationMessages extends Service {
         String weekday = sdf.format(date);
 
         extraData();
+        isSleep();
 
-        String[] days_array = weekend.split(" ");
-        boolean itsWeekend = Arrays.asList(days_array).contains(weekday);
 
-        /**IS it WEEKEND SOON?**/
-        if (itsWeekend){
-            Log.d(TAG,"WEEEEEKEND");
-            if(isWeatherGood){
-                radius = 3000;
-                category="category K";
-                Log.d(TAG,"Outdoor ");
-            }else{
-                radius = 3000;
-                category="category O";
-                Log.d(TAG,"Indoor ");
-            }
+        if (!isSleep()) {
+            String[] days_array = weekend.split(" ");
+            boolean itsWeekend = Arrays.asList(days_array).contains(weekday);
 
-        }
-        else{
-            /**IS LUNCHBREAK SOON?**/
-            if(breaktimeDiff == 1){
+            /**Is it WEEKEND SOON?**/
+            if (itsWeekend) {
+                Log.d(TAG, "WEEKEND");
+                if (isWeatherGood) {
+                    radius = 3000;
+                    category = "category K";
+                    Log.d(TAG, "Outdoor ");
+                } else {
+                    radius = 3000;
+                    category = "category O";
+                    Log.d(TAG, "Indoor ");
+                }
 
-                Log.d(TAG,"LUNCH BREAK SOON");
-                   checkWeather();
-                if(isWeatherGood){
+            } else {
+                /**IS LUNCHBREAK SOON?**/
+                if (breaktimeDiff == 1) {
 
-                    if(restaurantlocationNames.size()>0) {
+                    Log.d(TAG, "LUNCH BREAK SOON");
+                    checkWeather();
+                    if (isWeatherGood) {
 
-                        category = "category H";
-                        Log.d(TAG,"WALK TO RESTAURANT");
+                        if (restaurantlocationNames.size() > 0) {
 
-                    }
-                    else{
+                            category = "category H";
+                            Log.d(TAG, "WALK TO RESTAURANT");
+
+                        } else {
+                            radius = 1500;
+                            category = "category I";
+                            Log.d(TAG, "CAT: I");
+                        }
+                    } else {
                         radius = 1500;
-                        category = "category I";
-                        Log.d(TAG,"CAT: I");
+                        category = "category N";
+                        Log.d(TAG, "Drive/eat at work");
                     }
+
                 }
-                else{
-                    radius = 1500;
-                    category = "category N";
-                    Log.d(TAG,"Drive/eat at work");
-                }
+                /**IS EOWD SOON?**/
+                else {
+                    if (EODtimediff == 1) {
+                        Log.d(TAG, "END OF DAY COMING SOOON");
+                        checkWeather();
+                        if (isWeatherGood) {
+                            /////////nearby parks available?
+                            if (parklocationNames.size() > 0) {
+                                category = "category A";
 
-            }
-            /**IS EOWD SOON?**/
-            else{
-                if(EODtimediff == 1){
-                    Log.d(TAG,"END OF DAY COMING SOOON");
-                      checkWeather();
-                    if(isWeatherGood){
-                        /////////nearby parks available?
-                        if(parklocationNames.size()>0) {
-                            category = "category A";
-
-                            Log.d(TAG,"WALK TO PARK");
-                        }
-                        else{
-                            radius = 3000;
-                            ////walk in mall/gym/street
-                            category="category B";
-                            Log.d(TAG,"WALK IN MALL");
-                        }
-                    }
-                    else{
-
-                        ///nearby gyms available
-
-                        if(gymlocationNames.size()>0){
-                            category = "category C";
-                            Log.d(TAG,"WORKOUT IN GYM");
-                        }
-                        else{
-                            ///no nearby gyms
-
-                            if(malllocationNames.size()>0){
+                                Log.d(TAG, "WALK TO PARK");
+                            } else {
                                 radius = 3000;
-                                category = "category D";
-                                Log.d(TAG,"CATEGORY D");
+                                ////walk in mall/gym/street
+                                category = "category B";
+                                Log.d(TAG, "WALK IN MALL");
                             }
-                            else{
-                                ///home exercise
-                                category = "category E";
-                                Log.d(TAG,"WORKOUT IN HOME");
+                        } else {
+
+                            ///nearby gyms available
+
+                            if (gymlocationNames.size() > 0) {
+                                category = "category C";
+                                Log.d(TAG, "WORKOUT IN GYM");
+                            } else {
+                                ///no nearby gyms
+
+                                if (malllocationNames.size() > 0) {
+                                    radius = 3000;
+                                    category = "category D";
+                                    Log.d(TAG, "CATEGORY D");
+                                } else {
+                                    ///home exercise
+                                    category = "category E";
+                                    Log.d(TAG, "WORKOUT IN HOME");
+                                }
                             }
                         }
+
+                    } else {
+                        category = "category J";
+                        Log.d(TAG, "CATEGORY J");
                     }
+                }
 
-                }
-                else{
-                    category = "category J";
-                    Log.d(TAG,"CATEGORY J");
-                }
+
             }
-
-
-        }
-
 
 
 //            new nearbyGyms().execute();
@@ -986,8 +981,11 @@ public class MotivationMessages extends Service {
 //            new nearbyRestaurants().execute();
             Log.d("=====RADIUS====", String.valueOf(radius));
 
-        retrieveCategoryMessages();
-
+            retrieveCategoryMessages();
+        }
+        else {
+            Log.d(TAG,"Shushhh user is sleeping!");
+        }
     }
 
     private void checkEOD(){
@@ -1099,17 +1097,55 @@ public class MotivationMessages extends Service {
             date = hourFormat1.parse(EOD);
             EOD = hourFormat2.format(date);
 
-        } catch (ParseException e) {
-        }
+        } catch (ParseException e) {}
 
         lunchHour = Integer.parseInt(lunchbreak);
         eodHour = Integer.parseInt(EOD);
         breaktimeDiff = lunchHour - currenthour;
         EODtimediff = eodHour - currenthour;
 
+    }
 
+    private boolean isSleep(){
+        boolean isSleep = false;
+        sleepFrom = sharedPreferences.getString("SleepFromHour","00");
+        sleepTo = sharedPreferences.getString("SleepToHour","00");
 
+        try {
+            Date mToday = new Date();
 
+            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm aa");
+            String curTime = sdf.format(mToday);
+            Date sleepFromTime = sdf.parse(sleepFrom);
+            Date sleepToTime = sdf.parse(sleepTo);
+            Log.d("Sleep from:", String.valueOf(sleepFromTime));
+            Log.d("Sleep to:", String.valueOf(sleepToTime));
+            Date userDate = sdf.parse(curTime);
+
+            if(sleepToTime.before(sleepFromTime))
+            {
+                Calendar mCal = Calendar.getInstance();
+                mCal.setTime(sleepToTime);
+                mCal.add(Calendar.DAY_OF_YEAR, 1);
+                sleepToTime.setTime(mCal.getTimeInMillis());
+            }
+
+            Log.d("curTime: ", userDate.toString());
+            Log.d("sleep from: ", sleepFromTime.toString());
+            Log.d("sleep to: ", sleepToTime.toString());
+
+            if (userDate.after(sleepFromTime) && userDate.before(sleepToTime)) {
+                isSleep = true;
+                Log.d("result", "Sleeping...");
+            }
+            else{
+                isSleep = false;
+                Log.d("result", "Not Sleeping...");
+            }
+        } catch (ParseException e) {
+        }
+
+        return isSleep;
     }
 
     public void retrieveCategoryMessages(){

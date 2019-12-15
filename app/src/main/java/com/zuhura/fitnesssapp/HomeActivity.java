@@ -1378,8 +1378,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 awardPopup.dismiss();
             }
         });
-
-
     }
     /**
      * Check if the user has achieved any reward
@@ -1405,11 +1403,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         float distanceInKm = distanceInMeters / 1000;
 
-        Log.d(TAG, "-------REWARDS-------");
-        Log.d(TAG, String.valueOf(gotReward1));
-
-
-
         if ((totalStepsFromDataPoints >= sharedPreferences.getInt("Goal", 5000)) ) {
                 editor.putBoolean("trophy1", true);
                 editor.apply();
@@ -1418,7 +1411,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                  if(!gotReward1) {
                      displayReward(awardMsg, awardImg);
                  }
-
         }
 
 
@@ -1540,11 +1532,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 displayReward(awardMsg, awardImg);
             }
         }
-
-
-
-
-
     }
 
 
@@ -1601,15 +1588,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(HomeActivity.this, SettingsActivity.class));
             finish();
         }
-
-
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-
-
     }
-
-
-
 }

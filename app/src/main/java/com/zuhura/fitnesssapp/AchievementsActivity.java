@@ -46,18 +46,18 @@ public class AchievementsActivity extends AppCompatActivity {
         medal7 = findViewById(R.id.medal_7);
         medal8 = findViewById(R.id.medal_8);
 
-        trophy1.setImageAlpha(100);
-        trophy2.setImageAlpha(100);
-        trophy3.setImageAlpha(100);
-        trophy4.setImageAlpha(100);
-        medal1.setImageAlpha(100);
-        medal2.setImageAlpha(100);
-        medal3.setImageAlpha(100);
-        medal4.setImageAlpha(100);
-        medal5.setImageAlpha(100);
-        medal6.setImageAlpha(100);
-        medal7.setImageAlpha(100);
-        medal8.setImageAlpha(100);
+        trophy1.setImageAlpha(50);
+        trophy2.setImageAlpha(50);
+        trophy3.setImageAlpha(50);
+        trophy4.setImageAlpha(50);
+        medal1.setImageAlpha(50);
+        medal2.setImageAlpha(50);
+        medal3.setImageAlpha(50);
+        medal4.setImageAlpha(50);
+        medal5.setImageAlpha(50);
+        medal6.setImageAlpha(50);
+        medal7.setImageAlpha(50);
+        medal8.setImageAlpha(50);
 
 
         sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
