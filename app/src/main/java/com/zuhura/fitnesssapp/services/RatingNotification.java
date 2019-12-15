@@ -100,7 +100,6 @@ public class RatingNotification extends AppCompatActivity {
                 e.putString("readingTime",readingDuration);
                 e.apply();
                 recordNotifOpen();
-                startActivity(new Intent(RatingNotification.this, HomeActivity.class));
                 finish();
             }
         });

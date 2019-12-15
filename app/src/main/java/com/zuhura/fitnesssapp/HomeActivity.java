@@ -269,6 +269,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         } else {
             init.run();
             if(!isServiceRunning(MotivationMessages.class)) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("firstTime",true);
+                editor.apply();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(new Intent(this, MotivationMessages.class));
                 } else {
@@ -645,6 +648,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
                 if(isNetworkConnected()) {
                     if(!isServiceRunning(MotivationMessages.class)) {
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putBoolean("firstTime",true);
+                        editor.apply();
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             startForegroundService(new Intent(this, MotivationMessages.class));
                         } else {

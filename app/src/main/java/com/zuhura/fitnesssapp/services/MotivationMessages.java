@@ -715,7 +715,7 @@ public class MotivationMessages extends Service {
                     remainingPercentage = 100-percentFinished;
                     stepsRemaining = goal - totalStepsFromDataPoints;
 
-                    if(currenthour <= 12){
+                    if(sharedPreferences.getBoolean("firstTime",false)==true){
                         initialSteps = totalStepsFromDataPoints;
                     }
 
@@ -903,7 +903,7 @@ public class MotivationMessages extends Service {
             if(breaktimeDiff == 1){
 
                 Log.d(TAG,"LUNCH BREAK SOON");
-                //   checkWeather();
+                   checkWeather();
                 if(isWeatherGood){
 
                     if(restaurantlocationNames.size()>0) {
@@ -929,7 +929,7 @@ public class MotivationMessages extends Service {
             else{
                 if(EODtimediff == 1){
                     Log.d(TAG,"END OF DAY COMING SOOON");
-                    //    checkWeather();
+                      checkWeather();
                     if(isWeatherGood){
                         /////////nearby parks available?
                         if(parklocationNames.size()>0) {
@@ -1000,7 +1000,7 @@ public class MotivationMessages extends Service {
                 Log.d(TAG,"CATEOGRY L");
             }
             else{
-                //    checkWeather();
+                 checkWeather();
                 if(isWeatherGood){
                     if(parklocationNames.size()>0){
                         category="category F";
@@ -1071,7 +1071,10 @@ public class MotivationMessages extends Service {
         new weatherTask().execute();
         if((temp > 18) &&(temp < 35)){
             if(humidity < 90){
-                isWeatherGood = true;
+                if(weatherDesc !="Rain"){
+                    isWeatherGood = true;
+                }
+
             }
         }
         else{
@@ -1288,7 +1291,7 @@ public class MotivationMessages extends Service {
 
 
         protected String doInBackground(String... args) {
-            String response = HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?q=Doha&units=metric&appid=" + weather_API_key);
+            String response = HttpRequest.excuteGet("https://api.openweathermap.org/data/2.5/weather?lat="+latitude+"&lon="+longitude+"&units=metric&appid=" + weather_API_key);
             return response;
         }
 
@@ -1304,6 +1307,7 @@ public class MotivationMessages extends Service {
                 JSONObject weather = jsonObj.getJSONArray("weather").getJSONObject(0);
                 temp = Double.parseDouble(main.getString("temp"));
                 humidity = Double.parseDouble(main.getString("humidity"));
+                weatherDesc = weather.getString("main");
                 String weatherDescription = weather.getString("description");
 
                 String address = jsonObj.getString("name") + ", " + sys.getString("country");
@@ -1510,7 +1514,7 @@ public class MotivationMessages extends Service {
 
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationChannel channel = new NotificationChannel("fitnessapp", "fitnessapp", NotificationManager.IMPORTANCE_HIGH);
             manager.createNotificationChannel(channel);
         }
 
