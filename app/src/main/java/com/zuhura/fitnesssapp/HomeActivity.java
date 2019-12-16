@@ -830,7 +830,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 // increment the steps or distance
                 if (field.getName().equals("steps")) {
                     totalStepsFromDataPoints = dp.getValue(field).asInt();
-
                 } else if (field.getName().equals("distance")) {
                     distanceTraveledFromDataPoints += dp.getValue(field).asFloat();
                 } else if (field.getName().equals("calories")) {
@@ -845,16 +844,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         //update the proper labels
         if (dataSet.getDataType().getName().equals("com.google.step_count.delta")) {
-
-
-
+            stepsCounter.setProgress(totalStepsFromDataPoints);
             double steps = Double.parseDouble(String.valueOf(totalStepsFromDataPoints));
             double value = (steps / sharedPreferences.getInt("Goal", 5000)) * 100;
-//          stepsPercentage.setText(String.format("%.2f", value) + "% OF GOAL " + (sharedPreferences.getInt("Goal", 5000)));
-            stepsPercentage.setText(String.format("%.2f", value) + "Steps ");
-            int intValue = (int) value;
-            stepsCounter.setProgress(intValue);
-
+            stepsPercentage.setText(String.format("%.2f", value) + "% Completed Of " + (sharedPreferences.getInt("Goal", 5000)) + " Steps Goal!");
 
         } else if (dataSet.getDataType().getName().equals("com.google.distance.delta")) {
             distance.setText(String.format("%.2f", distanceTraveledFromDataPoints / 1000.00));

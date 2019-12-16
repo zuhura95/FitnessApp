@@ -139,8 +139,6 @@ public class MotivationMessages extends Service {
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
         today = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-
-
     }
 
 
@@ -155,9 +153,7 @@ public class MotivationMessages extends Service {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
-
                 mLocation = locationResult.getLastLocation();
-
             }
 
             @Override
@@ -168,7 +164,7 @@ public class MotivationMessages extends Service {
         };
 
 
-//        create a request for location
+//      create a request for location
         createLocationRequest();
         getLastLocation();
 
@@ -274,10 +270,8 @@ public class MotivationMessages extends Service {
     private Runnable run_motivation = new Runnable() {
         @Override
         public void run() {
-
             accessHourlySteps();
             accessGoogleFit();
-
 
             if(sharedPreferences.getBoolean("notifications",true)) {
                 //for testing if(true) {
@@ -380,7 +374,7 @@ public class MotivationMessages extends Service {
 
         if((totalStepsFromDataPoints-initialSteps)<5){
             initialSteps = totalStepsFromDataPoints;
-            Log.d(TAG,"NOT ACTIVE - sTART MOTIVATING");
+            Log.d(TAG,"NOT ACTIVE - START MOTIVATING");
             return false;
         }
         else{
@@ -867,9 +861,6 @@ public class MotivationMessages extends Service {
         Calendar currentTime = Calendar.getInstance();
         currenthour = currentTime.get(Calendar.HOUR_OF_DAY);
 
-        Log.d("Value:", getString(currenthour));
-
-
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
         Date date = null;
         try {
@@ -1113,14 +1104,11 @@ public class MotivationMessages extends Service {
 
         try {
             Date mToday = new Date();
-
-            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm aa");
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mmaa");
             String curTime = sdf.format(mToday);
+            Date userDate = sdf.parse(curTime);
             Date sleepFromTime = sdf.parse(sleepFrom);
             Date sleepToTime = sdf.parse(sleepTo);
-            Log.d("Sleep from:", String.valueOf(sleepFromTime));
-            Log.d("Sleep to:", String.valueOf(sleepToTime));
-            Date userDate = sdf.parse(curTime);
 
             if(sleepToTime.before(sleepFromTime))
             {
@@ -1130,9 +1118,12 @@ public class MotivationMessages extends Service {
                 sleepToTime.setTime(mCal.getTimeInMillis());
             }
 
-            Log.d("curTime: ", userDate.toString());
-            Log.d("sleep from: ", sleepFromTime.toString());
-            Log.d("sleep to: ", sleepToTime.toString());
+            if((userDate.before(sleepFromTime)) && (userDate.before(sleepToTime))) {
+                Calendar mCal = Calendar.getInstance();
+                mCal.setTime(userDate);
+                mCal.add(Calendar.DAY_OF_YEAR, 1);
+                userDate.setTime(mCal.getTimeInMillis());
+            }
 
             if (userDate.after(sleepFromTime) && userDate.before(sleepToTime)) {
                 isSleep = true;
