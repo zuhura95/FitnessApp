@@ -282,14 +282,10 @@ public class MotivationMessages extends Service {
 
                 }
                 checkEOD();
-                if(currenthour == 23){
-                    Log.d(TAG,"TIME TO LOG ACTIVE MINS");
-                    run_activeTimeCheck.run();
-                }
-                else{
-                    Log.d(TAG,"NOT TIME TO LOG ACTIVE MINS");
-                }
+
+
             }
+            fetchEODActivemins();
             mHandler.postDelayed(this, 2400000); //40 mins
         }
     };
@@ -304,13 +300,7 @@ public class MotivationMessages extends Service {
         }
     };
 
-    //Save active mins at the EOD
-    private Runnable run_activeTimeCheck = new Runnable() {
-        @Override
-        public void run() {
-            fetchEODActivemins();
-        }
-    };
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
