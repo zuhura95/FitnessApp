@@ -31,6 +31,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 
 import com.androdocs.httprequest.HttpRequest;
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
@@ -856,6 +857,7 @@ public class MotivationMessages extends Service {
         try {
             date = simpleDateFormat.parse(today);
         } catch (ParseException e) {
+            Crashlytics.logException(e);
             e.printStackTrace();
         }
         SimpleDateFormat sdf = new SimpleDateFormat("EEEE");
@@ -1078,7 +1080,9 @@ public class MotivationMessages extends Service {
             date = hourFormat1.parse(EOD);
             EOD = hourFormat2.format(date);
 
-        } catch (ParseException e) {}
+        } catch (ParseException e) {
+            Crashlytics.logException(e);
+        }
 
         lunchHour = Integer.parseInt(lunchbreak);
         eodHour = Integer.parseInt(EOD);
@@ -1124,6 +1128,7 @@ public class MotivationMessages extends Service {
                 Log.d("result", "Not Sleeping...");
             }
         } catch (ParseException e) {
+            Crashlytics.logException(e);
         }
 
         return isSleep;

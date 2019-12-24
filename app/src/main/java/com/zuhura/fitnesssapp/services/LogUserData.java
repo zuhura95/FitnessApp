@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.analytics.FirebaseAnalytics;
@@ -76,6 +77,7 @@ public class LogUserData {
             dismiss_time = sdf.parse(dismissTime);
             receive_time  = sdf.parse(receiveTime);
         } catch (ParseException e) {
+            Crashlytics.logException(e);
             e.printStackTrace();
         }
 

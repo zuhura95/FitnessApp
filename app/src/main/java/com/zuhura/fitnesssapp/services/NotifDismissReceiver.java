@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -62,6 +63,7 @@ public class NotifDismissReceiver extends BroadcastReceiver {
             dismiss_time = sdf.parse(dismissTime);
           receive_time  = sdf.parse(receiveTime);
         } catch (ParseException e) {
+            Crashlytics.logException(e);
             e.printStackTrace();
         }
         long readingduration = Math.abs(dismiss_time.getTime() - receive_time.getTime());

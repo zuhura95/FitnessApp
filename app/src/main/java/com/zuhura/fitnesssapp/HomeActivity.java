@@ -27,6 +27,7 @@ import com.anychart.APIlib;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
+import com.crashlytics.android.Crashlytics;
 import com.zuhura.fitnesssapp.services.MotivationMessages;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 import com.anychart.AnyChart;
@@ -883,6 +884,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                                 Date date = dateFormat.parse(time);
                                 time = dateFormat2.format(date);
                             } catch (ParseException e) {
+                                Crashlytics.logException(e);
                             }
 
                             int steps = Integer.parseInt(String.valueOf(document.get("steps")));
@@ -919,6 +921,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     return new SimpleDateFormat("hh aa").parse(o1.getKey()).compareTo(new SimpleDateFormat("hh aa").parse(o2.getKey()));
                 } catch (ParseException e) {
+                    Crashlytics.logException(e);
                     return 0;
                 }
             }
@@ -941,6 +944,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         try {
             date = simpleDateFormat.parse(today);
         } catch (ParseException e) {
+            Crashlytics.logException(e);
             e.printStackTrace();
         }
 
@@ -1003,6 +1007,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     return cal1.get(Calendar.DAY_OF_YEAR) - cal2.get(Calendar.DAY_OF_YEAR);
 
                 } catch (ParseException e) {
+                    Crashlytics.logException(e);
                     throw new RuntimeException(e);
                 }
 
@@ -1028,6 +1033,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         try {
             date = simpleDateFormat.parse(today);
         } catch (ParseException e) {
+            Crashlytics.logException(e);
             e.printStackTrace();
         }
 
@@ -1080,6 +1086,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         try {
             date = format.parse(today);
         } catch (ParseException e) {
+            Crashlytics.logException(e);
             e.printStackTrace();
         }
         SimpleDateFormat sdf = new SimpleDateFormat("E");

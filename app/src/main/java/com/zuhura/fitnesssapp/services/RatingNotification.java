@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
 import com.zuhura.fitnesssapp.HomeActivity;
 import com.zuhura.fitnesssapp.R;
 import com.google.firebase.analytics.FirebaseAnalytics;
@@ -85,6 +86,7 @@ public class RatingNotification extends AppCompatActivity {
             dismiss_time = sdf.parse(dismissTime);
             receive_time  = sdf.parse(receiveTime);
         } catch (ParseException e) {
+            Crashlytics.logException(e);
             e.printStackTrace();
         }
 
