@@ -875,11 +875,11 @@ public class MotivationMessages extends Service {
             if (itsWeekend) {
                 Log.d(TAG, "WEEKEND");
                 if (isWeatherGood) {
-                    radius = 3000;
+                    radius = 6000;
                     category = "category K";
                     Log.d(TAG, "Outdoor ");
                 } else {
-                    radius = 3000;
+                    radius = 6000;
                     category = "category O";
                     Log.d(TAG, "Indoor ");
                 }
@@ -976,7 +976,7 @@ public class MotivationMessages extends Service {
         /**IS EOD SOON?  9  pm **/
         if(currenthour == 21){
             Log.d(TAG,"ITS 9 PM");
-            if(totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000)){
+            if(totalStepsFromDataPoints >= sharedPreferences.getInt("Goal",5000)){
                 category = "category L";
                 Log.d(TAG,"CATEOGRY L");
             }
@@ -1050,7 +1050,7 @@ public class MotivationMessages extends Service {
     private void checkWeather() {
 
         new weatherTask().execute();
-        if((temp > 18) &&(temp < 35)){
+        if((temp > 13) &&(temp < 35)){
             if(humidity < 90){
                 if(weatherDesc !="Rain"){
                     isWeatherGood = true;
@@ -1281,7 +1281,7 @@ public class MotivationMessages extends Service {
             messageTitle = messageTitle.replaceAll("<percentage-remaining>",String.format("%.2f", remainingPercentage)+" %");
         }
         if(message.contains("<percentage-remaining>")){
-            message = message.replaceAll("<percentage-remaining>", String.valueOf(stepsRemaining));
+            message = message.replaceAll("<percentage-remaining>", String.format("%.2f", remainingPercentage)+" %");
         }
         if(messageTitle.contains("<steps-remaining>")){
             messageTitle = messageTitle.replaceAll("<steps-remaining>", String.valueOf(stepsRemaining));
