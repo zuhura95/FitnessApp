@@ -1291,7 +1291,7 @@ public class MotivationMessages extends Service {
             messageTitle = messageTitle.replaceAll("<percentage-remaining>",String.format("%.2f", remainingPercentage)+" %");
         }
         if(message.contains("<percentage-remaining>")){
-            message = message.replaceAll("<percentage-remaining>", String.valueOf(stepsRemaining));
+            message = message.replaceAll("<percentage-remaining>", String.format("%.2f", remainingPercentage)+" %");
         }
         if(messageTitle.contains("<steps-remaining>")){
             messageTitle = messageTitle.replaceAll("<steps-remaining>", String.valueOf(stepsRemaining));
