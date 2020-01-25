@@ -875,11 +875,11 @@ public class MotivationMessages extends Service {
             if (itsWeekend) {
                 Log.d(TAG, "WEEKEND");
                 if (isWeatherGood) {
-                    radius = 3000;
+                    radius = 6000;
                     category = "category K";
                     Log.d(TAG, "Outdoor ");
                 } else {
-                    radius = 3000;
+                    radius = 6000;
                     category = "category O";
                     Log.d(TAG, "Indoor ");
                 }
@@ -976,7 +976,7 @@ public class MotivationMessages extends Service {
         /**IS EOD SOON?  9  pm **/
         if(currenthour == 21){
             Log.d(TAG,"ITS 9 PM");
-            if(totalStepsFromDataPoints == sharedPreferences.getInt("Goal",5000)){
+            if(totalStepsFromDataPoints >= sharedPreferences.getInt("Goal",5000)){
                 category = "category L";
                 Log.d(TAG,"CATEOGRY L");
             }
@@ -1050,7 +1050,7 @@ public class MotivationMessages extends Service {
     private void checkWeather() {
 
         new weatherTask().execute();
-        if((temp > 18) &&(temp < 35)){
+        if((temp > 13) &&(temp < 35)){
             if(humidity < 90){
                 if(weatherDesc !="Rain"){
                     isWeatherGood = true;
@@ -1193,13 +1193,11 @@ public class MotivationMessages extends Service {
                     Log.d(TAG, "=======PARK=======" + parklocationNames);
 
 
-                                    if (messageTitle.contains("<") || message.contains("<")) {
+                    if (messageTitle.contains("<") || message.contains("<")) {
 
-                                        Log.d(TAG, "REPLACE TOKEN");
-                                        replaceTokens();
-                                    }
-
-
+                      Log.d(TAG, "REPLACE TOKEN");
+                       replaceTokens();
+                     }
 
                     else {
                         Log.d(TAG, "NO TOKEN");
@@ -1214,14 +1212,26 @@ public class MotivationMessages extends Service {
 
     private void replaceTokens() {
 
-        int i = new Random().nextInt(restaurantlocationNames.size());
-        String randomRestaurant = restaurantlocationNames.get(i);
-        int j = new Random().nextInt(parklocationNames.size());
-        String randomPark = parklocationNames.get(j);
-        int k = new Random().nextInt(gymlocationNames.size());
-        String randomGym = gymlocationNames.get(k);
-        int l = new Random().nextInt(malllocationNames.size());
-        String randomMall = malllocationNames.get(l);
+        String randomRestaurant="";
+        String randomPark="";
+        String randomGym="";
+        String randomMall="";
+        if (restaurantlocationNames.size() > 0) {
+            int i = new Random().nextInt(restaurantlocationNames.size());
+             randomRestaurant = restaurantlocationNames.get(i);
+        }
+        if (parklocationNames.size() > 0) {
+            int j = new Random().nextInt(parklocationNames.size());
+             randomPark = parklocationNames.get(j);
+        }
+        if (gymlocationNames.size() > 0) {
+            int k = new Random().nextInt(gymlocationNames.size());
+             randomGym = gymlocationNames.get(k);
+        }
+        if (malllocationNames.size() > 0) {
+            int l = new Random().nextInt(malllocationNames.size());
+             randomMall = malllocationNames.get(l);
+        }
         //Replace <weather>
         if(message.contains("<weather>")){
             message = message.replaceAll("<weather>",temp+" °C");
@@ -1271,7 +1281,7 @@ public class MotivationMessages extends Service {
             message = message.replaceAll("<weather>", temp+" °C");
         }
         if(messageTitle.contains("<percentage-finished>")){
-            messageTitle = messageTitle.replaceAll("<percentage-finished>",String.format("%.2f", percentFinished)+" %");
+            message = message.replaceAll("<percentage-remaining>", String.format("%.2f", remainingPercentage)+" %");
         }
         if(message.contains("<percentage-finished>")){
             message = message.replaceAll("<percentage-finished>", String.format("%.2f", percentFinished)+" %");
@@ -1321,31 +1331,29 @@ public class MotivationMessages extends Service {
         protected void onPostExecute(String result) {
 
 
-            try {
-                JSONObject jsonObj = new JSONObject(result);
-                JSONObject main = jsonObj.getJSONObject("main");
-                JSONObject sys = jsonObj.getJSONObject("sys");
-                JSONObject wind = jsonObj.getJSONObject("wind");
-                JSONObject weather = jsonObj.getJSONArray("weather").getJSONObject(0);
-                temp = Double.parseDouble(main.getString("temp"));
-                humidity = Double.parseDouble(main.getString("humidity"));
-                weatherDesc = weather.getString("main");
-                String weatherDescription = weather.getString("description");
+            if(result != null) {
+                try {
+                    JSONObject jsonObj = new JSONObject(result);
+                    JSONObject main = jsonObj.getJSONObject("main");
+                    JSONObject sys = jsonObj.getJSONObject("sys");
+                    JSONObject wind = jsonObj.getJSONObject("wind");
+                    JSONObject weather = jsonObj.getJSONArray("weather").getJSONObject(0);
+                    temp = Double.parseDouble(main.getString("temp"));
+                    humidity = Double.parseDouble(main.getString("humidity"));
+                    weatherDesc = weather.getString("main");
+                    String weatherDescription = weather.getString("description");
 
-                String address = jsonObj.getString("name") + ", " + sys.getString("country");
-
-
-
-                Log.d("=======WEATHER=========","wind: "+wind+", weather: "+weather+", temp:"+ temp);
-                //    checkWeather();
+                    String address = jsonObj.getString("name") + ", " + sys.getString("country");
 
 
+                    Log.d("=======WEATHER=========", "wind: " + wind + ", weather: " + weather + ", temp:" + temp);
+                    //    checkWeather();
 
 
+                } catch (JSONException e) {
 
-            } catch (JSONException e) {
-
-                Log.d("=======WEATHER=========", e.getMessage());
+                    Log.d("=======WEATHER=========", e.getMessage());
+                }
             }
 
         }
@@ -1373,22 +1381,24 @@ public class MotivationMessages extends Service {
         protected void onPostExecute(String response) {
 
             int count=0;
-            try{
-                JSONObject jsonObj = new JSONObject(response);
-                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
-                JSONArray jsonArray = jsonObj2.getJSONArray("items");
-                int n = jsonArray.length();
-                while(n>count) {
-                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
-                    String loc = items.getString("title");
+            if(response != null) {
+                try {
+                    JSONObject jsonObj = new JSONObject(response);
+                    JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                    JSONArray jsonArray = jsonObj2.getJSONArray("items");
+                    int n = jsonArray.length();
+                    while (n > count) {
+                        JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                        String loc = items.getString("title");
 
-                    if(!gymlocationNames.contains(loc)) {
-                        gymlocationNames.add(loc);
+                        if (!gymlocationNames.contains(loc)) {
+                            gymlocationNames.add(loc);
+                        }
+                        count++;
                     }
-                    count++;
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
             Log.d(TAG, "=======GYMS=======" + gymlocationNames);
         }
@@ -1416,24 +1426,26 @@ public class MotivationMessages extends Service {
         protected void onPostExecute(String response) {
 
             int count=0;
-            try{
-                JSONObject jsonObj = new JSONObject(response);
-                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
-                JSONArray jsonArray = jsonObj2.getJSONArray("items");
-                int n = jsonArray.length();
-                while(n>count) {
-                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
-                    String loc = items.getString("title");
+            if(response != null) {
+                try {
+                    JSONObject jsonObj = new JSONObject(response);
+                    JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                    JSONArray jsonArray = jsonObj2.getJSONArray("items");
+                    int n = jsonArray.length();
+                    while (n > count) {
+                        JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                        String loc = items.getString("title");
 
-                    if(!parklocationNames.contains(loc)){
-                        parklocationNames.add(loc);
+                        if (!parklocationNames.contains(loc)) {
+                            parklocationNames.add(loc);
+                        }
+
+
+                        count++;
                     }
-
-
-                    count++;
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
             Log.d(TAG, "=======PARKS=======" + parklocationNames);
         }
@@ -1460,24 +1472,26 @@ public class MotivationMessages extends Service {
         protected void onPostExecute(String response) {
 
             int count=0;
-            try{
-                JSONObject jsonObj = new JSONObject(response);
-                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
-                JSONArray jsonArray = jsonObj2.getJSONArray("items");
-                int n = jsonArray.length();
-                while(n>count) {
-                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
-                    String loc = items.getString("title");
+            if(response != null) {
+                try {
+                    JSONObject jsonObj = new JSONObject(response);
+                    JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                    JSONArray jsonArray = jsonObj2.getJSONArray("items");
+                    int n = jsonArray.length();
+                    while (n > count) {
+                        JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                        String loc = items.getString("title");
 
-                    if(!restaurantlocationNames.contains(loc)){
-                        restaurantlocationNames.add(loc);
+                        if (!restaurantlocationNames.contains(loc)) {
+                            restaurantlocationNames.add(loc);
+                        }
+
+
+                        count++;
                     }
-
-
-                    count++;
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
             Log.d(TAG, "=======RESTAURANTS=======" + restaurantlocationNames);
         }
@@ -1504,24 +1518,26 @@ public class MotivationMessages extends Service {
         protected void onPostExecute(String response) {
 
             int count=0;
-            try{
-                JSONObject jsonObj = new JSONObject(response);
-                JSONObject jsonObj2 = jsonObj.getJSONObject("results");
-                JSONArray jsonArray = jsonObj2.getJSONArray("items");
-                int n = jsonArray.length();
-                while(n>count) {
-                    JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
-                    String loc = items.getString("title");
+            if(response != null) {
+                try {
+                    JSONObject jsonObj = new JSONObject(response);
+                    JSONObject jsonObj2 = jsonObj.getJSONObject("results");
+                    JSONArray jsonArray = jsonObj2.getJSONArray("items");
+                    int n = jsonArray.length();
+                    while (n > count) {
+                        JSONObject items = jsonObj2.getJSONArray("items").getJSONObject(count);
+                        String loc = items.getString("title");
 
-                    if(!malllocationNames.contains(loc)){
-                        malllocationNames.add(loc);
+                        if (!malllocationNames.contains(loc)) {
+                            malllocationNames.add(loc);
+                        }
+
+
+                        count++;
                     }
-
-
-                    count++;
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
             Log.d(TAG, "=======MALLS=======" + malllocationNames);
         }

@@ -9,8 +9,8 @@ android {
         applicationId "com.zuhura.fitnesssapp"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 8
-        versionName "8.0"
+        versionCode 13
+        versionName "13.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true

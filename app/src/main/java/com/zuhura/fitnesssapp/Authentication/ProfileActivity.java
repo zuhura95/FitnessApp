@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -53,15 +54,38 @@ public class ProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                //Check if First Name and Last Name fields are empty
 
-                if (inputNickname.getText()== null){
 
-                    Toast.makeText(ProfileActivity.this, "Please Enter your Name", Toast.LENGTH_SHORT).show();
+                if(!TextUtils.isEmpty(inputNickname.getText().toString())){
+                    if(!TextUtils.isEmpty(inputWeight.getText().toString())){
+                        if(!TextUtils.isEmpty(inputHeight.getText().toString())){
+                            if(!TextUtils.isEmpty(inputAge.getText().toString())) {
+
+                                final String nickName = inputNickname.getText().toString();
+                                final float weight = Float.parseFloat(inputWeight.getText().toString());
+                                final float height = Float.parseFloat(inputHeight.getText().toString());
+                                final int age = Integer.parseInt(inputAge.getText().toString());
+                                getUserProfile(nickName, weight, height, age);
+                            } else{
+                                Toast.makeText(ProfileActivity.this, "Please Enter your Age", Toast.LENGTH_SHORT).show();
+
+                            }
+                        }
+                        else{
+                            Toast.makeText(ProfileActivity.this, "Please Enter your Height", Toast.LENGTH_SHORT).show();
+
+                        }
+                    } else{
+                        Toast.makeText(ProfileActivity.this, "Please Enter your Weight", Toast.LENGTH_SHORT).show();
+
+                    }
                 }
+
                 else{
-                    getUserProfile();
+                    Toast.makeText(ProfileActivity.this, "Please Enter your NickName", Toast.LENGTH_SHORT).show();
+
                 }
+
 
             }
         });
@@ -71,19 +95,15 @@ public class ProfileActivity extends AppCompatActivity {
 
     /**
      * Save user's info to local storage
+     * @param nickName
+     * @param weight
+     * @param height
+     * @param age
      */
-    private void getUserProfile(){
+    private void getUserProfile(String nickName, float weight, float height, int age){
 
-        final String nickName;
-        final float weight;
-       final  float height;
-       final  int age ;
+
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        nickName = inputNickname.getText().toString();
-        weight = Float.parseFloat(inputWeight.getText().toString());
-        height = Float.parseFloat(inputHeight.getText().toString());
-        age = Integer.parseInt(inputAge.getText().toString());
-
 
         editor.putString("NickName",nickName);
         editor.putFloat("Weight",weight);
