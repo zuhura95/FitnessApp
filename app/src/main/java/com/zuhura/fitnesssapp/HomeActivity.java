@@ -1377,7 +1377,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private void displayReward(String awardMsg,Drawable awardImg){
+    private void displayReward(String awardMsg, Drawable awardImg, final String award){
+
+         SharedPreferences.Editor editor = sharedPreferences.edit();
         TextView txtclose, awardMessage;
         ImageView awardImage;
         awardPopup.setContentView(R.layout.custompopup);
@@ -1387,20 +1389,25 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         awardImage.setImageDrawable(awardImg);
         awardMessage.setText(awardMsg);
-        if(active) {
+
             awardPopup.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            awardPopup.show();
-        }
-        else{
-            rewardNotify();
-        }
+
+                awardPopup.show();
+
+
+        editor.putBoolean(award, true);
+        editor.putBoolean("notifShown",false);
+        editor.apply();
 
         txtclose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG,sharedPreferences.getBoolean("notifShown",false)+"=========NOTIF SHOWN");
+
                 awardPopup.dismiss();
             }
         });
+
     }
     /**
      * Check if the user has achieved any reward
@@ -1423,19 +1430,32 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         boolean gotReward10 = sharedPreferences.getBoolean("medal7", false);
         boolean gotReward11 = sharedPreferences.getBoolean("medal8", false);
 
+        boolean notifShown = sharedPreferences.getBoolean("notifShown",false);
 
         float distanceInKm = distanceInMeters / 1000;
-
-        //check if activity is open - else display notif to open app
+       // float distanceInKm = 10;
 
             if ((totalStepsFromDataPoints >= sharedPreferences.getInt("Goal", 5000))) {
-                editor.putBoolean("trophy1", true);
-                editor.apply();
-                awardMsg = getResources().getString(R.string.award_1_message);
-                awardImg = getResources().getDrawable(R.drawable.complete1);
+
+                Log.d(TAG,gotReward1+"=========REWARD 1");
                 if (!gotReward1) {
 
-                    displayReward(awardMsg, awardImg);
+
+                    awardMsg = getResources().getString(R.string.award_1_message);
+                    awardImg = getResources().getDrawable(R.drawable.complete1);
+                    if (active){
+                        displayReward(awardMsg, awardImg,"trophy1");
+                    }
+                    else{
+                        if(!notifShown) {
+                            editor.putBoolean("notifShown",true);
+                            editor.apply();
+                            Log.d(TAG,sharedPreferences.getBoolean("notifShown",false)+"=========NOTIF SHOWN");
+                            rewardNotify();
+                        }
+
+                    }
+
                 }
             }
 
@@ -1447,7 +1467,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 awardMsg = getResources().getString(R.string.award_2_message);
                 awardImg = getResources().getDrawable(R.drawable.monkey);
                 if (!gotReward2) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"trophy2");
                 }
             }
 
@@ -1458,7 +1478,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 awardMsg = getResources().getString(R.string.award_3_message);
                 awardImg = getResources().getDrawable(R.drawable.bee);
                 if (!gotReward3) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"trophy3");
                 }
             }
 
@@ -1469,81 +1489,81 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 awardMsg = getResources().getString(R.string.award_4_message);
                 awardImg = getResources().getDrawable(R.drawable.worm);
                 if (!gotReward3) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"trophy4");
                 }
             }
 
 
             //distance higher than 1.5 km
-            if ((distanceInKm >= 1.5)) {
+            if ((distanceInKm >= 1.5) && (distanceInKm< 7)) {
                 editor.putBoolean("medal1", true);
                 editor.apply();
                 awardImg = getResources().getDrawable(R.drawable.torch);
                 awardMsg = getResources().getString(R.string.award_5_message);
                 if (!gotReward4) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"medal1");
                 }
             }
 
             //distance higher than 7 km
-            if ((distanceInKm >= 7)) {
+            if ((distanceInKm >= 7)&& (distanceInKm< 10)) {
                 editor.putBoolean("medal2", true);
                 editor.apply();
                 awardMsg = getResources().getString(R.string.award_6_message);
                 awardImg = getResources().getDrawable(R.drawable.cornish);
                 if (!gotReward5) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"medal2");
                 }
             }
 
             //distance higher than 10 km
-            if ((distanceInKm >= 10)) {
+            if ((distanceInKm >= 10)&& (distanceInKm< 33)) {
                 editor.putBoolean("medal3", true);
                 editor.apply();
                 awardImg = getResources().getDrawable(R.drawable.janoub);
                 awardMsg = getResources().getString(R.string.award_7_message);
                 if (!gotReward6) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"medal3");
                 }
             }
             //distance higher than 33 km
-            if ((distanceInKm >= 33)) {
+            if ((distanceInKm >= 33)&& (distanceInKm< 97)) {
                 editor.putBoolean("medal4", true);
                 editor.apply();
                 awardImg = getResources().getDrawable(R.drawable.alkhor);
                 awardMsg = getResources().getString(R.string.award_8_message);
                 if (!gotReward7) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"medal4");
                 }
             }
             //distance higher than 97 km
-            if ((distanceInKm >= 97)) {
+            if ((distanceInKm >= 97)&& (distanceInKm< 160)) {
                 editor.putBoolean("medal5", true);
                 editor.apply();
                 awardImg = getResources().getDrawable(R.drawable.halul);
                 awardMsg = getResources().getString(R.string.award_9_message);
                 if (!gotReward8) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"medal5");
                 }
             }
             //distance higher than 160 km
-            if ((distanceInKm >= 160)) {
+            if ((distanceInKm >= 160)&& (distanceInKm< 190)) {
                 editor.putBoolean("medal6", true);
                 editor.apply();
                 awardImg = getResources().getDrawable(R.drawable.length);
                 awardMsg = getResources().getString(R.string.award_10_message);
                 if (!gotReward9) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"medal6");
                 }
             }
             //distance higher than 190 km
-            if ((distanceInKm >= 190)) {
+            if ((distanceInKm >= 190)&& (distanceInKm< 571)) {
                 editor.putBoolean("medal7", true);
                 editor.apply();
                 awardImg = getResources().getDrawable(R.drawable.shamal);
                 awardMsg = getResources().getString(R.string.award_11_message);
                 if (!gotReward10) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"medal7");
                 }
             }
             //distance higher than 571 km
@@ -1553,7 +1573,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 awardImg = getResources().getDrawable(R.drawable.kuwait);
                 awardMsg = getResources().getString(R.string.award_12_message);
                 if (!gotReward11) {
-                    displayReward(awardMsg, awardImg);
+                    displayReward(awardMsg, awardImg,"medal8");
                 }
             }
 
@@ -1594,6 +1614,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             wl.acquire(3000);
         }
     }
+
+
 
     @Override
     public void onBackPressed() {
