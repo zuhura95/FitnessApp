@@ -911,7 +911,7 @@ public class MotivationMessages extends Service {
                 }
                 /**IS EOWD SOON?**/
                 else {
-                    if (EODtimediff >= 1) {
+                    if (EODtimediff <= 1) {
                         Log.d(TAG, "END OF DAY COMING SOOON");
                         checkWeather();
                         if (isWeatherGood) {
